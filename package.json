@@ -2,13 +2,21 @@
   "name": "hermes",
   "version": "1.0.0",
   "private": true,
-  "workspaces": [
-    "apps/*",
-    "packages/*"
-  ],
+  "workspaces": {
+    "packages": [
+      "apps/*",
+      "packages/*",
+      "services/*"
+    ],
+    "catalog": {
+      "react": "^19.0.0",
+      "react-dom": "^19.0.0",
+      "@t3-oss/env-core": "latest",
+      "convex": "^1.31.2"
+    }
+  },
   "scripts": {
     "dev": "bun run --filter '*' dev",
-    "dev:hot": "bun --hot --cwd apps/lofn run index.ts",
     "build": "bun run --filter '*' build",
     "test": "bun --filter '*' test",
     "check": "bun --filter '*' run check",

@@ -1,8 +1,13 @@
 {
-  "name": "convex",
+  "name": "backend",
   "module": "index.ts",
   "type": "module",
   "private": true,
+  "scripts": {
+    "dev": "convex dev",
+    "setup": "convex dev --until-success",
+    "typecheck": "tsc --noEmit -p convex"
+  },
   "devDependencies": {
     "@types/bun": "latest"
   },
@@ -10,6 +15,6 @@
     "typescript": "^5"
   },
   "dependencies": {
-    "convex": "^1.31.2"
+    "convex": "catalog:"
   }
 }
