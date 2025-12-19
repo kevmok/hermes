@@ -19,6 +19,7 @@ If the process crashes after saving predictions but before marking markets as an
 **Location:** `src/services/analysis/AnalysisService.ts:192-229`
 
 **Scenario:**
+
 ```
 1. Save predictions to predictionsRef (line 192) - SUCCESS
 2. Save consensus picks to consensusRef (line 202) - SUCCESS
@@ -30,6 +31,7 @@ If the process crashes after saving predictions but before marking markets as an
 ## Proposed Solutions
 
 ### Option A: Pre-Mark with Rollback (Recommended)
+
 Mark markets as analyzed BEFORE analysis, rollback on failure.
 
 **Effort:** Medium (2-3 hours)
@@ -61,6 +63,7 @@ yield* Effect.acquireUseRelease(
 ```
 
 ### Option B: Idempotent Analysis
+
 Track run_id and skip already-analyzed markets.
 
 **Effort:** Medium (3-4 hours)

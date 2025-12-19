@@ -20,6 +20,7 @@ The exact same `AppLayer` composition exists in two places: `main.ts:70-76` and 
 **Location 2:** `src/layers/AppLayers.ts:7-13`
 
 Both contain:
+
 ```typescript
 const AppLayer = Layer.provideMerge(
   PrimaryModelLayer,
@@ -33,12 +34,14 @@ const AppLayer = Layer.provideMerge(
 ## Proposed Solutions
 
 ### Option A: Delete layers/ folder (Recommended)
+
 Keep layer composition only in main.ts. Delete the layers/ folder.
 
 **Effort:** Small (15 minutes)
 **Risk:** Very Low
 
 ### Option B: Import from AppLayers
+
 Remove duplication in main.ts, import from layers/.
 
 **Effort:** Small (15 minutes)

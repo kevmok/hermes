@@ -21,6 +21,7 @@ Multiple concurrent WebSocket messages can interleave DataFrame updates in `upda
 **Location:** `src/domain/market/filters.ts:52-103`
 
 **Race Condition Scenario:**
+
 ```
 Time 0: Message A reads DataFrame (market X price = 0.50)
 Time 1: Message B reads DataFrame (market X price = 0.50)
@@ -30,6 +31,7 @@ Result: Price 0.55 is lost
 ```
 
 **Current Code:**
+
 ```typescript
 export const updateMarketsRef = (
   marketsRef: Ref.Ref<pl.DataFrame>,
@@ -49,14 +51,17 @@ export const updateMarketsRef = (
 ## Proposed Solutions
 
 ### Option A: Semaphore Serialization (Recommended)
+
 Add a Semaphore to serialize all DataFrame updates.
 
 **Pros:**
+
 - Guarantees no interleaving
 - Uses Effect.ts primitives correctly
 - Simple to implement
 
 **Cons:**
+
 - Reduces throughput (sequential processing)
 - May create backpressure under high load
 
@@ -85,13 +90,16 @@ export const updateMarketsRefSafe = (
 ```
 
 ### Option B: Per-Market Locking
+
 Use a Map of Semaphores, one per market_id.
 
 **Pros:**
+
 - Higher throughput (parallel updates to different markets)
 - Only serializes updates to same market
 
 **Cons:**
+
 - More complex implementation
 - Memory overhead for semaphore map
 
@@ -99,13 +107,16 @@ Use a Map of Semaphores, one per market_id.
 **Risk:** Medium
 
 ### Option C: Batch Updates with Debouncing
+
 Collect updates in a buffer, apply in batches.
 
 **Pros:**
+
 - Highest throughput
 - Natural deduplication
 
 **Cons:**
+
 - Adds latency to updates
 - More complex state management
 
@@ -119,6 +130,7 @@ Collect updates in a buffer, apply in batches.
 ## Technical Details
 
 **Affected Files:**
+
 - `src/services/data/DataService.ts` - Add semaphore to service interface
 - `src/domain/market/filters.ts` - Update function signature
 - `src/services/polymarket/WebSocketService.ts` - Pass semaphore
@@ -134,8 +146,8 @@ Collect updates in a buffer, apply in batches.
 
 ## Work Log
 
-| Date | Action | Learnings |
-|------|--------|-----------|
+| Date       | Action                                     | Learnings                                              |
+| ---------- | ------------------------------------------ | ------------------------------------------------------ |
 | 2025-12-18 | Created finding from data integrity review | Effect Ref.update is NOT atomic for complex operations |
 
 ## Resources

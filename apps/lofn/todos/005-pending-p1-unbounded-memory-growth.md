@@ -28,26 +28,29 @@ const consensusRef = yield* Ref.make(createEmptyConsensusDF());
 
 **Growth Projections:**
 
-| Scale | Markets | Predictions | Memory | CSV Write Time |
-|-------|---------|-------------|--------|----------------|
-| Current (1x) | 100 | 1,000 | ~5 MB | ~50ms |
-| 10x | 1,000 | 10,000 | ~50 MB | ~200ms |
-| 100x | 10,000 | 100,000 | ~500 MB | **2-5s** |
-| 1000x | 100,000 | 1,000,000 | **5-10 GB** | **30-60s** |
+| Scale        | Markets | Predictions | Memory      | CSV Write Time |
+| ------------ | ------- | ----------- | ----------- | -------------- |
+| Current (1x) | 100     | 1,000       | ~5 MB       | ~50ms          |
+| 10x          | 1,000   | 10,000      | ~50 MB      | ~200ms         |
+| 100x         | 10,000  | 100,000     | ~500 MB     | **2-5s**       |
+| 1000x        | 100,000 | 1,000,000   | **5-10 GB** | **30-60s**     |
 
 **Evidence:** No cleanup or rotation logic exists anywhere in the codebase.
 
 ## Proposed Solutions
 
 ### Option A: Time-Based Pruning (Recommended)
+
 Add scheduled pruning that removes old data.
 
 **Pros:**
+
 - Simple to implement
 - Predictable memory usage
 - Preserves recent data for analysis
 
 **Cons:**
+
 - Loses historical data
 - Requires choosing retention period
 
@@ -87,13 +90,16 @@ yield* pruneOldData.pipe(
 ```
 
 ### Option B: Size-Based Pruning
+
 Limit DataFrames to maximum row counts.
 
 **Pros:**
+
 - Predictable memory ceiling
 - Simple logic
 
 **Cons:**
+
 - May lose recent data during high activity
 - Doesn't consider data age
 
@@ -101,14 +107,17 @@ Limit DataFrames to maximum row counts.
 **Risk:** Medium
 
 ### Option C: Migrate to SQLite
+
 Use database with automatic indexing and better memory management.
 
 **Pros:**
+
 - Professional solution
 - Better query performance
 - Automatic memory management
 
 **Cons:**
+
 - Larger change
 - Requires repository refactor first
 
@@ -122,11 +131,13 @@ Use database with automatic indexing and better memory management.
 ## Technical Details
 
 **Affected Files:**
+
 - `src/services/data/DataService.ts` - Add pruneOldData method
 - `src/main.ts` - Schedule pruning task
 - `src/config/constants.ts` - Add retention configuration
 
 **New Configuration:**
+
 ```typescript
 PREDICTIONS_RETENTION_DAYS: 30,
 CONSENSUS_RETENTION_DAYS: 30,
@@ -143,8 +154,8 @@ MARKETS_RETENTION_DAYS: 7,
 
 ## Work Log
 
-| Date | Action | Learnings |
-|------|--------|-----------|
+| Date       | Action                                  | Learnings                                      |
+| ---------- | --------------------------------------- | ---------------------------------------------- |
 | 2025-12-18 | Created finding from performance review | Polars DataFrames in memory grow without bound |
 
 ## Resources

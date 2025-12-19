@@ -3,32 +3,39 @@
 ## Overview
 
 The current implementation has two gaps compared to the original Python agent:
+
 1. **CSV Schema Mismatch**: Missing columns from original `markets.csv` and `predictions.csv`
 2. **Fake Swarm Mode**: `USE_SWARM_MODE` only uses a single model, not multiple AIs in parallel
 
 ## Problem Statement
 
 ### CSV Files
+
 The original Python agent uses these CSV schemas:
 
 **markets.csv** (original has 10 columns):
+
 - `timestamp`, `market_id`, `event_slug`, `title`, `outcome`, `price`, `size_usd`, `first_seen`, `last_analyzed`, `last_trade_timestamp`
 
 Current implementation is missing: `last_analyzed`
 
 **predictions.csv** (original has 15 columns):
+
 - `run_id`, `timestamp`, `market_id`, `event_slug`, `title`, `outcome`, `price`, `model_name`, `decision`, `reasoning`, `consensus_decision`, `consensus_percentage`, `claude_decision`, `opus_decision`, `openai_decision`, etc.
 
 Current implementation only has 6 columns and doesn't track per-model decisions or consensus.
 
 ### Swarm Mode
+
 The original `swarm_agent.py`:
+
 - Queries 6 models **in parallel** using ThreadPoolExecutor
 - Collects YES/NO/NO_TRADE from each model
 - Calculates majority consensus
 - Uses a separate AI to summarize findings
 
 Current `analysis.ts`:
+
 - Uses only ONE model (Claude)
 - Calls it "swarm mode" but doesn't query multiple models
 - No actual consensus calculation

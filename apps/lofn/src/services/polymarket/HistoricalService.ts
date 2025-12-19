@@ -21,9 +21,7 @@ export const fetchHistoricalTrades = Effect.gen(function* () {
   console.log(`Min timestamp: ${minTimestamp}`);
   const url = `${CONFIG.TRADES_API_URL}?limit=${CONFIG.HISTORICAL_LIMIT}&_min_timestamp=${minTimestamp}`;
 
-  console.log(
-    `Fetching historical trades from last ${CONFIG.HISTORICAL_HOURS_BACK} hours...`,
-  );
+  console.log(`Fetching historical trades from last ${CONFIG.HISTORICAL_HOURS_BACK} hours...`);
 
   const response = yield* client.execute(HttpClientRequest.get(url)).pipe(
     Effect.flatMap((res) => res.json),

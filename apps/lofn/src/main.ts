@@ -35,23 +35,15 @@ const program = Effect.gen(function* () {
 
   // Periodic analysis
   yield* analysisTask.pipe(
-    Effect.repeat(
-      Schedule.spaced(Duration.seconds(CONFIG.ANALYSIS_CHECK_INTERVAL_SECONDS)),
-    ),
+    Effect.repeat(Schedule.spaced(Duration.seconds(CONFIG.ANALYSIS_CHECK_INTERVAL_SECONDS))),
     Effect.fork,
   );
 
   // Periodic data save (every 5 minutes)
-  yield* data.saveAll.pipe(
-    Effect.repeat(Schedule.spaced(Duration.minutes(5))),
-    Effect.fork,
-  );
+  yield* data.saveAll.pipe(Effect.repeat(Schedule.spaced(Duration.minutes(5))), Effect.fork);
 
   // Prune old data periodically (every hour)
-  yield* data.pruneOldData.pipe(
-    Effect.repeat(Schedule.spaced(Duration.hours(1))),
-    Effect.fork,
-  );
+  yield* data.pruneOldData.pipe(Effect.repeat(Schedule.spaced(Duration.hours(1))), Effect.fork);
 
   // Graceful shutdown handler
   yield* Effect.async<void, never>(() => {
@@ -81,10 +73,7 @@ const program = Effect.gen(function* () {
 // Compose layers - includes FetchHttpClient, SwarmService, and DataLayer
 const AppLayer = Layer.provideMerge(
   PrimaryModelLayer,
-  Layer.provideMerge(
-    SwarmLayer,
-    Layer.provideMerge(DataLayer, FetchHttpClient.layer)
-  )
+  Layer.provideMerge(SwarmLayer, Layer.provideMerge(DataLayer, FetchHttpClient.layer)),
 );
 
 // Run program with BunRuntime

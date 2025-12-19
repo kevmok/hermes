@@ -27,12 +27,13 @@ for (let i = 0; i < rows.length; i++) {
 }
 ```
 
-**Current Impact:** 3 markets * ~10-20s per market = 30-60s total
+**Current Impact:** 3 markets \* ~10-20s per market = 30-60s total
 **With Parallelization:** All 3 markets at once = ~10-20s total (3-5x faster)
 
 ## Proposed Solutions
 
 ### Option A: Parallel with Bounded Concurrency (Recommended)
+
 Process markets in parallel with concurrency limit.
 
 **Effort:** Small (1-2 hours)

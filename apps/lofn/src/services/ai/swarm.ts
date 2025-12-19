@@ -47,9 +47,7 @@ const parseDecision = (text: string): "YES" | "NO" | "NO_TRADE" => {
 // Calculate consensus from results
 const calculateConsensus = (results: SwarmResult[]): SwarmResponse => {
   const successfulResults = results.filter((r) => !r.error);
-  const tradingResults = successfulResults.filter(
-    (r) => r.decision !== "NO_TRADE"
-  );
+  const tradingResults = successfulResults.filter((r) => r.decision !== "NO_TRADE");
 
   let consensusDecision: "YES" | "NO" | "NO_TRADE" = "NO_TRADE";
   let consensusPercentage = 0;
@@ -84,7 +82,7 @@ export class SwarmService extends Context.Tag("SwarmService")<
   {
     readonly query: (
       systemPrompt: string,
-      userPrompt: string
+      userPrompt: string,
     ) => Effect.Effect<SwarmResponse, never>;
   }
 >() {}
@@ -94,7 +92,7 @@ const queryWithLayer = (
   name: string,
   layer: Layer.Layer<LanguageModel.LanguageModel, unknown, never>,
   systemPrompt: string,
-  userPrompt: string
+  userPrompt: string,
 ): Effect.Effect<SwarmResult, never> =>
   Effect.gen(function* () {
     const startTime = Date.now();
@@ -115,8 +113,8 @@ const queryWithLayer = (
         Effect.succeed({
           text: "",
           error: String(error),
-        })
-      )
+        }),
+      ),
     );
 
     const responseTimeMs = Date.now() - startTime;
@@ -163,13 +161,10 @@ const make = Effect.sync(() => {
   }
 
   console.log(
-    `SwarmService initialized with ${models.length} models: ${models.map((m) => m.name).join(", ")}`
+    `SwarmService initialized with ${models.length} models: ${models.map((m) => m.name).join(", ")}`,
   );
 
-  const query = (
-    systemPrompt: string,
-    userPrompt: string
-  ): Effect.Effect<SwarmResponse, never> =>
+  const query = (systemPrompt: string, userPrompt: string): Effect.Effect<SwarmResponse, never> =>
     Effect.gen(function* () {
       if (models.length === 0) {
         console.warn("No AI models configured - check API keys");
@@ -187,17 +182,15 @@ const make = Effect.sync(() => {
 
       // Retry schedule: exponential backoff starting at 1s, max 3 retries
       const retrySchedule = Schedule.exponential(Duration.seconds(1)).pipe(
-        Schedule.intersect(Schedule.recurs(3))
+        Schedule.intersect(Schedule.recurs(3)),
       );
 
       // Query all models with limited concurrency and retry on transient failures
       const results = yield* Effect.all(
         models.map(({ name, layer }) =>
-          queryWithLayer(name, layer, systemPrompt, userPrompt).pipe(
-            Effect.retry(retrySchedule)
-          )
+          queryWithLayer(name, layer, systemPrompt, userPrompt).pipe(Effect.retry(retrySchedule)),
         ),
-        { concurrency: 3 } // Limit concurrent AI API calls
+        { concurrency: 3 }, // Limit concurrent AI API calls
       );
 
       const totalTime = Date.now() - startTime;
@@ -205,12 +198,8 @@ const make = Effect.sync(() => {
 
       // Log individual results
       for (const result of results) {
-        const status = result.error
-          ? `ERROR: ${result.error.slice(0, 50)}`
-          : result.decision;
-        console.log(
-          `  ${result.modelName}: ${status} (${result.responseTimeMs}ms)`
-        );
+        const status = result.error ? `ERROR: ${result.error.slice(0, 50)}` : result.decision;
+        console.log(`  ${result.modelName}: ${status} (${result.responseTimeMs}ms)`);
       }
 
       return calculateConsensus(results);

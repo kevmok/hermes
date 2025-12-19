@@ -33,12 +33,14 @@ ws.addEventListener("message", (event) => {
 ```
 
 **Security Risks:**
+
 1. **Prototype Pollution:** Malicious JSON like `{"__proto__": {"isAdmin": true}}` could modify object prototypes
 2. **Type Confusion:** Missing fields cause silent failures in downstream processing
 3. **DoS:** Malformed JSON causes unhandled exceptions
 
 **Similar Issue in HistoricalService:**
 `src/services/polymarket/HistoricalService.ts:57`
+
 ```typescript
 const trades = response as HistoricalTrade[];  // No validation
 ```
@@ -46,14 +48,17 @@ const trades = response as HistoricalTrade[];  // No validation
 ## Proposed Solutions
 
 ### Option A: Effect Schema Validation (Recommended)
+
 Use `@effect/schema` for runtime validation.
 
 **Pros:**
+
 - Type-safe runtime validation
 - Already have @effect/schema in dependencies
 - Integrates with Effect error handling
 
 **Cons:**
+
 - Slight performance overhead
 - Requires defining schemas
 
@@ -93,13 +98,16 @@ const data = parseResult.right;
 ```
 
 ### Option B: Zod Validation
+
 Use Zod for schema validation.
 
 **Pros:**
+
 - Popular, well-documented
 - Good error messages
 
 **Cons:**
+
 - Adds new dependency
 - Doesn't integrate with Effect as well
 
@@ -107,13 +115,16 @@ Use Zod for schema validation.
 **Risk:** Low
 
 ### Option C: Manual Validation
+
 Add explicit field checks before processing.
 
 **Pros:**
+
 - No new patterns
 - Simple to understand
 
 **Cons:**
+
 - Verbose
 - Easy to miss fields
 - No type inference
@@ -128,6 +139,7 @@ Add explicit field checks before processing.
 ## Technical Details
 
 **Affected Files:**
+
 - `src/services/polymarket/WebSocketService.ts` - Add schema validation
 - `src/services/polymarket/HistoricalService.ts` - Add schema validation for API response
 - `src/domain/market/types.ts` - Define schemas (or new file)
@@ -142,8 +154,8 @@ Add explicit field checks before processing.
 
 ## Work Log
 
-| Date | Action | Learnings |
-|------|--------|-----------|
+| Date       | Action                               | Learnings                              |
+| ---------- | ------------------------------------ | -------------------------------------- |
 | 2025-12-18 | Created finding from security review | External data must always be validated |
 
 ## Resources

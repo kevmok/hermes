@@ -6,8 +6,7 @@ import { SwarmService, type SwarmResponse } from "../ai";
 import { MARKET_ANALYSIS_SYSTEM_PROMPT } from "../ai";
 
 // Generate unique run ID
-const generateRunId = () =>
-  `run_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+const generateRunId = () => `run_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
 
 // Save individual model predictions to predictions DataFrame
 const savePredictions = (
@@ -75,10 +74,7 @@ const saveConsensusPicks = (
     // Filter to high-confidence picks (>= 66% consensus)
     const highConfidencePicks = markets
       .filter((m) => m.response.consensusPercentage >= 66)
-      .sort(
-        (a, b) =>
-          b.response.consensusPercentage - a.response.consensusPercentage,
-      )
+      .sort((a, b) => b.response.consensusPercentage - a.response.consensusPercentage)
       .slice(0, CONFIG.TOP_MARKETS_COUNT);
 
     if (highConfidencePicks.length === 0) return;
@@ -139,9 +135,7 @@ export const analysisTask = Effect.gen(function* () {
   const toAnalyze = unanalyzed.head(CONFIG.MARKETS_TO_ANALYZE);
 
   if (toAnalyze.height < CONFIG.NEW_MARKETS_FOR_ANALYSIS) {
-    console.log(
-      `Waiting for markets (${toAnalyze.height}/${CONFIG.NEW_MARKETS_FOR_ANALYSIS})`,
-    );
+    console.log(`Waiting for markets (${toAnalyze.height}/${CONFIG.NEW_MARKETS_FOR_ANALYSIS})`);
     return;
   }
 
@@ -175,14 +169,9 @@ Should I trade YES, NO, or NO_TRADE on this market?
 
 Respond with JSON: {"decision": "YES|NO|NO_TRADE", "reasoning": "your analysis"}`;
 
-      console.log(
-        `\n[${i + 1}/${rows.length}] ${(market.title as string).slice(0, 60)}...`,
-      );
+      console.log(`\n[${i + 1}/${rows.length}] ${(market.title as string).slice(0, 60)}...`);
 
-      const response = yield* swarm.query(
-        MARKET_ANALYSIS_SYSTEM_PROMPT,
-        userPrompt,
-      );
+      const response = yield* swarm.query(MARKET_ANALYSIS_SYSTEM_PROMPT, userPrompt);
 
       console.log(
         `  Consensus: ${response.consensusDecision} (${response.consensusPercentage.toFixed(0)}% of ${response.successfulModels}/${response.totalModels} models)`,

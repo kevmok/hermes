@@ -28,6 +28,6 @@ export const statusReportingEffect = Effect.gen(function* () {
       console.log("-------------------\n");
 
       yield* Effect.sleep(Duration.seconds(30));
-    })
+    }),
   );
 });

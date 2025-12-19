@@ -17,6 +17,7 @@ All errors are generic. No custom error classes or tagged errors for better erro
 **Current State:** Errors are `unknown` or generic `Error` objects throughout the codebase.
 
 **Missing Patterns:**
+
 - No `DataLoadError` for file operations
 - No `ApiError` for external API calls
 - No `ValidationError` for input validation
@@ -45,6 +46,7 @@ export class ValidationError extends Data.TaggedError("ValidationError")<{
 ```
 
 Then use with `Effect.catchTag`:
+
 ```typescript
 effect.pipe(
   Effect.catchTag("DataLoadError", (error) => {

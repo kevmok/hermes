@@ -144,6 +144,7 @@ bun run check
 ### Workspace Protocol
 
 When referencing internal packages, use `workspace:*`:
+
 ```json
 {
   "dependencies": {

@@ -15,18 +15,21 @@ Effect exports have inconsistent naming patterns, reducing code readability.
 ## Findings
 
 **Current Inconsistencies:**
+
 - `analysisTask` (camelCase, no suffix)
 - `statusReportingEffect` (includes "Effect" suffix)
 - `websocketEffect` (includes "Effect" suffix)
 - `fetchHistoricalTrades` (imperative verb, no suffix)
 
 **Layer Naming:**
+
 - `DataLayer`, `SwarmLayer` (singular + Layer)
 - `AppLayers` (plural)
 
 ## Proposed Solution
 
 Standardize on one pattern:
+
 - Effects: camelCase without suffix (`analysisTask`, `statusReporting`, `websocket`, `fetchHistoricalTrades`)
 - Layers: singular + Layer suffix (`DataLayer`, `SwarmLayer`, `AppLayer`)
 

@@ -6,8 +6,5 @@ import { SwarmLayer, PrimaryModelLayer } from "../services/ai";
 // Compose all application layers
 export const AppLayers = Layer.provideMerge(
   PrimaryModelLayer,
-  Layer.provideMerge(
-    SwarmLayer,
-    Layer.provideMerge(DataLayer, FetchHttpClient.layer)
-  )
+  Layer.provideMerge(SwarmLayer, Layer.provideMerge(DataLayer, FetchHttpClient.layer)),
 );

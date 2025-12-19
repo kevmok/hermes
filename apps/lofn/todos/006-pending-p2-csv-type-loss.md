@@ -19,6 +19,7 @@ CSV format doesn't preserve type information. Boolean fields like `analyzed` may
 **Location:** `src/services/data/DataService.ts:83-121` (load operations)
 
 **Scenario:**
+
 ```
 Write: analyzed = true (boolean)
 CSV stores: "true" (string)
@@ -31,6 +32,7 @@ Filter fails: pl.col("analyzed").eq(pl.lit(false)) never matches
 ## Proposed Solutions
 
 ### Option A: Explicit Type Casting on Load (Recommended)
+
 Cast columns to correct types after reading CSV.
 
 **Effort:** Small (1-2 hours)
@@ -50,6 +52,7 @@ if (marketsExists) {
 ```
 
 ### Option B: Switch to Parquet Format
+
 Use Parquet instead of CSV for type preservation.
 
 **Effort:** Small (2-3 hours)

@@ -80,10 +80,7 @@ export const websocketEffect = Effect.gen(function* () {
   });
 });
 
-const processTradeMessage = (
-  data: TradeMessage,
-  marketsRef: Ref.Ref<pl.DataFrame>,
-) =>
+const processTradeMessage = (data: TradeMessage, marketsRef: Ref.Ref<pl.DataFrame>) =>
   Effect.gen(function* () {
     // Skip non-trade messages
     if (data.type !== "orders_matched" || !data.payload) return;

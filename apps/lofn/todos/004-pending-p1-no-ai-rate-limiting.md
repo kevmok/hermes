@@ -30,11 +30,13 @@ const results = yield* Effect.all(
 ```
 
 **Risk Analysis:**
+
 - **Financial:** With 3 AI providers, each market analyzed costs ~$0.01-0.05. At 100 markets/hour = $1-5/hour. Misconfiguration could 100x this.
 - **Availability:** OpenAI/Anthropic rate limits: ~60 requests/minute. Exceeding causes 429 errors and potential IP bans.
 - **Operational:** No backpressure mechanism. Failed requests not tracked.
 
 **Also Missing:**
+
 - Retry with exponential backoff
 - Request deduplication
 - Cost tracking/alerts
@@ -42,14 +44,17 @@ const results = yield* Effect.all(
 ## Proposed Solutions
 
 ### Option A: Bounded Concurrency + Rate Limiting (Recommended)
+
 Add concurrency limits and rate limiting using Effect primitives.
 
 **Pros:**
+
 - Simple to implement
 - Uses Effect.ts patterns
 - Prevents most issues
 
 **Cons:**
+
 - Reduces throughput
 - May need tuning
 
@@ -81,13 +86,16 @@ const rateLimiter = yield* RateLimiter.make({
 ```
 
 ### Option B: Token Bucket Rate Limiter
+
 Implement more sophisticated rate limiting per provider.
 
 **Pros:**
+
 - Allows bursts while preventing sustained overload
 - Per-provider limits
 
 **Cons:**
+
 - More complex
 - Requires tracking state per provider
 
@@ -95,13 +103,16 @@ Implement more sophisticated rate limiting per provider.
 **Risk:** Low
 
 ### Option C: Circuit Breaker Pattern
+
 Add circuit breakers that trip on repeated failures.
 
 **Pros:**
+
 - Prevents cascade failures
 - Auto-recovery
 
 **Cons:**
+
 - More complex setup
 - Requires monitoring
 
@@ -115,10 +126,12 @@ Add circuit breakers that trip on repeated failures.
 ## Technical Details
 
 **Affected Files:**
+
 - `src/services/ai/swarm.ts` - Add concurrency limits and retry logic
 - `src/config/constants.ts` - Add rate limit configuration
 
 **New Configuration:**
+
 ```typescript
 AI_MAX_CONCURRENT_REQUESTS: 3,
 AI_RATE_LIMIT_PER_SECOND: 10,
@@ -135,8 +148,8 @@ AI_MAX_RETRIES: 3,
 
 ## Work Log
 
-| Date | Action | Learnings |
-|------|--------|-----------|
+| Date       | Action                               | Learnings                                                    |
+| ---------- | ------------------------------------ | ------------------------------------------------------------ |
 | 2025-12-18 | Created finding from security review | Unbounded external API calls are financial/availability risk |
 
 ## Resources

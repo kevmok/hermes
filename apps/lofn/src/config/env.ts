@@ -27,8 +27,8 @@ export const validateEnv = Effect.gen(function* () {
   if (configured.length === 0) {
     yield* Effect.fail(
       new Error(
-        "No AI API keys configured. Set at least one of: OPENAI_KEY, ANTHROPIC_KEY, GEMINI_KEY"
-      )
+        "No AI API keys configured. Set at least one of: OPENAI_KEY, ANTHROPIC_KEY, GEMINI_KEY",
+      ),
     );
   }
 

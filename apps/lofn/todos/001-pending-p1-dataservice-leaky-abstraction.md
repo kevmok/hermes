@@ -32,12 +32,14 @@ export class DataService extends Context.Tag("DataService")<
 ```
 
 **Consumer Impact - 4 Direct Usages:**
+
 1. `src/services/analysis/AnalysisService.ts:124` - Uses Polars filter/sort APIs directly
 2. `src/services/analysis/StatusService.ts:6` - Accesses marketsRef directly
 3. `src/services/polymarket/WebSocketService.ts:41` - Passes marketsRef to domain function
 4. `src/services/polymarket/HistoricalService.ts:36` - Same pattern
 
 **Evidence of tight coupling:**
+
 ```typescript
 // AnalysisService.ts:136-137 - Direct Polars API usage
 const unanalyzed = markets
@@ -48,15 +50,18 @@ const unanalyzed = markets
 ## Proposed Solutions
 
 ### Option A: Repository Pattern (Recommended)
+
 Create a `MarketRepository` interface that abstracts storage operations.
 
 **Pros:**
+
 - Clean separation of concerns
 - Easy to swap implementations (CSV → PostgreSQL → SQLite)
 - Testable with mock implementations
 - Follows Effect.ts best practices
 
 **Cons:**
+
 - Requires updating all 4 consumer services
 - ~19-26 hours total migration effort
 
@@ -78,13 +83,16 @@ export class MarketRepositoryService extends Context.Tag("MarketRepository")<
 ```
 
 ### Option B: Facade Methods on DataService
+
 Add query methods to DataService while keeping refs internal.
 
 **Pros:**
+
 - Less invasive change
 - Can be done incrementally
 
 **Cons:**
+
 - Still couples consumers to DataService
 - Doesn't fully solve the abstraction problem
 
@@ -92,9 +100,11 @@ Add query methods to DataService while keeping refs internal.
 **Risk:** Low
 
 ### Option C: Convex Backend (Target Implementation)
+
 Migrate to Convex for real-time, type-safe database with serverless functions.
 
 **Pros:**
+
 - Real-time sync out of the box
 - Type-safe schema with validators
 - Serverless functions (queries/mutations)
@@ -102,6 +112,7 @@ Migrate to Convex for real-time, type-safe database with serverless functions.
 - Built-in indexing
 
 **Cons:**
+
 - External service dependency
 - Requires Convex account/deployment
 - Learning curve for Convex patterns
@@ -116,6 +127,7 @@ Migrate to Convex for real-time, type-safe database with serverless functions.
 ## Technical Details
 
 **Affected Files:**
+
 - `src/services/data/DataService.ts` - Complete interface redesign
 - `src/services/analysis/AnalysisService.ts` - Remove Polars imports
 - `src/services/analysis/StatusService.ts` - Use repository methods
@@ -124,6 +136,7 @@ Migrate to Convex for real-time, type-safe database with serverless functions.
 - `src/domain/market/filters.ts` - Move `updateMarketsRef` to repository
 
 **New Files to Create:**
+
 - `src/repositories/MarketRepository.ts` - Interface definition
 - `src/repositories/PolarsMarketRepository.ts` - Current CSV implementation (fallback)
 - `src/repositories/ConvexMarketRepository.ts` - Convex implementation
@@ -134,6 +147,7 @@ Migrate to Convex for real-time, type-safe database with serverless functions.
 - `convex/consensus.ts` - Consensus queries/mutations
 
 **Convex Schema Design:**
+
 ```typescript
 // convex/schema.ts
 import { defineSchema, defineTable } from "convex/server";
@@ -188,6 +202,7 @@ export default defineSchema({
 ```
 
 **ConvexHttpClient Usage:**
+
 ```typescript
 // src/repositories/ConvexMarketRepository.ts
 import { ConvexHttpClient } from "convex/browser";
@@ -214,8 +229,8 @@ await convex.mutation(api.markets.saveTrade, { ...tradeData });
 
 ## Work Log
 
-| Date | Action | Learnings |
-|------|--------|-----------|
+| Date       | Action                                   | Learnings                                          |
+| ---------- | ---------------------------------------- | -------------------------------------------------- |
 | 2025-12-18 | Created finding from architecture review | This is the primary blocker for database migration |
 
 ## Resources

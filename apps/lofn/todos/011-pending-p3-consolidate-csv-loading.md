@@ -17,6 +17,7 @@ The `loadData` function has three nearly identical blocks for loading CSV files 
 **Location:** `src/services/data/DataService.ts:76-122`
 
 Same pattern repeated 3 times:
+
 ```typescript
 const marketsPath = `${CONFIG.DATA_FOLDER}/markets.csv`;
 const marketsExists = yield* Effect.tryPromise(() =>

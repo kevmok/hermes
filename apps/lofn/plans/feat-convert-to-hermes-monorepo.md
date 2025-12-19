@@ -7,6 +7,7 @@ Convert the existing `lofn` project into a Bun workspaces monorepo called `herme
 ## Problem Statement / Motivation
 
 The current project structure is a single package. As the project grows, we need:
+
 - **Multi-app support**: Ability to add new apps (dashboard, API, CLI) that share code
 - **Code sharing**: Extract common domain logic, AI services, and utilities
 - **Better organization**: Clear separation between apps and shared packages
@@ -15,6 +16,7 @@ The current project structure is a single package. As the project grows, we need
 ## Proposed Solution
 
 Create a Bun workspaces monorepo with:
+
 - Root `hermes/` directory with workspace configuration
 - `apps/lofn/` - Current application (deployable)
 - `packages/` - Future shared libraries (prepared but empty initially)
@@ -59,6 +61,7 @@ hermes/                                 # Root monorepo (rename current dir)
 ### Phase 1: Create Monorepo Root Structure
 
 **1.1 Rename project directory**
+
 ```bash
 # From parent directory
 mv lofn hermes
@@ -130,6 +133,7 @@ exclude = [
 ### Phase 2: Move App to apps/lofn
 
 **2.1 Create apps directory and move code**
+
 ```bash
 mkdir -p apps
 git mv src apps/lofn/src
@@ -189,6 +193,7 @@ git mv .env.example apps/lofn/ 2>/dev/null || true
 **3.1 Update root .gitignore**
 
 Add to existing .gitignore:
+
 ```gitignore
 # Workspace-specific
 apps/*/node_modules
@@ -206,7 +211,8 @@ packages/*/dist
 **3.2 Update CLAUDE.md for monorepo**
 
 Add monorepo-specific instructions:
-```markdown
+
+````markdown
 ## Monorepo Structure
 
 This is a Bun workspaces monorepo called "hermes".
@@ -223,11 +229,12 @@ bun install              # Installs all workspaces
 
 # Add dependency to specific workspace
 bun add package --cwd apps/lofn
-```
+````
 
 ### Workspace Protocol
 
 When referencing internal packages, use `workspace:*`:
+
 ```json
 {
   "dependencies": {
@@ -235,7 +242,8 @@ When referencing internal packages, use `workspace:*`:
   }
 }
 ```
-```
+
+````
 
 ### Phase 4: Cleanup and Verification
 
@@ -243,9 +251,10 @@ When referencing internal packages, use `workspace:*`:
 ```bash
 mkdir -p packages
 touch packages/.gitkeep
-```
+````
 
 **4.2 Remove old root files**
+
 ```bash
 # Old package.json and tsconfig.json are replaced by new ones
 rm -f package.json tsconfig.json
@@ -254,6 +263,7 @@ rm -rf node_modules bun.lock
 ```
 
 **4.3 Install and verify**
+
 ```bash
 bun install
 bun run dev
@@ -262,6 +272,7 @@ bun run dev
 ## Acceptance Criteria
 
 ### Functional Requirements
+
 - [ ] Root `hermes/` directory with workspace configuration
 - [ ] `apps/lofn/` contains all application code
 - [ ] `packages/` directory exists for future shared code
@@ -273,6 +284,7 @@ bun run dev
 - [ ] All existing functionality preserved
 
 ### Non-Functional Requirements
+
 - [ ] Git history preserved for moved files (`git log --follow` works)
 - [ ] TypeScript type checking passes (`bun run check`)
 - [ ] No broken imports or module resolution errors
@@ -280,6 +292,7 @@ bun run dev
 - [ ] CLAUDE.md updated with monorepo commands
 
 ### Quality Gates
+
 - [ ] `bun install` completes without errors
 - [ ] `bun --cwd apps/lofn run index.ts` starts the app
 - [ ] App runs for 60+ seconds without errors (tests scheduled tasks)
@@ -300,17 +313,18 @@ bun run dev
 
 ## Risk Analysis & Mitigation
 
-| Risk | Likelihood | Impact | Mitigation |
-|------|------------|--------|------------|
-| Data path resolution breaks | Medium | Critical | Test data load/save immediately after migration |
-| .env not found | Medium | Critical | Verify Bun loads .env from workspace directory |
-| Import paths break | Low | High | Internal imports use relative paths, no change needed |
-| Git history lost | Low | Medium | Use `git mv` for all moves |
-| nodejs-polars native bindings fail | Low | High | Test early, verify from nested workspace |
+| Risk                               | Likelihood | Impact   | Mitigation                                            |
+| ---------------------------------- | ---------- | -------- | ----------------------------------------------------- |
+| Data path resolution breaks        | Medium     | Critical | Test data load/save immediately after migration       |
+| .env not found                     | Medium     | Critical | Verify Bun loads .env from workspace directory        |
+| Import paths break                 | Low        | High     | Internal imports use relative paths, no change needed |
+| Git history lost                   | Low        | Medium   | Use `git mv` for all moves                            |
+| nodejs-polars native bindings fail | Low        | High     | Test early, verify from nested workspace              |
 
 ## Documentation Plan
 
 Update these files post-migration:
+
 - `README.md` - Monorepo overview and getting started
 - `CLAUDE.md` - Development commands for monorepo
 - `apps/lofn/README.md` - App-specific documentation
@@ -325,6 +339,7 @@ Once the monorepo is established, consider extracting:
 4. **@hermes/polymarket** - WebSocket and Historical services
 
 These extractions enable:
+
 - Reusing AI swarm across multiple apps
 - Sharing domain types between backend and future frontend
 - Testing services in isolation
@@ -332,16 +347,19 @@ These extractions enable:
 ## Implementation Checklist
 
 ### Pre-Migration
+
 - [ ] Backup data directory
 - [ ] Note current working state
 - [ ] Create migration branch
 
 ### Phase 1: Root Structure
+
 - [ ] Create root package.json
 - [ ] Create bunfig.toml
 - [ ] Create tsconfig.base.json
 
 ### Phase 2: Move App
+
 - [ ] Create apps/ directory
 - [ ] git mv src, index.ts, data, plans, todos, agent-rules
 - [ ] git mv .env files
@@ -349,11 +367,13 @@ These extractions enable:
 - [ ] Create apps/lofn/tsconfig.json
 
 ### Phase 3: Configuration
+
 - [ ] Update .gitignore
 - [ ] Update CLAUDE.md
 - [ ] Update README.md
 
 ### Phase 4: Verification
+
 - [ ] Create packages/.gitkeep
 - [ ] Remove old root config files
 - [ ] Run bun install
@@ -363,6 +383,7 @@ These extractions enable:
 - [ ] Test for 60+ seconds
 
 ### Post-Migration
+
 - [ ] Commit with descriptive message
 - [ ] Push and create PR
 - [ ] Document any issues found
@@ -370,15 +391,18 @@ These extractions enable:
 ## References & Research
 
 ### Internal References
+
 - Current structure: `src/main.ts:16-67` - Application entry and scheduled tasks
 - Data loading: `src/services/data/DataService.ts:73-128`
 - Config loading: `src/config/constants.ts`
 
 ### External References
+
 - [Bun Workspaces Documentation](https://bun.sh/docs/install/workspaces)
 - [Bun TypeScript Guide](https://bun.sh/docs/typescript)
 - [Effect.ts Documentation](https://effect.website)
 
 ### Related Work
+
 - Completed P1 fixes: #002, #003, #004, #005
 - Pending: #001 (DataService repository abstraction - path to Convex)

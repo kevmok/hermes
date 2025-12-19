@@ -7,6 +7,7 @@ Refactor the Python [polymarket_agent.py](https://github.com/moondevonyt/moon-de
 ## Problem Statement
 
 The existing TypeScript implementation at `/Users/kevin/code/src/github/kevmok/lofn` has:
+
 - **Critical bugs** preventing compilation/execution
 - **Incorrect API usage** for Effect.ts and nodejs-polars
 - **Anti-patterns** (Effect.runPromise inside WebSocket callbacks)
@@ -88,6 +89,7 @@ const DeepSeekClient = OpenAiClient.make({...});
 ```
 
 **Also line 40**:
+
 ```typescript
 // BEFORE
 const XAIClient = OpenAIClient.make({...});
@@ -631,34 +633,40 @@ export const validateEnv = Effect.gen(function* () {
 ## Implementation Phases
 
 ### Phase 1: Foundation (Critical Bug Fixes)
+
 - [ ] Fix models.ts import case mismatch at line 31 and 40
 - [ ] Fix analysis.ts import path from `./prompts` to `./prompt`
 - [ ] Add missing imports to analysis.ts (Duration, Schema, IndividualPrediction)
 - [ ] Add CONFIG import to main.ts
 
 ### Phase 2: Polars API Corrections
+
 - [ ] Fix data.ts:28-29 Schema.fields usage (use correct Polars API)
 - [ ] Fix websocket.ts:62-73 DataFrame operations (use groupBy instead of upsert)
 - [ ] Verify nodejs-polars 0.23.4 API compatibility
 
 ### Phase 3: Effect Pattern Fixes
+
 - [ ] Replace Effect.runPromise in WebSocket callback with Queue pattern
 - [ ] Add proper error boundaries with Effect.catchAll
 - [ ] Implement Effect.async for WebSocket connection
 
 ### Phase 4: Missing Features
+
 - [ ] Add status reporting service (30-second interval)
 - [ ] Implement graceful shutdown (SIGINT/SIGTERM handlers)
 - [ ] Add atomic file writes (temp + rename pattern)
 - [ ] Add environment variable validation on startup
 
 ### Phase 5: Analysis Improvements
+
 - [ ] Fix "analyzed" flag tracking
 - [ ] Implement consensus JSON parsing with Schema
 - [ ] Preserve first_seen timestamp on updates
 - [ ] Generate proper run_id for ConsensusPick
 
 ### Phase 6: Testing & Validation
+
 - [ ] Test fresh start (no CSV files)
 - [ ] Test WebSocket reconnection
 - [ ] Test graceful shutdown data persistence
@@ -678,6 +686,7 @@ export const validateEnv = Effect.gen(function* () {
 ## Dependencies & Prerequisites
 
 **Required Packages** (already in package.json):
+
 - effect@^3.19.12
 - @effect/ai@^0.32.1
 - @effect/ai-anthropic@^0.22.0
@@ -686,6 +695,7 @@ export const validateEnv = Effect.gen(function* () {
 - nodejs-polars@^0.23.4
 
 **Environment Variables** (at least one required):
+
 - ANTHROPIC_KEY (recommended)
 - OPENAI_KEY
 - GEMINI_KEY
@@ -695,22 +705,24 @@ export const validateEnv = Effect.gen(function* () {
 
 ## Risk Analysis & Mitigation
 
-| Risk | Mitigation |
-|------|------------|
-| Polymarket WebSocket API changes | Add payload validation with Schema |
-| AI API rate limits | Implement exponential backoff |
-| Large DataFrames (1000+ markets) | Add pagination, periodic cleanup |
-| Network failures during save | Atomic writes with temp files |
-| Memory leaks from Queue | Add bounded queue with backpressure |
+| Risk                             | Mitigation                          |
+| -------------------------------- | ----------------------------------- |
+| Polymarket WebSocket API changes | Add payload validation with Schema  |
+| AI API rate limits               | Implement exponential backoff       |
+| Large DataFrames (1000+ markets) | Add pagination, periodic cleanup    |
+| Network failures during save     | Atomic writes with temp files       |
+| Memory leaks from Queue          | Add bounded queue with backpressure |
 
 ## References
 
 ### Internal References
+
 - `/Users/kevin/code/src/github/kevmok/lofn/src/config.ts:1-38` - Configuration
 - `/Users/kevin/code/src/github/kevmok/lofn/src/types.ts:1-38` - Schema types
 - `/Users/kevin/code/src/github/kevmok/lofn/agent-rules/effect.md` - Effect docs location
 
 ### External References
+
 - [Effect.ts Documentation](https://effect.website/docs)
 - [Effect/AI Documentation](https://effect.website/docs/ai/introduction/)
 - [nodejs-polars Documentation](https://pola-rs.github.io/nodejs-polars)

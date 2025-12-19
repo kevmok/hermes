@@ -82,30 +82,32 @@ mkdir -p src/layers
 
 ### Phase 2: Move & Rename Files
 
-| Old Location | New Location |
-|-------------|--------------|
-| `src/config.ts` | `src/config/constants.ts` |
-| `src/env.ts` | `src/config/env.ts` |
-| `src/types.ts` | Split → `src/domain/market/types.ts` + `src/domain/prediction/types.ts` |
-| `src/filters.ts` | `src/domain/market/filters.ts` |
-| `src/models.ts` | `src/services/ai/models.ts` |
-| `src/swarm.ts` | `src/services/ai/swarm.ts` |
-| `src/prompt.ts` | `src/services/ai/prompts.ts` |
-| `src/data.ts` | `src/services/data/DataService.ts` |
-| `src/websocket.ts` | `src/services/polymarket/WebSocketService.ts` |
-| `src/historical.ts` | `src/services/polymarket/HistoricalService.ts` |
-| `src/analysis.ts` | `src/services/analysis/AnalysisService.ts` |
-| `src/status.ts` | `src/services/analysis/StatusService.ts` |
+| Old Location        | New Location                                                            |
+| ------------------- | ----------------------------------------------------------------------- |
+| `src/config.ts`     | `src/config/constants.ts`                                               |
+| `src/env.ts`        | `src/config/env.ts`                                                     |
+| `src/types.ts`      | Split → `src/domain/market/types.ts` + `src/domain/prediction/types.ts` |
+| `src/filters.ts`    | `src/domain/market/filters.ts`                                          |
+| `src/models.ts`     | `src/services/ai/models.ts`                                             |
+| `src/swarm.ts`      | `src/services/ai/swarm.ts`                                              |
+| `src/prompt.ts`     | `src/services/ai/prompts.ts`                                            |
+| `src/data.ts`       | `src/services/data/DataService.ts`                                      |
+| `src/websocket.ts`  | `src/services/polymarket/WebSocketService.ts`                           |
+| `src/historical.ts` | `src/services/polymarket/HistoricalService.ts`                          |
+| `src/analysis.ts`   | `src/services/analysis/AnalysisService.ts`                              |
+| `src/status.ts`     | `src/services/analysis/StatusService.ts`                                |
 
 ### Phase 3: Create Index Files (Re-exports)
 
 **src/config/index.ts:**
+
 ```typescript
 export * from "./constants";
 export * from "./env";
 ```
 
 **src/services/ai/index.ts:**
+
 ```typescript
 export * from "./models";
 export * from "./swarm";
@@ -119,6 +121,7 @@ Update all import paths in moved files to reflect new locations.
 ### Phase 5: Create AppLayers.ts
 
 **src/layers/AppLayers.ts:**
+
 ```typescript
 import { Layer } from "effect";
 import { FetchHttpClient } from "@effect/platform";

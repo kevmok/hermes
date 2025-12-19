@@ -17,6 +17,7 @@ dependencies: []
 ## Findings
 
 **Unused Schema Classes:**
+
 - `src/domain/market/types.ts:3-14` - `MarketRow` class (never used)
 - `src/domain/prediction/types.ts:3-14` - `IndividualPrediction` class (never used)
 - `src/domain/prediction/types.ts:16-29` - `ConsensusPick` class (never used)
@@ -24,18 +25,21 @@ dependencies: []
 **Evidence:** Grep for class names shows only definitions, no usages.
 
 **Also Unused:**
+
 - `src/config/env.ts:13-37` - `validateEnv` function never called
 - `src/services/ai/prompts.ts:8` - `CONSENSUS_AI_PROMPT` never used
 
 ## Proposed Solutions
 
 ### Option A: Delete Unused Code (Recommended)
+
 Remove Schema.Class definitions, keep only plain interfaces.
 
 **Effort:** Small (30 minutes)
 **Risk:** Very Low
 
 ### Option B: Use Schemas for Validation
+
 Actually use the schemas for runtime validation.
 
 **Effort:** Medium (4-6 hours)

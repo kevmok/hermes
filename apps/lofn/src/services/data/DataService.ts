@@ -70,14 +70,15 @@ const make = Effect.gen(function* () {
 
   const loadData = Effect.gen(function* () {
     // Create data folder if it doesn't exist
-    yield* Effect.tryPromise(() =>
-      fs.mkdir(CONFIG.DATA_FOLDER, { recursive: true })
-    );
+    yield* Effect.tryPromise(() => fs.mkdir(CONFIG.DATA_FOLDER, { recursive: true }));
 
     // Load markets.csv if exists
     const marketsPath = `${CONFIG.DATA_FOLDER}/markets.csv`;
     const marketsExists = yield* Effect.tryPromise(() =>
-      fs.access(marketsPath).then(() => true).catch(() => false)
+      fs
+        .access(marketsPath)
+        .then(() => true)
+        .catch(() => false),
     );
 
     if (marketsExists) {
@@ -86,14 +87,17 @@ const make = Effect.gen(function* () {
         return Ref.set(marketsRef, df);
       }).pipe(
         Effect.flatMap((effect) => effect),
-        Effect.catchAll(() => Effect.void)
+        Effect.catchAll(() => Effect.void),
       );
     }
 
     // Load predictions.csv if exists
     const predictionsPath = `${CONFIG.DATA_FOLDER}/predictions.csv`;
     const predictionsExists = yield* Effect.tryPromise(() =>
-      fs.access(predictionsPath).then(() => true).catch(() => false)
+      fs
+        .access(predictionsPath)
+        .then(() => true)
+        .catch(() => false),
     );
 
     if (predictionsExists) {
@@ -102,14 +106,17 @@ const make = Effect.gen(function* () {
         return Ref.set(predictionsRef, df);
       }).pipe(
         Effect.flatMap((effect) => effect),
-        Effect.catchAll(() => Effect.void)
+        Effect.catchAll(() => Effect.void),
       );
     }
 
     // Load consensus_picks.csv if exists
     const consensusPath = `${CONFIG.DATA_FOLDER}/consensus_picks.csv`;
     const consensusExists = yield* Effect.tryPromise(() =>
-      fs.access(consensusPath).then(() => true).catch(() => false)
+      fs
+        .access(consensusPath)
+        .then(() => true)
+        .catch(() => false),
     );
 
     if (consensusExists) {
@@ -118,7 +125,7 @@ const make = Effect.gen(function* () {
         return Ref.set(consensusRef, df);
       }).pipe(
         Effect.flatMap((effect) => effect),
-        Effect.catchAll(() => Effect.void)
+        Effect.catchAll(() => Effect.void),
       );
     }
 
@@ -133,9 +140,7 @@ const make = Effect.gen(function* () {
     ]);
 
     // Ensure data folder exists
-    yield* Effect.tryPromise(() =>
-      fs.mkdir(CONFIG.DATA_FOLDER, { recursive: true })
-    );
+    yield* Effect.tryPromise(() => fs.mkdir(CONFIG.DATA_FOLDER, { recursive: true }));
 
     // Atomic write pattern: write to temp, then rename
     const writeAtomic = (path: string, df: pl.DataFrame) =>
@@ -155,7 +160,7 @@ const make = Effect.gen(function* () {
         writeAtomic(`${CONFIG.DATA_FOLDER}/predictions.csv`, predictions),
         writeAtomic(`${CONFIG.DATA_FOLDER}/consensus_picks.csv`, consensus),
       ],
-      { concurrency: "unbounded" }
+      { concurrency: "unbounded" },
     );
 
     console.log("Data saved successfully");
@@ -168,13 +173,13 @@ const make = Effect.gen(function* () {
     const MARKETS_RETENTION_DAYS = 7;
 
     const predictionsCutoff = new Date(
-      Date.now() - PREDICTIONS_RETENTION_DAYS * 24 * 60 * 60 * 1000
+      Date.now() - PREDICTIONS_RETENTION_DAYS * 24 * 60 * 60 * 1000,
     ).toISOString();
     const consensusCutoff = new Date(
-      Date.now() - CONSENSUS_RETENTION_DAYS * 24 * 60 * 60 * 1000
+      Date.now() - CONSENSUS_RETENTION_DAYS * 24 * 60 * 60 * 1000,
     ).toISOString();
     const marketsCutoff = new Date(
-      Date.now() - MARKETS_RETENTION_DAYS * 24 * 60 * 60 * 1000
+      Date.now() - MARKETS_RETENTION_DAYS * 24 * 60 * 60 * 1000,
     ).toISOString();
 
     // Prune predictions older than retention period
@@ -193,9 +198,10 @@ const make = Effect.gen(function* () {
     yield* Ref.update(marketsRef, (df) => {
       if (df.height === 0) return df;
       return df.filter(
-        pl.col("analyzed").eq(pl.lit(false)).or(
-          pl.col("last_trade_timestamp").gt(pl.lit(marketsCutoff))
-        )
+        pl
+          .col("analyzed")
+          .eq(pl.lit(false))
+          .or(pl.col("last_trade_timestamp").gt(pl.lit(marketsCutoff))),
       );
     });
 

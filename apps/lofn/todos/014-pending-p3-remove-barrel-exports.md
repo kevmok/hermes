@@ -15,6 +15,7 @@ Single-line barrel exports add cognitive overhead and file navigation complexity
 ## Findings
 
 **Barrel files with minimal exports:**
+
 - `src/config/index.ts` - re-exports 2 files
 - `src/services/data/index.ts` - re-exports 1 file
 - `src/domain/market/index.ts` - re-exports 2 files
