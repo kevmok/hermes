@@ -1,10 +1,30 @@
+import { v } from 'convex/values';
 import { internalAction, internalMutation } from './_generated/server';
 import { internal } from './_generated/api';
+import type { Id } from './_generated/dataModel';
+
+interface MarketForAnalysis {
+  _id: Id<'markets'>;
+  polymarketId: string;
+  title: string;
+  eventSlug: string;
+  currentYesPrice: number;
+  currentNoPrice: number;
+  volume24h: number;
+}
 
 export const runAutomaticAnalysis = internalAction({
-  handler: async (ctx) => {
+  args: {},
+  returns: v.object({
+    analyzed: v.number(),
+    total: v.optional(v.number()),
+    errors: v.optional(v.number()),
+  }),
+  handler: async (
+    ctx,
+  ): Promise<{ analyzed: number; total?: number; errors?: number }> => {
     // Get top markets by activity that haven't been analyzed recently
-    const markets = await ctx.runQuery(
+    const markets: MarketForAnalysis[] = await ctx.runQuery(
       internal.markets.getMarketsNeedingAnalysis,
       {
         limit: 10,
@@ -18,9 +38,12 @@ export const runAutomaticAnalysis = internalAction({
     }
 
     // Create batch analysis run
-    const runId = await ctx.runMutation(internal.analysis.createAnalysisRun, {
-      triggerType: 'scheduled',
-    });
+    const runId: Id<'analysisRuns'> = await ctx.runMutation(
+      internal.analysis.createAnalysisRun,
+      {
+        triggerType: 'scheduled',
+      },
+    );
 
     let analyzed = 0;
     const errors: string[] = [];
@@ -53,7 +76,15 @@ export const runAutomaticAnalysis = internalAction({
 });
 
 export const cleanupOldData = internalMutation({
-  handler: async (ctx) => {
+  args: {},
+  returns: v.object({
+    snapshots: v.number(),
+    predictions: v.number(),
+    requests: v.number(),
+  }),
+  handler: async (
+    ctx,
+  ): Promise<{ snapshots: number; predictions: number; requests: number }> => {
     const snapshotCutoff = Date.now() - 7 * 24 * 60 * 60 * 1000; // 7 days
     const predictionCutoff = Date.now() - 30 * 24 * 60 * 60 * 1000; // 30 days
 

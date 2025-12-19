@@ -6,6 +6,7 @@ import {
   query,
 } from './_generated/server';
 import { api, internal } from './_generated/api';
+import type { Id } from './_generated/dataModel';
 
 // ============ INTERNAL MUTATIONS ============
 
@@ -253,11 +254,21 @@ export const executeMarketAnalysis = internalAction({
     requestId: v.optional(v.id('analysisRequests')),
     marketId: v.id('markets'),
   },
-  handler: async (ctx, args) => {
+  returns: v.object({
+    success: v.boolean(),
+    insightId: v.id('insights'),
+  }),
+  handler: async (
+    ctx,
+    args,
+  ): Promise<{ success: boolean; insightId: Id<'insights'> }> => {
     // Create analysis run
-    const runId = await ctx.runMutation(internal.analysis.createAnalysisRun, {
-      triggerType: args.requestId ? 'on_demand' : 'system',
-    });
+    const runId: Id<'analysisRuns'> = await ctx.runMutation(
+      internal.analysis.createAnalysisRun,
+      {
+        triggerType: args.requestId ? 'on_demand' : 'system',
+      },
+    );
 
     try {
       // Update status to running
@@ -301,16 +312,19 @@ export const executeMarketAnalysis = internalAction({
       const consensus = calculateConsensus(modelResults);
 
       // Save insight
-      const insightId = await ctx.runMutation(internal.analysis.saveInsight, {
-        analysisRunId: runId,
-        marketId: args.marketId,
-        consensusDecision: consensus.decision,
-        consensusPercentage: consensus.percentage,
-        totalModels: modelResults.length,
-        agreeingModels: consensus.agreeingCount,
-        aggregatedReasoning: consensus.reasoning,
-        priceAtAnalysis: market.currentYesPrice,
-      });
+      const insightId: Id<'insights'> = await ctx.runMutation(
+        internal.analysis.saveInsight,
+        {
+          analysisRunId: runId,
+          marketId: args.marketId,
+          consensusDecision: consensus.decision,
+          consensusPercentage: consensus.percentage,
+          totalModels: modelResults.length,
+          agreeingModels: consensus.agreeingCount,
+          aggregatedReasoning: consensus.reasoning,
+          priceAtAnalysis: market.currentYesPrice,
+        },
+      );
 
       // Update analysis run as completed
       await ctx.runMutation(internal.analysis.updateAnalysisRun, {
