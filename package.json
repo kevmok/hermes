@@ -23,6 +23,7 @@
     "clean": "rm -rf apps/*/node_modules packages/*/node_modules node_modules bun.lock",
     "format": "oxfmt",
     "format:check": "oxfmt --check",
+    "lint": "bunx oxlint@latest",
     "prepare": "husky"
   },
   "devDependencies": {

@@ -1,14 +1,14 @@
-import { HttpClient, HttpClientRequest } from "@effect/platform";
-import { Effect, Schema } from "effect";
-import { CONFIG } from "../../config";
-import { DataService } from "../data";
+import { HttpClient, HttpClientRequest } from '@effect/platform';
+import { Effect, Schema } from 'effect';
+import { CONFIG } from '../../config';
+import { DataService } from '../data';
 import {
   buildMarketRow,
   shouldIncludeTrade,
   type TradeData,
   updateMarketsRef,
   HistoricalTradesResponseSchema,
-} from "../../domain";
+} from '../../domain';
 
 export const fetchHistoricalTrades = Effect.gen(function* () {
   const { marketsRef } = yield* DataService;
@@ -27,7 +27,7 @@ export const fetchHistoricalTrades = Effect.gen(function* () {
   const response = yield* client.execute(HttpClientRequest.get(url)).pipe(
     Effect.flatMap((res) => res.json),
     Effect.catchAll((error) => {
-      console.error("Failed to fetch historical trades:", error);
+      console.error('Failed to fetch historical trades:', error);
       return Effect.succeed([]);
     }),
   );
@@ -36,8 +36,8 @@ export const fetchHistoricalTrades = Effect.gen(function* () {
   const parseResult = Schema.decodeUnknownEither(
     HistoricalTradesResponseSchema,
   )(response);
-  if (parseResult._tag === "Left") {
-    console.error("Invalid historical trades response format");
+  if (parseResult._tag === 'Left') {
+    console.error('Invalid historical trades response format');
     return;
   }
   const trades = parseResult.right;
@@ -55,7 +55,7 @@ export const fetchHistoricalTrades = Effect.gen(function* () {
 
     const tradeData: TradeData = {
       marketId: trade.conditionId,
-      eventSlug: trade.eventSlug ?? "",
+      eventSlug: trade.eventSlug ?? '',
       title: trade.title ?? `Market ${trade.conditionId}`,
       outcome: trade.outcome.toUpperCase(),
       price: trade.price,
