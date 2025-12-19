@@ -1,2 +1,2 @@
-export * from "./AnalysisService";
-export * from "./StatusService";
+export * from './AnalysisService';
+export * from './StatusService';

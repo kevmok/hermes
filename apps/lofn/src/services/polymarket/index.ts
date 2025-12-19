@@ -1,2 +1,2 @@
-export * from "./WebSocketService";
-export * from "./HistoricalService";
+export * from './WebSocketService';
+export * from './HistoricalService';

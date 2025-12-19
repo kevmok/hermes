@@ -1,7 +1,7 @@
-import { Effect, Queue, Schema, type Ref } from "effect";
-import type pl from "nodejs-polars";
-import { CONFIG } from "../../config";
-import { DataService } from "../data";
+import { Effect, Queue, Schema, type Ref } from 'effect';
+import type pl from 'nodejs-polars';
+import { CONFIG } from '../../config';
+import { DataService } from '../data';
 import {
   buildMarketRow,
   shouldIncludeTrade,
@@ -9,7 +9,7 @@ import {
   updateMarketsRef,
   TradeMessageSchema,
   type TradeMessage,
-} from "../../domain";
+} from '../../domain';
 
 export const websocketEffect = Effect.gen(function* () {
   const { marketsRef } = yield* DataService;
@@ -30,48 +30,48 @@ export const websocketEffect = Effect.gen(function* () {
   // WebSocket connection with reconnect logic
   yield* Effect.async<void, never>(() => {
     const connect = () => {
-      console.log("Connecting to Polymarket WebSocket...");
+      console.log('Connecting to Polymarket WebSocket...');
       const ws = new WebSocket(CONFIG.WEBSOCKET_URL);
 
-      ws.addEventListener("open", () => {
+      ws.addEventListener('open', () => {
         ws.send(
           JSON.stringify({
-            action: "subscribe",
+            action: 'subscribe',
             subscriptions: [
               {
-                topic: "activity",
-                type: "orders_matched",
+                topic: 'activity',
+                type: 'orders_matched',
               },
             ],
           }),
         );
-        console.log("WebSocket connected & subscribed");
+        console.log('WebSocket connected & subscribed');
       });
 
-      ws.addEventListener("message", (event) => {
+      ws.addEventListener('message', (event) => {
         try {
           if (!event.data) return;
           const parsed = JSON.parse(event.data);
           // Validate message against schema
           const result = Schema.decodeUnknownEither(TradeMessageSchema)(parsed);
-          if (result._tag === "Left") {
+          if (result._tag === 'Left') {
             // Skip invalid messages silently (many are heartbeats/subscriptions)
             return;
           }
           // Non-blocking offer to queue
           Effect.runSync(Queue.offer(messageQueue, result.right));
         } catch (e) {
-          console.error("Failed to parse message:", e);
+          console.error('Failed to parse message:', e);
         }
       });
 
-      ws.addEventListener("close", () => {
-        console.log("WebSocket closed, reconnecting in 3s...");
+      ws.addEventListener('close', () => {
+        console.log('WebSocket closed, reconnecting in 3s...');
         setTimeout(connect, 3000);
       });
 
-      ws.addEventListener("error", (e) => {
-        console.error("WebSocket error:", e);
+      ws.addEventListener('error', (e) => {
+        console.error('WebSocket error:', e);
       });
     };
 
@@ -80,10 +80,13 @@ export const websocketEffect = Effect.gen(function* () {
   });
 });
 
-const processTradeMessage = (data: TradeMessage, marketsRef: Ref.Ref<pl.DataFrame>) =>
+const processTradeMessage = (
+  data: TradeMessage,
+  marketsRef: Ref.Ref<pl.DataFrame>,
+) =>
   Effect.gen(function* () {
     // Skip non-trade messages
-    if (data.type !== "orders_matched" || !data.payload) return;
+    if (data.type !== 'orders_matched' || !data.payload) return;
 
     const t = data.payload;
 
@@ -94,7 +97,7 @@ const processTradeMessage = (data: TradeMessage, marketsRef: Ref.Ref<pl.DataFram
 
     const tradeData: TradeData = {
       marketId: t.conditionId,
-      eventSlug: t.eventSlug ?? "",
+      eventSlug: t.eventSlug ?? '',
       title: t.title,
       outcome: t.outcome.toUpperCase(),
       price: t.price,

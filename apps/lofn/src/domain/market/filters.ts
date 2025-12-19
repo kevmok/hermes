@@ -1,7 +1,11 @@
-import { Effect, Ref } from "effect";
-import pl from "nodejs-polars";
-import { CONFIG, IGNORE_CRYPTO_KEYWORDS, IGNORE_SPORTS_KEYWORDS } from "../../config";
-import type { TradeData, MarketRowData } from "./types";
+import { Effect, Ref } from 'effect';
+import pl from 'nodejs-polars';
+import {
+  CONFIG,
+  IGNORE_CRYPTO_KEYWORDS,
+  IGNORE_SPORTS_KEYWORDS,
+} from '../../config';
+import type { TradeData, MarketRowData } from './types';
 
 // Check if a trade should be included based on filters
 export const shouldIncludeTrade = (trade: TradeData): boolean => {
@@ -9,7 +13,10 @@ export const shouldIncludeTrade = (trade: TradeData): boolean => {
   if (trade.sizeUsd < CONFIG.MIN_TRADE_SIZE_USD) return false;
 
   // Filter by price
-  if (trade.price <= CONFIG.IGNORE_PRICE_LOW || trade.price >= CONFIG.IGNORE_PRICE_HIGH)
+  if (
+    trade.price <= CONFIG.IGNORE_PRICE_LOW ||
+    trade.price >= CONFIG.IGNORE_PRICE_HIGH
+  )
     return false;
 
   // Filter by keywords
@@ -42,34 +49,37 @@ export const buildMarketRow = (trade: TradeData): MarketRowData => {
 };
 
 // Update markets DataFrame with a new row (Ref.update is atomic via compare-and-swap)
-export const updateMarketsRef = (marketsRef: Ref.Ref<pl.DataFrame>, row: MarketRowData) =>
+export const updateMarketsRef = (
+  marketsRef: Ref.Ref<pl.DataFrame>,
+  row: MarketRowData,
+) =>
   Ref.update(marketsRef, (df) => {
-    const existingMarkets = df.getColumn("market_id").toArray() as string[];
+    const existingMarkets = df.getColumn('market_id').toArray() as string[];
     const marketExists = existingMarkets.includes(row.market_id);
 
     if (marketExists) {
       // Update existing market - keep first_seen, update last_trade_timestamp
       return df.withColumns(
         pl
-          .when(pl.col("market_id").eq(pl.lit(row.market_id)))
+          .when(pl.col('market_id').eq(pl.lit(row.market_id)))
           .then(pl.lit(row.price))
-          .otherwise(pl.col("price"))
-          .alias("price"),
+          .otherwise(pl.col('price'))
+          .alias('price'),
         pl
-          .when(pl.col("market_id").eq(pl.lit(row.market_id)))
+          .when(pl.col('market_id').eq(pl.lit(row.market_id)))
           .then(pl.lit(row.size_usd))
-          .otherwise(pl.col("size_usd"))
-          .alias("size_usd"),
+          .otherwise(pl.col('size_usd'))
+          .alias('size_usd'),
         pl
-          .when(pl.col("market_id").eq(pl.lit(row.market_id)))
+          .when(pl.col('market_id').eq(pl.lit(row.market_id)))
           .then(pl.lit(row.last_trade_timestamp))
-          .otherwise(pl.col("last_trade_timestamp"))
-          .alias("last_trade_timestamp"),
+          .otherwise(pl.col('last_trade_timestamp'))
+          .alias('last_trade_timestamp'),
         pl
-          .when(pl.col("market_id").eq(pl.lit(row.market_id)))
+          .when(pl.col('market_id').eq(pl.lit(row.market_id)))
           .then(pl.lit(row.timestamp))
-          .otherwise(pl.col("timestamp"))
-          .alias("timestamp"),
+          .otherwise(pl.col('timestamp'))
+          .alias('timestamp'),
       );
     } else {
       // Add new market

@@ -1,7 +1,7 @@
-import * as fs from "node:fs/promises";
-import { Context, Effect, Layer, Ref } from "effect";
-import pl from "nodejs-polars";
-import { CONFIG } from "../../config";
+import * as fs from 'node:fs/promises';
+import { Context, Effect, Layer, Ref } from 'effect';
+import pl from 'nodejs-polars';
+import { CONFIG } from '../../config';
 
 // Create an empty DataFrame with expected schema
 const createEmptyMarketsDF = () =>
@@ -50,7 +50,7 @@ const createEmptyConsensusDF = () =>
     reasoning: [] as string[],
   });
 
-export class DataService extends Context.Tag("DataService")<
+export class DataService extends Context.Tag('DataService')<
   DataService,
   {
     readonly marketsRef: Ref.Ref<pl.DataFrame>;
@@ -70,7 +70,9 @@ const make = Effect.gen(function* () {
 
   const loadData = Effect.gen(function* () {
     // Create data folder if it doesn't exist
-    yield* Effect.tryPromise(() => fs.mkdir(CONFIG.DATA_FOLDER, { recursive: true }));
+    yield* Effect.tryPromise(() =>
+      fs.mkdir(CONFIG.DATA_FOLDER, { recursive: true }),
+    );
 
     // Load markets.csv if exists
     const marketsPath = `${CONFIG.DATA_FOLDER}/markets.csv`;
@@ -129,7 +131,7 @@ const make = Effect.gen(function* () {
       );
     }
 
-    console.log("Data loaded successfully");
+    console.log('Data loaded successfully');
   });
 
   const saveAll = Effect.gen(function* () {
@@ -140,7 +142,9 @@ const make = Effect.gen(function* () {
     ]);
 
     // Ensure data folder exists
-    yield* Effect.tryPromise(() => fs.mkdir(CONFIG.DATA_FOLDER, { recursive: true }));
+    yield* Effect.tryPromise(() =>
+      fs.mkdir(CONFIG.DATA_FOLDER, { recursive: true }),
+    );
 
     // Atomic write pattern: write to temp, then rename
     const writeAtomic = (path: string, df: pl.DataFrame) =>
@@ -160,10 +164,10 @@ const make = Effect.gen(function* () {
         writeAtomic(`${CONFIG.DATA_FOLDER}/predictions.csv`, predictions),
         writeAtomic(`${CONFIG.DATA_FOLDER}/consensus_picks.csv`, consensus),
       ],
-      { concurrency: "unbounded" },
+      { concurrency: 'unbounded' },
     );
 
-    console.log("Data saved successfully");
+    console.log('Data saved successfully');
   });
 
   // Prune old data to prevent unbounded memory growth
@@ -185,13 +189,13 @@ const make = Effect.gen(function* () {
     // Prune predictions older than retention period
     yield* Ref.update(predictionsRef, (df) => {
       if (df.height === 0) return df;
-      return df.filter(pl.col("timestamp").gt(pl.lit(predictionsCutoff)));
+      return df.filter(pl.col('timestamp').gt(pl.lit(predictionsCutoff)));
     });
 
     // Prune consensus older than retention period
     yield* Ref.update(consensusRef, (df) => {
       if (df.height === 0) return df;
-      return df.filter(pl.col("timestamp").gt(pl.lit(consensusCutoff)));
+      return df.filter(pl.col('timestamp').gt(pl.lit(consensusCutoff)));
     });
 
     // Remove analyzed markets older than retention period (keep unanalyzed)
@@ -199,13 +203,13 @@ const make = Effect.gen(function* () {
       if (df.height === 0) return df;
       return df.filter(
         pl
-          .col("analyzed")
+          .col('analyzed')
           .eq(pl.lit(false))
-          .or(pl.col("last_trade_timestamp").gt(pl.lit(marketsCutoff))),
+          .or(pl.col('last_trade_timestamp').gt(pl.lit(marketsCutoff))),
       );
     });
 
-    console.log("Old data pruned successfully");
+    console.log('Old data pruned successfully');
   });
 
   return {

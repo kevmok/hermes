@@ -1,11 +1,11 @@
-import { LanguageModel } from "@effect/ai";
-import { env } from "bun";
-import { Context, Duration, Effect, Layer, Schedule } from "effect";
-import { PrimaryModelLayer, OpenAiLayer, GoogleLayer } from "./models";
+import { LanguageModel } from '@effect/ai';
+import { env } from 'bun';
+import { Context, Duration, Effect, Layer, Schedule } from 'effect';
+import { PrimaryModelLayer, OpenAiLayer, GoogleLayer } from './models';
 
 export interface SwarmResult {
   modelName: string;
-  decision: "YES" | "NO" | "NO_TRADE";
+  decision: 'YES' | 'NO' | 'NO_TRADE';
   reasoning: string;
   responseTimeMs: number;
   error?: string;
@@ -13,57 +13,59 @@ export interface SwarmResult {
 
 export interface SwarmResponse {
   results: SwarmResult[];
-  consensusDecision: "YES" | "NO" | "NO_TRADE";
+  consensusDecision: 'YES' | 'NO' | 'NO_TRADE';
   consensusPercentage: number;
   totalModels: number;
   successfulModels: number;
 }
 
 // Parse decision from model response text
-const parseDecision = (text: string): "YES" | "NO" | "NO_TRADE" => {
+const parseDecision = (text: string): 'YES' | 'NO' | 'NO_TRADE' => {
   const upper = text.toUpperCase();
   if (
     upper.includes('"YES"') ||
-    upper.includes("DECISION: YES") ||
+    upper.includes('DECISION: YES') ||
     upper.includes('"DECISION":"YES"') ||
     upper.includes('"DECISION": "YES"')
   ) {
-    return "YES";
+    return 'YES';
   }
   if (
     upper.includes('"NO"') ||
-    upper.includes("DECISION: NO") ||
+    upper.includes('DECISION: NO') ||
     upper.includes('"DECISION":"NO"') ||
     upper.includes('"DECISION": "NO"')
   ) {
     // Make sure it's not "NO_TRADE"
-    if (!upper.includes("NO_TRADE")) {
-      return "NO";
+    if (!upper.includes('NO_TRADE')) {
+      return 'NO';
     }
   }
-  return "NO_TRADE";
+  return 'NO_TRADE';
 };
 
 // Calculate consensus from results
 const calculateConsensus = (results: SwarmResult[]): SwarmResponse => {
   const successfulResults = results.filter((r) => !r.error);
-  const tradingResults = successfulResults.filter((r) => r.decision !== "NO_TRADE");
+  const tradingResults = successfulResults.filter(
+    (r) => r.decision !== 'NO_TRADE',
+  );
 
-  let consensusDecision: "YES" | "NO" | "NO_TRADE" = "NO_TRADE";
+  let consensusDecision: 'YES' | 'NO' | 'NO_TRADE' = 'NO_TRADE';
   let consensusPercentage = 0;
 
   if (tradingResults.length > 0) {
-    const yesCount = tradingResults.filter((r) => r.decision === "YES").length;
-    const noCount = tradingResults.filter((r) => r.decision === "NO").length;
+    const yesCount = tradingResults.filter((r) => r.decision === 'YES').length;
+    const noCount = tradingResults.filter((r) => r.decision === 'NO').length;
 
     if (yesCount > noCount) {
-      consensusDecision = "YES";
+      consensusDecision = 'YES';
       consensusPercentage = (yesCount / tradingResults.length) * 100;
     } else if (noCount > yesCount) {
-      consensusDecision = "NO";
+      consensusDecision = 'NO';
       consensusPercentage = (noCount / tradingResults.length) * 100;
     } else {
-      consensusDecision = "NO_TRADE";
+      consensusDecision = 'NO_TRADE';
       consensusPercentage = 50;
     }
   }
@@ -77,7 +79,7 @@ const calculateConsensus = (results: SwarmResult[]): SwarmResponse => {
   };
 };
 
-export class SwarmService extends Context.Tag("SwarmService")<
+export class SwarmService extends Context.Tag('SwarmService')<
   SwarmService,
   {
     readonly query: (
@@ -101,8 +103,8 @@ const queryWithLayer = (
       const model = yield* LanguageModel.LanguageModel;
       const response = yield* model.generateText({
         prompt: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userPrompt },
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt },
         ],
       });
       return response;
@@ -111,7 +113,7 @@ const queryWithLayer = (
       Effect.timeout(Duration.seconds(120)),
       Effect.catchAll((error) =>
         Effect.succeed({
-          text: "",
+          text: '',
           error: String(error),
         }),
       ),
@@ -123,7 +125,7 @@ const queryWithLayer = (
 
     return {
       modelName: name,
-      decision: error ? "NO_TRADE" : parseDecision(text),
+      decision: error ? 'NO_TRADE' : parseDecision(text),
       reasoning: text.slice(0, 500),
       responseTimeMs,
       error,
@@ -141,36 +143,39 @@ const make = Effect.sync(() => {
 
   if (env.ANTHROPIC_KEY) {
     models.push({
-      name: "claude-sonnet-4",
+      name: 'claude-sonnet-4',
       layer: PrimaryModelLayer,
     });
   }
 
   if (env.OPENAI_KEY) {
     models.push({
-      name: "gpt-4o",
+      name: 'gpt-4o',
       layer: OpenAiLayer,
     });
   }
 
   if (env.GEMINI_KEY) {
     models.push({
-      name: "gemini-1.5-pro",
+      name: 'gemini-1.5-pro',
       layer: GoogleLayer,
     });
   }
 
   console.log(
-    `SwarmService initialized with ${models.length} models: ${models.map((m) => m.name).join(", ")}`,
+    `SwarmService initialized with ${models.length} models: ${models.map((m) => m.name).join(', ')}`,
   );
 
-  const query = (systemPrompt: string, userPrompt: string): Effect.Effect<SwarmResponse, never> =>
+  const query = (
+    systemPrompt: string,
+    userPrompt: string,
+  ): Effect.Effect<SwarmResponse, never> =>
     Effect.gen(function* () {
       if (models.length === 0) {
-        console.warn("No AI models configured - check API keys");
+        console.warn('No AI models configured - check API keys');
         return {
           results: [],
-          consensusDecision: "NO_TRADE" as const,
+          consensusDecision: 'NO_TRADE' as const,
           consensusPercentage: 0,
           totalModels: 0,
           successfulModels: 0,
@@ -188,7 +193,9 @@ const make = Effect.sync(() => {
       // Query all models with limited concurrency and retry on transient failures
       const results = yield* Effect.all(
         models.map(({ name, layer }) =>
-          queryWithLayer(name, layer, systemPrompt, userPrompt).pipe(Effect.retry(retrySchedule)),
+          queryWithLayer(name, layer, systemPrompt, userPrompt).pipe(
+            Effect.retry(retrySchedule),
+          ),
         ),
         { concurrency: 3 }, // Limit concurrent AI API calls
       );
@@ -198,8 +205,12 @@ const make = Effect.sync(() => {
 
       // Log individual results
       for (const result of results) {
-        const status = result.error ? `ERROR: ${result.error.slice(0, 50)}` : result.decision;
-        console.log(`  ${result.modelName}: ${status} (${result.responseTimeMs}ms)`);
+        const status = result.error
+          ? `ERROR: ${result.error.slice(0, 50)}`
+          : result.decision;
+        console.log(
+          `  ${result.modelName}: ${status} (${result.responseTimeMs}ms)`,
+        );
       }
 
       return calculateConsensus(results);

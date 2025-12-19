@@ -1,4 +1,4 @@
-import { CONFIG } from "../../config";
+import { CONFIG } from '../../config';
 
 export const MARKET_ANALYSIS_SYSTEM_PROMPT = `You are an expert prediction market analyst focused on finding mispriced outcomes.
 For each market, decide whether the "YES" outcome is undervalued (YES), the "NO" outcome is undervalued (NO), or there is no clear edge (NO_TRADE).
