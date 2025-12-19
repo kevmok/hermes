@@ -1,7 +1,7 @@
 import * as fs from "node:fs/promises";
 import { Context, Effect, Layer, Ref } from "effect";
 import pl from "nodejs-polars";
-import { CONFIG } from "./config";
+import { CONFIG } from "../../config";
 
 // Create an empty DataFrame with expected schema
 const createEmptyMarketsDF = () =>
@@ -144,19 +144,18 @@ const make = Effect.gen(function* () {
         const tempPath = `${path}.tmp`;
         const csvBuffer = df.writeCSV();
 
-        yield* Effect.tryPromise(() =>
-          Bun.write(tempPath, csvBuffer)
-        );
-        yield* Effect.tryPromise(() =>
-          fs.rename(tempPath, path)
-        );
+        yield* Effect.tryPromise(() => Bun.write(tempPath, csvBuffer));
+        yield* Effect.tryPromise(() => fs.rename(tempPath, path));
       });
 
-    yield* Effect.all([
-      writeAtomic(`${CONFIG.DATA_FOLDER}/markets.csv`, markets),
-      writeAtomic(`${CONFIG.DATA_FOLDER}/predictions.csv`, predictions),
-      writeAtomic(`${CONFIG.DATA_FOLDER}/consensus_picks.csv`, consensus),
-    ], { concurrency: "unbounded" });
+    yield* Effect.all(
+      [
+        writeAtomic(`${CONFIG.DATA_FOLDER}/markets.csv`, markets),
+        writeAtomic(`${CONFIG.DATA_FOLDER}/predictions.csv`, predictions),
+        writeAtomic(`${CONFIG.DATA_FOLDER}/consensus_picks.csv`, consensus),
+      ],
+      { concurrency: "unbounded" }
+    );
 
     console.log("Data saved successfully");
   });

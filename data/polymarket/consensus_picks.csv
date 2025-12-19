@@ -1,0 +1,9 @@
+timestamp,run_id,rank,market_number,market_title,side,consensus,consensus_count,total_models,link,reasoning
+2025-12-19T01:32:30.114Z,run_1766107931097_h7qsli,1.0,2.0,"Maduro out by February 28, 2026?",NO,2 out of 2 models agreed,2.0,2.0,https://polymarket.com/event/maduro-out-in-2025,"claude-sonnet-4: {""decision"": ""NO"", ""reasoning"": ""At 0.73, the market is pricing only a 27% chance that Maduro remain"
+2025-12-19T01:37:49.766Z,run_1766108250150_jq0umo,1.0,1.0,Spread: Nuggets (-7.5),YES,2 out of 2 models agreed,2.0,2.0,https://polymarket.com/event/nba-orl-den-2025-12-18,"gpt-4o: ```json
+{
+  ""decision"": ""YES"",
+  ""reasoning"": ""The current price of 0.53 suggests that the market be"
+2025-12-19T01:37:49.766Z,run_1766108250150_jq0umo,2.0,2.0,Will DraftKings launch a prediction market in 2025? ,NO,2 out of 2 models agreed,2.0,2.0,https://polymarket.com/event/will-draftkings-launch-a-prediction-market-in-2025,"claude-sonnet-4: {""decision"": ""NO"", ""reasoning"": ""The current price of ~0.059 implies only a 5.9% chance that DraftKi"
+2025-12-19T01:37:49.766Z,run_1766108250150_jq0umo,3.0,3.0,Will Trump release the Epstein files by December 31?,NO,2 out of 2 models agreed,2.0,2.0,https://polymarket.com/event/will-trump-release-epstein-files-by,"claude-sonnet-4: {""decision"": ""NO"", ""reasoning"": ""At 79% probability, the market seems overly optimistic about Trump  | gpt-4o: ```json
+{""decision"": ""NO"", ""reasoning"": ""The current price of 0.79 suggests a high probability that "

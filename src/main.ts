@@ -2,13 +2,16 @@ import { Effect, Schedule, Layer, Duration } from "effect";
 import { BunRuntime } from "@effect/platform-bun";
 import { FetchHttpClient } from "@effect/platform";
 import { CONFIG } from "./config";
-import { analysisTask } from "./analysis";
-import { websocketEffect } from "./websocket";
-import { fetchHistoricalTrades } from "./historical";
-import { statusReportingEffect } from "./status";
-import { PrimaryModelLayer } from "./models";
-import { DataService, DataLayer } from "./data";
-import { SwarmLayer } from "./swarm";
+import {
+  DataService,
+  DataLayer,
+  SwarmLayer,
+  PrimaryModelLayer,
+  analysisTask,
+  websocketEffect,
+  fetchHistoricalTrades,
+  statusReportingEffect,
+} from "./services";
 
 const program = Effect.gen(function* () {
   const data = yield* DataService;

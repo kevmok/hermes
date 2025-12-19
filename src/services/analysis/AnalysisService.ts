@@ -1,9 +1,9 @@
 import { Effect, Ref } from "effect";
 import pl from "nodejs-polars";
-import { CONFIG } from "./config";
-import { DataService } from "./data";
-import { SwarmService, type SwarmResponse } from "./swarm";
-import { MARKET_ANALYSIS_SYSTEM_PROMPT } from "./prompt";
+import { CONFIG } from "../../config";
+import { DataService } from "../data";
+import { SwarmService, type SwarmResponse } from "../ai";
+import { MARKET_ANALYSIS_SYSTEM_PROMPT } from "../ai";
 
 // Generate unique run ID
 const generateRunId = () =>

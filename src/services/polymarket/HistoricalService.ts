@@ -1,13 +1,13 @@
 import { HttpClient, HttpClientRequest } from "@effect/platform";
 import { Effect } from "effect";
-import { CONFIG } from "./config";
-import { DataService } from "./data";
+import { CONFIG } from "../../config";
+import { DataService } from "../data";
 import {
   buildMarketRow,
   shouldIncludeTrade,
   type TradeData,
   updateMarketsRef,
-} from "./filters";
+} from "../../domain";
 
 // Response shape from Polymarket trades API
 interface HistoricalTrade {
@@ -59,11 +59,6 @@ export const fetchHistoricalTrades = Effect.gen(function* () {
   let filteredCount = 0;
 
   for (const trade of trades) {
-    // Skip if missing required fields
-    // if (!trade.conditionId || !trade.size || !trade.price) {
-    //   continue;
-    // }
-
     const sizeUsd = trade.size * trade.price;
 
     const tradeData: TradeData = {

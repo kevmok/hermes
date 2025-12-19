@@ -1,13 +1,13 @@
 import { Effect, Queue, type Ref } from "effect";
 import type pl from "nodejs-polars";
-import { CONFIG } from "./config";
-import { DataService } from "./data";
+import { CONFIG } from "../../config";
+import { DataService } from "../data";
 import {
   buildMarketRow,
   shouldIncludeTrade,
   type TradeData,
   updateMarketsRef,
-} from "./filters";
+} from "../../domain";
 
 // Trade message structure from Polymarket WebSocket
 interface TradeMessage {

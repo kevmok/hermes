@@ -37,19 +37,19 @@ const GoogleModelLayer = GoogleLanguageModel.layer({
 // Primary model layer (Anthropic by default) - provides LanguageModel.LanguageModel
 export const PrimaryModelLayer = Layer.provideMerge(
   AnthropicModelLayer,
-  AnthropicClientLayer,
+  AnthropicClientLayer
 ).pipe(Layer.provide(FetchHttpClient.layer));
 
 // OpenAI model layer
 export const OpenAiLayer = Layer.provideMerge(
   OpenAiModelLayer,
-  OpenAiClientLayer,
+  OpenAiClientLayer
 ).pipe(Layer.provide(FetchHttpClient.layer));
 
 // Google model layer
 export const GoogleLayer = Layer.provideMerge(
   GoogleModelLayer,
-  GoogleClientLayer,
+  GoogleClientLayer
 ).pipe(Layer.provide(FetchHttpClient.layer));
 
 export { LanguageModel };

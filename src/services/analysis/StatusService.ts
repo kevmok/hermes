@@ -1,6 +1,6 @@
 import { Effect, Ref, Duration } from "effect";
 import pl from "nodejs-polars";
-import { DataService } from "./data";
+import { DataService } from "../data";
 
 export const statusReportingEffect = Effect.gen(function* () {
   const { marketsRef, predictionsRef, consensusRef } = yield* DataService;
