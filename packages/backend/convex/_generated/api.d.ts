@@ -8,7 +8,12 @@
  * @module
  */
 
-import type * as tasks from '../tasks.js';
+import type * as analysis from '../analysis.js';
+import type * as crons from '../crons.js';
+import type * as insights from '../insights.js';
+import type * as markets from '../markets.js';
+import type * as scheduledJobs from '../scheduledJobs.js';
+import type * as watchlists from '../watchlists.js';
 
 import type {
   ApiFromModules,
@@ -17,7 +22,12 @@ import type {
 } from 'convex/server';
 
 declare const fullApi: ApiFromModules<{
-  tasks: typeof tasks;
+  analysis: typeof analysis;
+  crons: typeof crons;
+  insights: typeof insights;
+  markets: typeof markets;
+  scheduledJobs: typeof scheduledJobs;
+  watchlists: typeof watchlists;
 }>;
 
 /**
