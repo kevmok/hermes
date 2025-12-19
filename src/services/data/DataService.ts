@@ -59,6 +59,7 @@ export class DataService extends Context.Tag("DataService")<
 
     readonly loadData: Effect.Effect<void, unknown>;
     readonly saveAll: Effect.Effect<void, unknown>;
+    readonly pruneOldData: Effect.Effect<void, unknown>;
   }
 >() {}
 
@@ -160,12 +161,54 @@ const make = Effect.gen(function* () {
     console.log("Data saved successfully");
   });
 
+  // Prune old data to prevent unbounded memory growth
+  const pruneOldData = Effect.gen(function* () {
+    const PREDICTIONS_RETENTION_DAYS = 30;
+    const CONSENSUS_RETENTION_DAYS = 30;
+    const MARKETS_RETENTION_DAYS = 7;
+
+    const predictionsCutoff = new Date(
+      Date.now() - PREDICTIONS_RETENTION_DAYS * 24 * 60 * 60 * 1000
+    ).toISOString();
+    const consensusCutoff = new Date(
+      Date.now() - CONSENSUS_RETENTION_DAYS * 24 * 60 * 60 * 1000
+    ).toISOString();
+    const marketsCutoff = new Date(
+      Date.now() - MARKETS_RETENTION_DAYS * 24 * 60 * 60 * 1000
+    ).toISOString();
+
+    // Prune predictions older than retention period
+    yield* Ref.update(predictionsRef, (df) => {
+      if (df.height === 0) return df;
+      return df.filter(pl.col("timestamp").gt(pl.lit(predictionsCutoff)));
+    });
+
+    // Prune consensus older than retention period
+    yield* Ref.update(consensusRef, (df) => {
+      if (df.height === 0) return df;
+      return df.filter(pl.col("timestamp").gt(pl.lit(consensusCutoff)));
+    });
+
+    // Remove analyzed markets older than retention period (keep unanalyzed)
+    yield* Ref.update(marketsRef, (df) => {
+      if (df.height === 0) return df;
+      return df.filter(
+        pl.col("analyzed").eq(pl.lit(false)).or(
+          pl.col("last_trade_timestamp").gt(pl.lit(marketsCutoff))
+        )
+      );
+    });
+
+    console.log("Old data pruned successfully");
+  });
+
   return {
     marketsRef,
     predictionsRef,
     consensusRef,
     loadData,
     saveAll,
+    pruneOldData,
   } as const;
 });
 

@@ -1,5 +1,5 @@
 import { HttpClient, HttpClientRequest } from "@effect/platform";
-import { Effect } from "effect";
+import { Effect, Schema } from "effect";
 import { CONFIG } from "../../config";
 import { DataService } from "../data";
 import {
@@ -7,30 +7,9 @@ import {
   shouldIncludeTrade,
   type TradeData,
   updateMarketsRef,
+  HistoricalTradesResponseSchema,
+  type HistoricalTrade,
 } from "../../domain";
-
-// Response shape from Polymarket trades API
-interface HistoricalTrade {
-  proxyWallet: string;
-  side: string;
-  asset: string;
-  conditionId: string;
-  size: number;
-  price: number;
-  timestamp: number;
-  title: string;
-  slug: string;
-  icon: string;
-  eventSlug: string;
-  outcome: string;
-  outcomeIndex: number;
-  name: string;
-  pseudonym: string;
-  bio: string;
-  profileImage: string;
-  profileImageOptimized: string;
-  transactionHash: string;
-}
 
 export const fetchHistoricalTrades = Effect.gen(function* () {
   const { marketsRef } = yield* DataService;
@@ -50,15 +29,27 @@ export const fetchHistoricalTrades = Effect.gen(function* () {
     Effect.flatMap((res) => res.json),
     Effect.catchAll((error) => {
       console.error("Failed to fetch historical trades:", error);
-      return Effect.succeed([] as HistoricalTrade[]);
+      return Effect.succeed([]);
     }),
   );
 
-  const trades = response as HistoricalTrade[];
+  // Validate response against schema
+  const parseResult = Schema.decodeUnknownEither(HistoricalTradesResponseSchema)(response);
+  if (parseResult._tag === "Left") {
+    console.error("Invalid historical trades response format");
+    return;
+  }
+  const trades = parseResult.right;
   let processedCount = 0;
   let filteredCount = 0;
 
   for (const trade of trades) {
+    // Skip trades missing required fields
+    if (!trade.conditionId || !trade.size || !trade.price || !trade.outcome) {
+      filteredCount++;
+      continue;
+    }
+
     const sizeUsd = trade.size * trade.price;
 
     const tradeData: TradeData = {

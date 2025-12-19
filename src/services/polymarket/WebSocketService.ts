@@ -1,4 +1,4 @@
-import { Effect, Queue, type Ref } from "effect";
+import { Effect, Queue, Schema, type Ref } from "effect";
 import type pl from "nodejs-polars";
 import { CONFIG } from "../../config";
 import { DataService } from "../data";
@@ -7,41 +7,15 @@ import {
   shouldIncludeTrade,
   type TradeData,
   updateMarketsRef,
+  TradeMessageSchema,
+  type TradeMessage,
 } from "../../domain";
-
-// Trade message structure from Polymarket WebSocket
-interface TradeMessage {
-  type: string;
-  topic: string;
-  timestamp: number;
-  connection_id: string;
-  payload?: {
-    proxyWallet: string;
-    side: string;
-    asset: string;
-    conditionId: string;
-    size: number;
-    price: number;
-    timestamp: number;
-    title: string;
-    slug: string;
-    icon: string;
-    eventSlug: string;
-    outcome: string;
-    outcomeIndex: number;
-    name: string;
-    pseudonym: string;
-    bio: string;
-    profileImage: string;
-    transactionHash: string;
-  };
-}
 
 export const websocketEffect = Effect.gen(function* () {
   const { marketsRef } = yield* DataService;
 
-  // Create a queue for incoming messages
-  const messageQueue = yield* Queue.unbounded<TradeMessage>();
+  // Create a bounded queue for incoming messages (backpressure protection)
+  const messageQueue = yield* Queue.bounded<TradeMessage>(1000);
 
   // Message processor fiber - runs continuously
   yield* Effect.fork(
@@ -77,9 +51,15 @@ export const websocketEffect = Effect.gen(function* () {
       ws.addEventListener("message", (event) => {
         try {
           if (!event.data) return;
-          const data = JSON.parse(event.data) as TradeMessage;
+          const parsed = JSON.parse(event.data);
+          // Validate message against schema
+          const result = Schema.decodeUnknownEither(TradeMessageSchema)(parsed);
+          if (result._tag === "Left") {
+            // Skip invalid messages silently (many are heartbeats/subscriptions)
+            return;
+          }
           // Non-blocking offer to queue
-          Effect.runSync(Queue.offer(messageQueue, data));
+          Effect.runSync(Queue.offer(messageQueue, result.right));
         } catch (e) {
           console.error("Failed to parse message:", e);
         }
@@ -111,7 +91,7 @@ const processTradeMessage = (
     const t = data.payload;
 
     // Validate required fields
-    if (!t.conditionId || !t.title || !t.size || !t.price) return;
+    if (!t.conditionId || !t.title || !t.size || !t.price || !t.outcome) return;
 
     const sizeUsd = t.size * t.price;
 
@@ -127,7 +107,7 @@ const processTradeMessage = (
     // Use shared filter
     if (!shouldIncludeTrade(tradeData)) return;
 
-    // Use shared row builder and update
+    // Use shared row builder and update (Ref.update is atomic)
     const row = buildMarketRow(tradeData);
     yield* updateMarketsRef(marketsRef, row);
 

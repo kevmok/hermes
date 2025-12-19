@@ -41,6 +41,18 @@ const program = Effect.gen(function* () {
     Effect.fork,
   );
 
+  // Periodic data save (every 5 minutes)
+  yield* data.saveAll.pipe(
+    Effect.repeat(Schedule.spaced(Duration.minutes(5))),
+    Effect.fork,
+  );
+
+  // Prune old data periodically (every hour)
+  yield* data.pruneOldData.pipe(
+    Effect.repeat(Schedule.spaced(Duration.hours(1))),
+    Effect.fork,
+  );
+
   // Graceful shutdown handler
   yield* Effect.async<void, never>(() => {
     const shutdown = async () => {

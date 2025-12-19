@@ -1,6 +1,6 @@
 import { LanguageModel } from "@effect/ai";
 import { env } from "bun";
-import { Context, Duration, Effect, Layer } from "effect";
+import { Context, Duration, Effect, Layer, Schedule } from "effect";
 import { PrimaryModelLayer, OpenAiLayer, GoogleLayer } from "./models";
 
 export interface SwarmResult {
@@ -182,15 +182,22 @@ const make = Effect.sync(() => {
         };
       }
 
-      console.log(`Querying ${models.length} models in parallel...`);
+      console.log(`Querying ${models.length} models...`);
       const startTime = Date.now();
 
-      // Query all models in parallel
+      // Retry schedule: exponential backoff starting at 1s, max 3 retries
+      const retrySchedule = Schedule.exponential(Duration.seconds(1)).pipe(
+        Schedule.intersect(Schedule.recurs(3))
+      );
+
+      // Query all models with limited concurrency and retry on transient failures
       const results = yield* Effect.all(
         models.map(({ name, layer }) =>
-          queryWithLayer(name, layer, systemPrompt, userPrompt)
+          queryWithLayer(name, layer, systemPrompt, userPrompt).pipe(
+            Effect.retry(retrySchedule)
+          )
         ),
-        { concurrency: "unbounded" }
+        { concurrency: 3 } // Limit concurrent AI API calls
       );
 
       const totalTime = Date.now() - startTime;
