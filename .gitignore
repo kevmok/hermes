@@ -1,9 +1,13 @@
 # dependencies (bun install)
 node_modules
+apps/*/node_modules
+packages/*/node_modules
 
 # output
 out
 dist
+apps/*/dist
+packages/*/dist
 *.tgz
 
 # code coverage
@@ -21,6 +25,11 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
 .env.test.local
 .env.production.local
 .env.local
+apps/*/.env
+apps/*/.env.local
+
+# Data directories (app-specific)
+apps/*/data/
 
 # caches
 .eslintcache

@@ -1,0 +1,17 @@
+// inherit from the base config
+{
+  "extends": "../../tsconfig.base.json",
+  "include": ["src/**/*.ts", "src/**/*.tsx"],
+  "compilerOptions": {
+    "outDir": "dist",
+    "rootDir": "src",
+    "incremental": true,
+    "tsBuildInfoFile": "./dist/tsconfig.tsbuildinfo",
+    "declaration": false,
+    "isolatedModules": true,
+    "noEmit": false,
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  }
+}

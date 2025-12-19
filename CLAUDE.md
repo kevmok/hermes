@@ -109,3 +109,45 @@ bun --hot ./index.ts
 ```
 
 For more information, read the Bun API docs in `node_modules/bun-types/docs/**.md`.
+
+## Monorepo Structure
+
+This is a Bun workspaces monorepo called "hermes".
+
+```
+hermes/
+├── apps/
+│   └── lofn/           # Polymarket prediction agent
+├── packages/           # Shared libraries (future)
+├── package.json        # Root workspace config
+├── bunfig.toml         # Bun workspace settings
+└── tsconfig.base.json  # Shared TypeScript config
+```
+
+### Running Commands
+
+```bash
+# From root - run lofn app
+bun run dev              # Uses root script
+bun --cwd apps/lofn dev  # Direct workspace command
+
+# Install dependencies
+bun install              # Installs all workspaces
+
+# Add dependency to specific workspace
+bun add package --cwd apps/lofn
+
+# Run type check across all workspaces
+bun run check
+```
+
+### Workspace Protocol
+
+When referencing internal packages, use `workspace:*`:
+```json
+{
+  "dependencies": {
+    "@hermes/shared": "workspace:*"
+  }
+}
+```

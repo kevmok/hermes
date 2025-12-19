@@ -1,23 +1,21 @@
 {
-  "name": "lofn",
-  "module": "index.ts",
-  "type": "module",
+  "name": "hermes",
+  "version": "1.0.0",
   "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "bun run --filter '*' dev",
+    "dev:hot": "bun --hot --cwd apps/lofn run index.ts",
+    "build": "bun run --filter '*' build",
+    "test": "bun --filter '*' test",
+    "check": "bun --filter '*' run check",
+    "clean": "rm -rf apps/*/node_modules packages/*/node_modules node_modules bun.lock"
+  },
   "devDependencies": {
-    "@types/bun": "latest"
-  },
-  "peerDependencies": {
+    "@types/bun": "latest",
     "typescript": "^5"
-  },
-  "dependencies": {
-    "@effect/ai": "^0.32.1",
-    "@effect/ai-anthropic": "^0.22.0",
-    "@effect/ai-google": "^0.11.1",
-    "@effect/ai-openai": "^0.36.0",
-    "@effect/platform": "^0.93.8",
-    "@effect/platform-bun": "^0.86.0",
-    "@effect/schema": "^0.75.5",
-    "effect": "^3.19.12",
-    "nodejs-polars": "^0.23.4"
   }
 }

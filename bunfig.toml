@@ -1,0 +1,6 @@
+[workspace]
+packages = ["apps/*", "packages/*"]
+
+[install]
+linkWorkspacePackages = true
+linker = "isolated"
