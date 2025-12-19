@@ -8,18 +8,18 @@
  * @module
  */
 
-import type * as analysis from '../analysis.js';
-import type * as crons from '../crons.js';
-import type * as insights from '../insights.js';
-import type * as markets from '../markets.js';
-import type * as scheduledJobs from '../scheduledJobs.js';
-import type * as watchlists from '../watchlists.js';
+import type * as analysis from "../analysis.js";
+import type * as crons from "../crons.js";
+import type * as insights from "../insights.js";
+import type * as markets from "../markets.js";
+import type * as scheduledJobs from "../scheduledJobs.js";
+import type * as watchlists from "../watchlists.js";
 
 import type {
   ApiFromModules,
   FilterApi,
   FunctionReference,
-} from 'convex/server';
+} from "convex/server";
 
 declare const fullApi: ApiFromModules<{
   analysis: typeof analysis;
@@ -40,7 +40,7 @@ declare const fullApi: ApiFromModules<{
  */
 export declare const api: FilterApi<
   typeof fullApi,
-  FunctionReference<any, 'public'>
+  FunctionReference<any, "public">
 >;
 
 /**
@@ -53,7 +53,7 @@ export declare const api: FilterApi<
  */
 export declare const internal: FilterApi<
   typeof fullApi,
-  FunctionReference<any, 'internal'>
+  FunctionReference<any, "internal">
 >;
 
 export declare const components: {};
