@@ -10,6 +10,9 @@ export const CONFIG = {
   SEND_PRICE_INFO_TO_AI: false,
   DATA_FOLDER: "./data/polymarket",
   WEBSOCKET_URL: "wss://ws-live-data.polymarket.com",
+  TRADES_API_URL: "https://data-api.polymarket.com/trades",
+  HISTORICAL_HOURS_BACK: 24,
+  HISTORICAL_LIMIT: 1000,
 } as const;
 
 export const IGNORE_CRYPTO_KEYWORDS = [

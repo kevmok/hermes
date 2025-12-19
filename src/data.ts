@@ -21,11 +21,18 @@ const createEmptyMarketsDF = () =>
 const createEmptyPredictionsDF = () =>
   pl.DataFrame({
     run_id: [] as string[],
+    timestamp: [] as string[],
     market_id: [] as string[],
+    event_slug: [] as string[],
+    title: [] as string[],
+    outcome: [] as string[],
+    price: [] as number[],
     model_name: [] as string[],
     decision: [] as string[],
     reasoning: [] as string[],
-    timestamp: [] as string[],
+    response_time_ms: [] as number[],
+    consensus_decision: [] as string[],
+    consensus_percentage: [] as number[],
   });
 
 const createEmptyConsensusDF = () =>

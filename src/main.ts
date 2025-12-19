@@ -1,11 +1,14 @@
 import { Effect, Schedule, Layer, Duration } from "effect";
 import { BunRuntime } from "@effect/platform-bun";
+import { FetchHttpClient } from "@effect/platform";
 import { CONFIG } from "./config";
 import { analysisTask } from "./analysis";
 import { websocketEffect } from "./websocket";
+import { fetchHistoricalTrades } from "./historical";
 import { statusReportingEffect } from "./status";
 import { PrimaryModelLayer } from "./models";
 import { DataService, DataLayer } from "./data";
+import { SwarmLayer } from "./swarm";
 
 const program = Effect.gen(function* () {
   const data = yield* DataService;
@@ -18,6 +21,9 @@ const program = Effect.gen(function* () {
   console.log(`Min trade size: $${CONFIG.MIN_TRADE_SIZE_USD}`);
   console.log(`Markets to analyze: ${CONFIG.MARKETS_TO_ANALYZE}`);
 
+  // Fetch historical trades before starting WebSocket
+  yield* fetchHistoricalTrades;
+
   // Start WebSocket (runs forever with reconnects)
   yield* websocketEffect.pipe(Effect.fork);
 
@@ -27,9 +33,9 @@ const program = Effect.gen(function* () {
   // Periodic analysis
   yield* analysisTask.pipe(
     Effect.repeat(
-      Schedule.spaced(Duration.seconds(CONFIG.ANALYSIS_CHECK_INTERVAL_SECONDS))
+      Schedule.spaced(Duration.seconds(CONFIG.ANALYSIS_CHECK_INTERVAL_SECONDS)),
     ),
-    Effect.fork
+    Effect.fork,
   );
 
   // Graceful shutdown handler
@@ -57,8 +63,14 @@ const program = Effect.gen(function* () {
   yield* Effect.never;
 });
 
-// Compose layers
-const AppLayer = Layer.provideMerge(PrimaryModelLayer, DataLayer);
+// Compose layers - includes FetchHttpClient, SwarmService, and DataLayer
+const AppLayer = Layer.provideMerge(
+  PrimaryModelLayer,
+  Layer.provideMerge(
+    SwarmLayer,
+    Layer.provideMerge(DataLayer, FetchHttpClient.layer)
+  )
+);
 
 // Run program with BunRuntime
 BunRuntime.runMain(
@@ -67,6 +79,6 @@ BunRuntime.runMain(
     Effect.catchAllDefect((defect) => {
       console.error("Unhandled defect:", defect);
       return Effect.die(defect);
-    })
-  )
+    }),
+  ),
 );
