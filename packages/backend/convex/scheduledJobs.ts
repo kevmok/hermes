@@ -1,6 +1,6 @@
 import { v } from 'convex/values';
 import { internalAction, internalMutation } from './_generated/server';
-import { internal } from './_generated/api';
+import { api, internal } from './_generated/api';
 import type { Id } from './_generated/dataModel';
 
 interface MarketForAnalysis {
@@ -25,7 +25,7 @@ export const runAutomaticAnalysis = internalAction({
   ): Promise<{ analyzed: number; total?: number; errors?: number }> => {
     // Get top markets by activity that haven't been analyzed recently
     const markets: MarketForAnalysis[] = await ctx.runQuery(
-      internal.markets.getMarketsNeedingAnalysis,
+      api.markets.getMarketsNeedingAnalysis,
       {
         limit: 10,
         minHoursSinceLastAnalysis: 6,
@@ -39,7 +39,7 @@ export const runAutomaticAnalysis = internalAction({
 
     // Create batch analysis run
     const runId: Id<'analysisRuns'> = await ctx.runMutation(
-      internal.analysis.createAnalysisRun,
+      api.analysis.createAnalysisRun,
       {
         triggerType: 'scheduled',
       },
@@ -61,7 +61,7 @@ export const runAutomaticAnalysis = internalAction({
       }
     }
 
-    await ctx.runMutation(internal.analysis.updateAnalysisRun, {
+    await ctx.runMutation(api.analysis.updateAnalysisRun, {
       runId,
       status: errors.length === markets.length ? 'failed' : 'completed',
       marketsAnalyzed: analyzed,

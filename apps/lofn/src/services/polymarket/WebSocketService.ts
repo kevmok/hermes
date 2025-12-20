@@ -1,7 +1,8 @@
-import { Effect, Queue, Schema, type Ref } from 'effect';
+import { Context, Effect, Queue, Schema, type Ref } from 'effect';
 import type pl from 'nodejs-polars';
 import { CONFIG } from '../../config';
 import { DataService } from '../data';
+import { ConvexDataService, type MarketData } from '../data/ConvexDataService';
 import {
   buildMarketRow,
   shouldIncludeTrade,
@@ -13,6 +14,7 @@ import {
 
 export const websocketEffect = Effect.gen(function* () {
   const { marketsRef } = yield* DataService;
+  const convex = yield* ConvexDataService;
 
   // Create a bounded queue for incoming messages (backpressure protection)
   const messageQueue = yield* Queue.bounded<TradeMessage>(1000);
@@ -22,7 +24,7 @@ export const websocketEffect = Effect.gen(function* () {
     Effect.forever(
       Effect.gen(function* () {
         const msg = yield* Queue.take(messageQueue);
-        yield* processTradeMessage(msg, marketsRef);
+        yield* processTradeMessage(msg, marketsRef, convex);
       }),
     ),
   );
@@ -83,6 +85,7 @@ export const websocketEffect = Effect.gen(function* () {
 const processTradeMessage = (
   data: TradeMessage,
   marketsRef: Ref.Ref<pl.DataFrame>,
+  convex: Context.Tag.Service<typeof ConvexDataService>,
 ) =>
   Effect.gen(function* () {
     // Skip non-trade messages
@@ -107,9 +110,32 @@ const processTradeMessage = (
     // Use shared filter
     if (!shouldIncludeTrade(tradeData)) return;
 
-    // Use shared row builder and update (Ref.update is atomic)
+    // 1. Update local CSV (backup)
     const row = buildMarketRow(tradeData);
     yield* updateMarketsRef(marketsRef, row);
 
-    console.log(`Trade: ${row.title.slice(0, 50)}... | $${sizeUsd.toFixed(0)}`);
+    // 2. Send to Convex (primary) - triggers AI analysis automatically
+    const marketData: MarketData = {
+      polymarketId: t.conditionId,
+      conditionId: t.conditionId,
+      eventSlug: t.eventSlug ?? '',
+      title: t.title,
+      currentYesPrice:
+        t.outcome.toUpperCase() === 'YES' ? t.price : 1 - t.price,
+      currentNoPrice: t.outcome.toUpperCase() === 'NO' ? t.price : 1 - t.price,
+      volume24h: sizeUsd,
+      totalVolume: sizeUsd,
+      isActive: true,
+    };
+
+    yield* convex.upsertMarket(marketData).pipe(
+      Effect.catchAll((error) => {
+        console.error('Convex upsert failed:', error);
+        return Effect.succeed(undefined); // Don't crash on Convex failures
+      }),
+    );
+
+    console.log(
+      `Trade: ${row.title.slice(0, 50)}... | $${sizeUsd.toFixed(0)} → Convex`,
+    );
   });

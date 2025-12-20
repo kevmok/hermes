@@ -7,9 +7,14 @@ import {
 } from './_generated/server';
 import { internal } from './_generated/api';
 
-// ============ INTERNAL MUTATIONS (called by lofn collector) ============
+// ============ COLLECTOR MUTATIONS (called by lofn collector service) ============
+// These are public mutations for the collector service to call via ConvexHttpClient.
+// In production, consider adding authentication via Convex Auth or deploy keys.
 
-export const upsertMarket = internalMutation({
+// Analysis throttling: only trigger analysis once per hour per market
+const ONE_HOUR_MS = 60 * 60 * 1000;
+
+export const upsertMarket = mutation({
   args: {
     polymarketId: v.string(),
     conditionId: v.optional(v.string()),
@@ -42,12 +47,17 @@ export const upsertMarket = internalMutation({
         lastTradeAt: now,
       });
 
-      // Trigger analysis for existing market (no await - fire and forget)
-      await ctx.scheduler.runAfter(
-        0,
-        internal.analysis.analyzeMarketWithSwarm,
-        { marketId: existing._id },
-      );
+      // Throttle analysis: only trigger if not analyzed in the last hour
+      const shouldAnalyze =
+        !existing.lastAnalyzedAt || now - existing.lastAnalyzedAt > ONE_HOUR_MS;
+
+      if (shouldAnalyze) {
+        await ctx.scheduler.runAfter(
+          0,
+          internal.analysis.analyzeMarketWithSwarm,
+          { marketId: existing._id },
+        );
+      }
 
       return existing._id;
     }
@@ -59,7 +69,7 @@ export const upsertMarket = internalMutation({
       lastTradeAt: now,
     });
 
-    // Trigger analysis for new market (no await - fire and forget)
+    // Always analyze new markets
     await ctx.scheduler.runAfter(0, internal.analysis.analyzeMarketWithSwarm, {
       marketId,
     });
@@ -68,7 +78,7 @@ export const upsertMarket = internalMutation({
   },
 });
 
-export const upsertMarketsBatch = internalMutation({
+export const upsertMarketsBatch = mutation({
   args: {
     markets: v.array(
       v.object({
@@ -118,7 +128,7 @@ export const upsertMarketsBatch = internalMutation({
   },
 });
 
-export const recordSnapshot = internalMutation({
+export const recordSnapshot = mutation({
   args: {
     marketId: v.id('markets'),
     yesPrice: v.number(),
@@ -133,7 +143,7 @@ export const recordSnapshot = internalMutation({
   },
 });
 
-export const markMarketAnalyzed = internalMutation({
+export const markMarketAnalyzed = mutation({
   args: { marketId: v.id('markets') },
   handler: async (ctx, args) => {
     await ctx.db.patch(args.marketId, {
@@ -144,7 +154,7 @@ export const markMarketAnalyzed = internalMutation({
 
 // ============ INTERNAL QUERIES ============
 
-export const getMarketsNeedingAnalysis = internalQuery({
+export const getMarketsNeedingAnalysis = query({
   args: {
     limit: v.number(),
     minHoursSinceLastAnalysis: v.number(),

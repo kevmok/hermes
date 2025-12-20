@@ -8,6 +8,7 @@ import {
   websocketEffect,
   fetchHistoricalTrades,
 } from './services';
+import { ConvexDataLayer } from './services/data/ConvexDataService';
 
 const program = Effect.gen(function* () {
   const data = yield* DataService;
@@ -63,8 +64,14 @@ const program = Effect.gen(function* () {
   yield* Effect.never;
 });
 
-// Compose layers - DataLayer for local storage, FetchHttpClient for API calls
-const AppLayer = Layer.provideMerge(DataLayer, FetchHttpClient.layer);
+// Compose layers:
+// - DataLayer: local CSV storage (backup)
+// - ConvexDataLayer: Convex backend (primary) - triggers AI analysis
+// - FetchHttpClient: for API calls
+const AppLayer = Layer.provideMerge(
+  ConvexDataLayer,
+  Layer.provideMerge(DataLayer, FetchHttpClient.layer),
+);
 
 // Run program with BunRuntime
 BunRuntime.runMain(
