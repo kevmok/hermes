@@ -84,7 +84,7 @@ export default defineSchema({
     .index('by_timestamp', ['timestamp']),
 
   insights: defineTable({
-    analysisRunId: v.id('analysisRuns'),
+    analysisRunId: v.optional(v.id('analysisRuns')), // Optional - only set for tracked runs
     marketId: v.id('markets'),
     consensusDecision: v.union(
       v.literal('YES'),

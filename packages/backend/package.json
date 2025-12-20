@@ -9,7 +9,13 @@
     "typecheck": "tsc --noEmit -p convex"
   },
   "dependencies": {
-    "convex": "catalog:"
+    "@effect/ai": "^0.33.0",
+    "@effect/ai-anthropic": "^0.23.0",
+    "@effect/ai-google": "^0.12.0",
+    "@effect/ai-openai": "^0.37.0",
+    "@effect/platform": "^0.94.0",
+    "convex": "catalog:",
+    "effect": "^3.19.13"
   },
   "devDependencies": {
     "@types/bun": "latest"

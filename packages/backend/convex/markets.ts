@@ -5,6 +5,7 @@ import {
   mutation,
   query,
 } from './_generated/server';
+import { internal } from './_generated/api';
 
 // ============ INTERNAL MUTATIONS (called by lofn collector) ============
 
@@ -40,15 +41,30 @@ export const upsertMarket = internalMutation({
         updatedAt: now,
         lastTradeAt: now,
       });
+
+      // Trigger analysis for existing market (no await - fire and forget)
+      await ctx.scheduler.runAfter(
+        0,
+        internal.analysis.analyzeMarketWithSwarm,
+        { marketId: existing._id },
+      );
+
       return existing._id;
     }
 
-    return await ctx.db.insert('markets', {
+    const marketId = await ctx.db.insert('markets', {
       ...args,
       createdAt: now,
       updatedAt: now,
       lastTradeAt: now,
     });
+
+    // Trigger analysis for new market (no await - fire and forget)
+    await ctx.scheduler.runAfter(0, internal.analysis.analyzeMarketWithSwarm, {
+      marketId,
+    });
+
+    return marketId;
   },
 });
 

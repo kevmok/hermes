@@ -7,6 +7,8 @@ import {
 } from './_generated/server';
 import { api, internal } from './_generated/api';
 import type { Id } from './_generated/dataModel';
+import { Effect } from 'effect';
+import { querySwarm, buildPrompt, type SwarmResponse } from './ai/swarm';
 
 // ============ INTERNAL MUTATIONS ============
 
@@ -80,7 +82,7 @@ export const saveModelPrediction = internalMutation({
 
 export const saveInsight = internalMutation({
   args: {
-    analysisRunId: v.id('analysisRuns'),
+    analysisRunId: v.optional(v.id('analysisRuns')),
     marketId: v.id('markets'),
     consensusDecision: v.union(
       v.literal('YES'),
@@ -249,6 +251,84 @@ export const requestMarketAnalysis = mutation({
 
 // ============ INTERNAL ACTIONS ============
 
+// Analyze market using Effect.ts swarm - called on market upsert
+export const analyzeMarketWithSwarm = internalAction({
+  args: {
+    marketId: v.id('markets'),
+  },
+  returns: v.object({
+    success: v.boolean(),
+    insightId: v.optional(v.id('insights')),
+    error: v.optional(v.string()),
+  }),
+  handler: async (
+    ctx,
+    args,
+  ): Promise<{
+    success: boolean;
+    insightId?: Id<'insights'>;
+    error?: string;
+  }> => {
+    try {
+      // Get market data
+      const market = await ctx.runQuery(internal.markets.getMarketById, {
+        marketId: args.marketId,
+      });
+
+      if (!market) {
+        return { success: false, error: 'Market not found' };
+      }
+
+      // Build prompts and query swarm using Effect.ts
+      const { systemPrompt, userPrompt } = buildPrompt(market);
+      const swarmResponse = await Effect.runPromise(
+        querySwarm(systemPrompt, userPrompt) as Effect.Effect<SwarmResponse>,
+      );
+
+      // If no models responded, skip saving
+      if (swarmResponse.totalModels === 0) {
+        console.log(`No AI models configured for market ${market.title}`);
+        return { success: false, error: 'No AI models configured' };
+      }
+
+      // Aggregate reasoning from results
+      const aggregatedReasoning = swarmResponse.results
+        .filter((r) => r.decision === swarmResponse.consensusDecision)
+        .map((r) => `${r.modelName}: ${r.reasoning.slice(0, 200)}`)
+        .join(' | ');
+
+      // Save insight directly (no analysisRun tracking for simplicity)
+      const insightId: Id<'insights'> = await ctx.runMutation(
+        internal.analysis.saveInsight,
+        {
+          marketId: args.marketId,
+          consensusDecision: swarmResponse.consensusDecision,
+          consensusPercentage: swarmResponse.consensusPercentage,
+          totalModels: swarmResponse.totalModels,
+          agreeingModels: swarmResponse.successfulModels,
+          aggregatedReasoning,
+          priceAtAnalysis: market.currentYesPrice,
+        },
+      );
+
+      console.log(
+        `Market ${market.title}: ${swarmResponse.consensusDecision} (${swarmResponse.consensusPercentage.toFixed(0)}% consensus)`,
+      );
+
+      return { success: true, insightId };
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      console.error(
+        `Analysis failed for market ${args.marketId}:`,
+        errorMessage,
+      );
+      return { success: false, error: errorMessage };
+    }
+  },
+});
+
+// Legacy executeMarketAnalysis - kept for on-demand requests with full tracking
 export const executeMarketAnalysis = internalAction({
   args: {
     requestId: v.optional(v.id('analysisRequests')),
@@ -262,7 +342,7 @@ export const executeMarketAnalysis = internalAction({
     ctx,
     args,
   ): Promise<{ success: boolean; insightId: Id<'insights'> }> => {
-    // Create analysis run
+    // Create analysis run for tracking
     const runId: Id<'analysisRuns'> = await ctx.runMutation(
       internal.analysis.createAnalysisRun,
       {
@@ -271,7 +351,6 @@ export const executeMarketAnalysis = internalAction({
     );
 
     try {
-      // Update status to running
       await ctx.runMutation(internal.analysis.updateAnalysisRun, {
         runId,
         status: 'running',
@@ -291,12 +370,18 @@ export const executeMarketAnalysis = internalAction({
 
       if (!market) throw new Error('Market not found');
 
-      // Call AI models - this is where you integrate with your existing swarm
-      // The actual AI calls happen here (external HTTP calls to AI providers)
-      const modelResults = await performAIAnalysis(market);
+      // Build prompts and query swarm
+      const { systemPrompt, userPrompt } = buildPrompt(market);
+      const swarmResponse = await Effect.runPromise(
+        querySwarm(systemPrompt, userPrompt) as Effect.Effect<SwarmResponse>,
+      );
 
-      // Save individual predictions
-      for (const result of modelResults) {
+      if (swarmResponse.totalModels === 0) {
+        throw new Error('No AI models configured');
+      }
+
+      // Save individual predictions for tracking
+      for (const result of swarmResponse.results) {
         await ctx.runMutation(internal.analysis.saveModelPrediction, {
           analysisRunId: runId,
           marketId: args.marketId,
@@ -304,12 +389,14 @@ export const executeMarketAnalysis = internalAction({
           decision: result.decision,
           reasoning: result.reasoning,
           responseTimeMs: result.responseTimeMs,
-          confidence: result.confidence,
         });
       }
 
-      // Calculate consensus
-      const consensus = calculateConsensus(modelResults);
+      // Aggregate reasoning
+      const aggregatedReasoning = swarmResponse.results
+        .filter((r) => r.decision === swarmResponse.consensusDecision)
+        .map((r) => `${r.modelName}: ${r.reasoning.slice(0, 200)}`)
+        .join(' | ');
 
       // Save insight
       const insightId: Id<'insights'> = await ctx.runMutation(
@@ -317,23 +404,21 @@ export const executeMarketAnalysis = internalAction({
         {
           analysisRunId: runId,
           marketId: args.marketId,
-          consensusDecision: consensus.decision,
-          consensusPercentage: consensus.percentage,
-          totalModels: modelResults.length,
-          agreeingModels: consensus.agreeingCount,
-          aggregatedReasoning: consensus.reasoning,
+          consensusDecision: swarmResponse.consensusDecision,
+          consensusPercentage: swarmResponse.consensusPercentage,
+          totalModels: swarmResponse.totalModels,
+          agreeingModels: swarmResponse.successfulModels,
+          aggregatedReasoning,
           priceAtAnalysis: market.currentYesPrice,
         },
       );
 
-      // Update analysis run as completed
       await ctx.runMutation(internal.analysis.updateAnalysisRun, {
         runId,
         status: 'completed',
         marketsAnalyzed: 1,
       });
 
-      // Update request if on-demand
       if (args.requestId) {
         await ctx.runMutation(internal.analysis.updateAnalysisRequest, {
           requestId: args.requestId,
@@ -365,65 +450,3 @@ export const executeMarketAnalysis = internalAction({
     }
   },
 });
-
-// ============ HELPERS ============
-
-interface ModelResult {
-  modelName: string;
-  decision: 'YES' | 'NO' | 'NO_TRADE';
-  reasoning: string;
-  responseTimeMs: number;
-  confidence?: number;
-}
-
-async function performAIAnalysis(_market: {
-  title: string;
-  currentYesPrice: number;
-  eventSlug: string;
-}): Promise<ModelResult[]> {
-  // TODO: Integrate with existing Effect.ts AI swarm from apps/lofn
-  // This would call the AI providers (Anthropic, OpenAI, Google) in parallel
-  // For now, this is a placeholder showing the expected structure
-
-  // In production, you would:
-  // 1. Import your existing swarm logic or make HTTP calls to AI providers
-  // 2. Use environment variables for API keys
-  // 3. Implement proper error handling and retries
-
-  throw new Error(
-    'AI analysis not yet implemented - integrate with apps/lofn swarm',
-  );
-}
-
-function calculateConsensus(results: ModelResult[]) {
-  const counts = { YES: 0, NO: 0, NO_TRADE: 0 };
-  for (const r of results) counts[r.decision]++;
-
-  const total = results.length;
-  const tradingResults = results.filter((r) => r.decision !== 'NO_TRADE');
-
-  let decision: 'YES' | 'NO' | 'NO_TRADE' = 'NO_TRADE';
-  let agreeingCount = 0;
-
-  if (tradingResults.length > 0) {
-    if (counts.YES > counts.NO) {
-      decision = 'YES';
-      agreeingCount = counts.YES;
-    } else if (counts.NO > counts.YES) {
-      decision = 'NO';
-      agreeingCount = counts.NO;
-    }
-  }
-
-  const percentage = total > 0 ? (agreeingCount / total) * 100 : 0;
-
-  return {
-    decision,
-    percentage,
-    agreeingCount,
-    reasoning: results
-      .filter((r) => r.decision === decision)
-      .map((r) => `${r.modelName}: ${r.reasoning.slice(0, 200)}`)
-      .join(' | '),
-  };
-}

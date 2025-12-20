@@ -51,13 +51,20 @@ export const getInsightWithPredictions = query({
     const insight = await ctx.db.get(args.insightId);
     if (!insight) return null;
 
-    const predictions = await ctx.db
-      .query('modelPredictions')
-      .withIndex('by_run', (q) => q.eq('analysisRunId', insight.analysisRunId))
-      .collect();
+    // Only fetch predictions if analysisRunId exists
+    const predictions = insight.analysisRunId
+      ? await ctx.db
+          .query('modelPredictions')
+          .withIndex('by_run', (q) =>
+            q.eq('analysisRunId', insight.analysisRunId!),
+          )
+          .collect()
+      : [];
 
     const market = await ctx.db.get(insight.marketId);
-    const analysisRun = await ctx.db.get(insight.analysisRunId);
+    const analysisRun = insight.analysisRunId
+      ? await ctx.db.get(insight.analysisRunId)
+      : null;
 
     return {
       ...insight,
