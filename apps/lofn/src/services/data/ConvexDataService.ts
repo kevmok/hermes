@@ -1,38 +1,18 @@
-import { Context, Effect, Layer } from 'effect';
+import { Context, Duration, Effect, Layer, Schedule } from 'effect';
+import { ConvexHttpClient } from 'convex/browser';
+import { api } from 'backend/convex/_generated/api';
 import type { Id } from 'backend/convex/_generated/dataModel';
 
 const CONVEX_URL = process.env.CONVEX_URL;
-const CONVEX_DEPLOY_KEY = process.env.CONVEX_DEPLOY_KEY;
 
 if (!CONVEX_URL) {
   throw new Error('CONVEX_URL environment variable is required');
 }
 
-// Helper to make authenticated requests to Convex
-const convexFetch = async <T>(
-  endpoint: 'mutation' | 'query',
-  path: string,
-  args: Record<string, unknown>,
-): Promise<T> => {
-  const response = await fetch(`${CONVEX_URL}/api/${endpoint}`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      ...(CONVEX_DEPLOY_KEY && {
-        Authorization: `Convex ${CONVEX_DEPLOY_KEY}`,
-      }),
-    },
-    body: JSON.stringify({ path, args }),
-  });
-
-  if (!response.ok) {
-    const error = await response.text();
-    throw new Error(`Convex ${endpoint} failed: ${error}`);
-  }
-
-  const result = await response.json();
-  return result.value as T;
-};
+// Retry schedule: exponential backoff, max 3 attempts
+const retrySchedule = Schedule.exponential(Duration.seconds(1)).pipe(
+  Schedule.intersect(Schedule.recurs(3)),
+);
 
 export interface MarketData {
   polymarketId: string;
@@ -121,25 +101,20 @@ export class ConvexDataService extends Context.Tag('ConvexDataService')<
 >() {}
 
 const make = Effect.sync(() => {
+  // Singleton ConvexHttpClient - safe for long-running Bun service
+  const client = new ConvexHttpClient(CONVEX_URL!);
+
   const upsertMarket = (market: MarketData) =>
     Effect.tryPromise({
-      try: () =>
-        convexFetch<Id<'markets'>>(
-          'mutation',
-          'markets:upsertMarket',
-          market as unknown as Record<string, unknown>,
-        ),
+      try: () => client.mutation(api.markets.upsertMarket, market),
       catch: (e) => new Error(`Failed to upsert market: ${e}`),
-    });
+    }).pipe(Effect.retry(retrySchedule));
 
   const upsertMarketsBatch = (markets: MarketData[]) =>
     Effect.tryPromise({
-      try: () =>
-        convexFetch<Id<'markets'>[]>('mutation', 'markets:upsertMarketsBatch', {
-          markets,
-        }),
+      try: () => client.mutation(api.markets.upsertMarketsBatch, { markets }),
       catch: (e) => new Error(`Failed to batch upsert markets: ${e}`),
-    });
+    }).pipe(Effect.retry(retrySchedule));
 
   const recordSnapshot = (
     marketId: Id<'markets'>,
@@ -149,44 +124,33 @@ const make = Effect.sync(() => {
   ) =>
     Effect.tryPromise({
       try: () =>
-        convexFetch<Id<'marketSnapshots'>>(
-          'mutation',
-          'markets:recordSnapshot',
-          {
-            marketId,
-            yesPrice,
-            noPrice,
-            volume,
-          },
-        ),
+        client.mutation(api.markets.recordSnapshot, {
+          marketId,
+          yesPrice,
+          noPrice,
+          volume,
+        }),
       catch: (e) => new Error(`Failed to record snapshot: ${e}`),
-    });
+    }).pipe(Effect.retry(retrySchedule));
 
   const getMarketsForAnalysis = (limit: number) =>
     Effect.tryPromise({
       try: () =>
-        convexFetch<MarketForAnalysis[]>(
-          'query',
-          'markets:getMarketsNeedingAnalysis',
-          { limit, minHoursSinceLastAnalysis: 6 },
-        ),
+        client.query(api.markets.getMarketsNeedingAnalysis, {
+          limit,
+          minHoursSinceLastAnalysis: 6,
+        }),
       catch: (e) => new Error(`Failed to get markets for analysis: ${e}`),
-    });
+    }).pipe(Effect.retry(retrySchedule));
 
   const createAnalysisRun = (
     triggerType: 'scheduled' | 'on_demand' | 'system',
   ) =>
     Effect.tryPromise({
       try: () =>
-        convexFetch<Id<'analysisRuns'>>(
-          'mutation',
-          'analysis:createAnalysisRun',
-          {
-            triggerType,
-          },
-        ),
+        client.mutation(api.analysis.createAnalysisRun, { triggerType }),
       catch: (e) => new Error(`Failed to create analysis run: ${e}`),
-    });
+    }).pipe(Effect.retry(retrySchedule));
 
   const updateAnalysisRun = (
     runId: Id<'analysisRuns'>,
@@ -196,45 +160,32 @@ const make = Effect.sync(() => {
   ) =>
     Effect.tryPromise({
       try: () =>
-        convexFetch<void>('mutation', 'analysis:updateAnalysisRun', {
+        client.mutation(api.analysis.updateAnalysisRun, {
           runId,
           status,
           marketsAnalyzed,
           errorMessage,
         }),
       catch: (e) => new Error(`Failed to update analysis run: ${e}`),
-    });
+    }).pipe(Effect.retry(retrySchedule));
 
   const saveModelPrediction = (data: ModelPredictionData) =>
     Effect.tryPromise({
-      try: () =>
-        convexFetch<Id<'modelPredictions'>>(
-          'mutation',
-          'analysis:saveModelPrediction',
-          data as unknown as Record<string, unknown>,
-        ),
+      try: () => client.mutation(api.analysis.saveModelPrediction, data),
       catch: (e) => new Error(`Failed to save model prediction: ${e}`),
-    });
+    }).pipe(Effect.retry(retrySchedule));
 
   const saveInsight = (data: InsightData) =>
     Effect.tryPromise({
-      try: () =>
-        convexFetch<Id<'insights'>>(
-          'mutation',
-          'analysis:saveInsight',
-          data as unknown as Record<string, unknown>,
-        ),
+      try: () => client.mutation(api.analysis.saveInsight, data),
       catch: (e) => new Error(`Failed to save insight: ${e}`),
-    });
+    }).pipe(Effect.retry(retrySchedule));
 
   const markMarketAnalyzed = (marketId: Id<'markets'>) =>
     Effect.tryPromise({
-      try: () =>
-        convexFetch<void>('mutation', 'markets:markMarketAnalyzed', {
-          marketId,
-        }),
+      try: () => client.mutation(api.markets.markMarketAnalyzed, { marketId }),
       catch: (e) => new Error(`Failed to mark market as analyzed: ${e}`),
-    });
+    }).pipe(Effect.retry(retrySchedule));
 
   return {
     upsertMarket,

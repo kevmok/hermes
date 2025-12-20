@@ -10,9 +10,10 @@ import type { Id } from './_generated/dataModel';
 import { Effect } from 'effect';
 import { querySwarm, buildPrompt, type SwarmResponse } from './ai/swarm';
 
-// ============ INTERNAL MUTATIONS ============
+// ============ COLLECTOR MUTATIONS (called by lofn collector service) ============
+// These are public mutations for the collector service to call via ConvexHttpClient.
 
-export const createAnalysisRun = internalMutation({
+export const createAnalysisRun = mutation({
   args: {
     triggerType: v.union(
       v.literal('scheduled'),
@@ -33,7 +34,7 @@ export const createAnalysisRun = internalMutation({
   },
 });
 
-export const updateAnalysisRun = internalMutation({
+export const updateAnalysisRun = mutation({
   args: {
     runId: v.id('analysisRuns'),
     status: v.union(
@@ -62,7 +63,7 @@ export const updateAnalysisRun = internalMutation({
   },
 });
 
-export const saveModelPrediction = internalMutation({
+export const saveModelPrediction = mutation({
   args: {
     analysisRunId: v.id('analysisRuns'),
     marketId: v.id('markets'),
@@ -80,7 +81,7 @@ export const saveModelPrediction = internalMutation({
   },
 });
 
-export const saveInsight = internalMutation({
+export const saveInsight = mutation({
   args: {
     analysisRunId: v.optional(v.id('analysisRuns')),
     marketId: v.id('markets'),
@@ -299,7 +300,7 @@ export const analyzeMarketWithSwarm = internalAction({
 
       // Save insight directly (no analysisRun tracking for simplicity)
       const insightId: Id<'insights'> = await ctx.runMutation(
-        internal.analysis.saveInsight,
+        api.analysis.saveInsight,
         {
           marketId: args.marketId,
           consensusDecision: swarmResponse.consensusDecision,
@@ -344,14 +345,14 @@ export const executeMarketAnalysis = internalAction({
   ): Promise<{ success: boolean; insightId: Id<'insights'> }> => {
     // Create analysis run for tracking
     const runId: Id<'analysisRuns'> = await ctx.runMutation(
-      internal.analysis.createAnalysisRun,
+      api.analysis.createAnalysisRun,
       {
         triggerType: args.requestId ? 'on_demand' : 'system',
       },
     );
 
     try {
-      await ctx.runMutation(internal.analysis.updateAnalysisRun, {
+      await ctx.runMutation(api.analysis.updateAnalysisRun, {
         runId,
         status: 'running',
       });
@@ -382,7 +383,7 @@ export const executeMarketAnalysis = internalAction({
 
       // Save individual predictions for tracking
       for (const result of swarmResponse.results) {
-        await ctx.runMutation(internal.analysis.saveModelPrediction, {
+        await ctx.runMutation(api.analysis.saveModelPrediction, {
           analysisRunId: runId,
           marketId: args.marketId,
           modelName: result.modelName,
@@ -400,7 +401,7 @@ export const executeMarketAnalysis = internalAction({
 
       // Save insight
       const insightId: Id<'insights'> = await ctx.runMutation(
-        internal.analysis.saveInsight,
+        api.analysis.saveInsight,
         {
           analysisRunId: runId,
           marketId: args.marketId,
@@ -413,7 +414,7 @@ export const executeMarketAnalysis = internalAction({
         },
       );
 
-      await ctx.runMutation(internal.analysis.updateAnalysisRun, {
+      await ctx.runMutation(api.analysis.updateAnalysisRun, {
         runId,
         status: 'completed',
         marketsAnalyzed: 1,
@@ -432,7 +433,7 @@ export const executeMarketAnalysis = internalAction({
       const errorMessage =
         error instanceof Error ? error.message : String(error);
 
-      await ctx.runMutation(internal.analysis.updateAnalysisRun, {
+      await ctx.runMutation(api.analysis.updateAnalysisRun, {
         runId,
         status: 'failed',
         errorMessage,
