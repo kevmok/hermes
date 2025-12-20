@@ -11,10 +11,6 @@
     "check": "bunx tsc --noEmit"
   },
   "dependencies": {
-    "@effect/ai": "^0.32.1",
-    "@effect/ai-anthropic": "^0.22.0",
-    "@effect/ai-google": "^0.11.1",
-    "@effect/ai-openai": "^0.36.0",
     "@effect/platform": "^0.93.8",
     "@effect/platform-bun": "^0.86.0",
     "@effect/schema": "^0.75.5",

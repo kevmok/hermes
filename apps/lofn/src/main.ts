@@ -5,12 +5,8 @@ import { CONFIG } from './config';
 import {
   DataService,
   DataLayer,
-  SwarmLayer,
-  PrimaryModelLayer,
-  analysisTask,
   websocketEffect,
   fetchHistoricalTrades,
-  statusReportingEffect,
 } from './services';
 
 const program = Effect.gen(function* () {
@@ -19,27 +15,16 @@ const program = Effect.gen(function* () {
   // Load existing data
   yield* data.loadData;
 
-  console.log('Starting Polymarket Agent...');
-  console.log(`Analysis interval: ${CONFIG.ANALYSIS_CHECK_INTERVAL_SECONDS}s`);
+  console.log('Starting Polymarket Collector...');
   console.log(`Min trade size: $${CONFIG.MIN_TRADE_SIZE_USD}`);
-  console.log(`Markets to analyze: ${CONFIG.MARKETS_TO_ANALYZE}`);
+  console.log('Analysis now handled by Convex backend');
 
   // Fetch historical trades before starting WebSocket
   yield* fetchHistoricalTrades;
 
   // Start WebSocket (runs forever with reconnects)
+  // This collects trades and sends them to Convex for analysis
   yield* websocketEffect.pipe(Effect.fork);
-
-  // Start status reporting (every 30 seconds)
-  yield* statusReportingEffect.pipe(Effect.fork);
-
-  // Periodic analysis
-  yield* analysisTask.pipe(
-    Effect.repeat(
-      Schedule.spaced(Duration.seconds(CONFIG.ANALYSIS_CHECK_INTERVAL_SECONDS)),
-    ),
-    Effect.fork,
-  );
 
   // Periodic data save (every 5 minutes)
   yield* data.saveAll.pipe(
@@ -78,14 +63,8 @@ const program = Effect.gen(function* () {
   yield* Effect.never;
 });
 
-// Compose layers - includes FetchHttpClient, SwarmService, and DataLayer
-const AppLayer = Layer.provideMerge(
-  PrimaryModelLayer,
-  Layer.provideMerge(
-    SwarmLayer,
-    Layer.provideMerge(DataLayer, FetchHttpClient.layer),
-  ),
-);
+// Compose layers - DataLayer for local storage, FetchHttpClient for API calls
+const AppLayer = Layer.provideMerge(DataLayer, FetchHttpClient.layer);
 
 // Run program with BunRuntime
 BunRuntime.runMain(
