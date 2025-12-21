@@ -9,6 +9,8 @@
     "typecheck": "tsc --noEmit -p convex"
   },
   "dependencies": {
+    "better-auth": "catalog:auth",
+    "@convex-dev/better-auth": "catalog:auth",
     "@effect/ai": "^0.33.0",
     "@effect/ai-anthropic": "^0.23.0",
     "@effect/ai-google": "^0.12.0",
