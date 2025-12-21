@@ -6,9 +6,15 @@ packages/*/node_modules
 # output
 out
 dist
+dist-ssr
 apps/*/dist
 packages/*/dist
 *.tgz
+.nitro
+.tanstack
+.wranger
+.output
+.vinxi
 
 # code coverage
 coverage
