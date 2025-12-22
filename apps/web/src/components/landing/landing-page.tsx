@@ -103,7 +103,7 @@ function CircuitGrid() {
 
       {/* Scanning line */}
       <motion.div
-        className="absolute left-0 right-0 h-[2px] pointer-events-none"
+        className="absolute left-0 right-0 h-0.5 pointer-events-none"
         style={{
           background: `linear-gradient(90deg, transparent, ${colors.cyan}, transparent)`,
           boxShadow: `0 0 20px ${colors.cyanGlow}, 0 0 40px ${colors.cyanGlow}`,
@@ -427,7 +427,7 @@ function AIModelNode({
         )}
       </motion.div>
       <span
-        className="text-xs text-[var(--text-muted)]"
+        className="text-xs text-(--text-muted)"
         style={{ color: colors.textMuted }}
       >
         {model.name}
@@ -795,7 +795,7 @@ function Navigation() {
             <a
               key={item}
               href={`#${item.toLowerCase().replace(/ /g, "-")}`}
-              className="text-sm transition-colors hover:text-[var(--cyan)]"
+              className="text-sm transition-colors hover:text-(--cyan)"
               style={{ color: colors.textMuted }}
             >
               {item}
@@ -847,11 +847,11 @@ function HeroSection() {
 
       {/* Radial glows */}
       <div
-        className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[800px] h-[600px] rounded-full blur-[150px] pointer-events-none"
+        className="absolute top-1/4 left-1/2 -translate-x-1/2 w-200 h-150 rounded-full blur-[150px] pointer-events-none"
         style={{ background: colors.cyanDim }}
       />
       <div
-        className="absolute bottom-0 right-0 w-[500px] h-[500px] rounded-full blur-[120px] pointer-events-none"
+        className="absolute bottom-0 right-0 w-125 h-125 rounded-full blur-[120px] pointer-events-none"
         style={{ background: colors.purpleGlow, opacity: 0.3 }}
       />
 
@@ -922,8 +922,9 @@ function HeroSection() {
           className="text-lg sm:text-xl text-center max-w-2xl mx-auto mb-12 leading-relaxed"
           style={{ color: colors.textMuted }}
         >
-          Watch our multi-model AI consensus engine analyze trades in real-time.
-          Get the sharpest recommendations powered by Claude, GPT-4, and Gemini.
+          Watch our multi-model AI consensus engine analyze markets in
+          real-time. Multiple models vote independently — high-confidence
+          signals only when they agree.
         </motion.p>
 
         {/* Trade Analysis Animation */}
@@ -1066,7 +1067,7 @@ function FeatureCard({
 
         {/* Scan line on hover */}
         <motion.div
-          className="absolute left-0 right-0 h-[1px] opacity-0 group-hover:opacity-100"
+          className="absolute left-0 right-0 h-px opacity-0 group-hover:opacity-100"
           style={{ background: color, boxShadow: `0 0 20px ${color}` }}
           initial={{ top: 0 }}
           whileHover={{ top: "100%" }}
@@ -1168,29 +1169,8 @@ function FeaturesSection() {
       ),
       title: "Multi-Model Consensus",
       description:
-        "Three AI models vote independently. High-confidence signals only when they agree.",
+        "Multiple AI models vote independently. High-confidence signals only when they agree.",
       color: colors.purple,
-    },
-    {
-      icon: (
-        <svg
-          className="w-7 h-7"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="#f59e0b"
-          strokeWidth="1.5"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M16.5 18.75h-9m9 0a3 3 0 013 3h-15a3 3 0 013-3m9 0v-3.375c0-.621-.503-1.125-1.125-1.125h-.871M7.5 18.75v-3.375c0-.621.504-1.125 1.125-1.125h.872m5.007 0H9.497m5.007 0a7.454 7.454 0 01-.982-3.172M9.497 14.25a7.454 7.454 0 00.981-3.172M5.25 4.236c-.982.143-1.954.317-2.916.52A6.003 6.003 0 007.73 9.728M5.25 4.236V4.5c0 2.108.966 3.99 2.48 5.228M5.25 4.236V2.721C7.456 2.41 9.71 2.25 12 2.25c2.291 0 4.545.16 6.75.47v1.516M18.75 4.236c.982.143 1.954.317 2.916.52A6.003 6.003 0 0016.27 9.728M18.75 4.236V4.5c0 2.108-.966 3.99-2.48 5.228m0 0a6.008 6.008 0 01-3.27.953 6.008 6.008 0 01-3.27-.953"
-          />
-        </svg>
-      ),
-      title: "Sports Picks Coming",
-      description:
-        "Precise up/down predictions for major sporting events. Same AI consensus, new markets.",
-      color: "#f59e0b",
     },
   ];
 
@@ -1203,11 +1183,11 @@ function FeaturesSection() {
       {/* Background effects */}
       <div className="absolute inset-0 pointer-events-none">
         <div
-          className="absolute top-0 left-1/4 w-[500px] h-[500px] rounded-full blur-[150px]"
+          className="absolute top-0 left-1/4 w-125 h-125 rounded-full blur-[150px]"
           style={{ background: colors.cyanDim, opacity: 0.5 }}
         />
         <div
-          className="absolute bottom-0 right-1/4 w-[400px] h-[400px] rounded-full blur-[120px]"
+          className="absolute bottom-0 right-1/4 w-100 h-100 rounded-full blur-[120px]"
           style={{ background: colors.purpleGlow, opacity: 0.3 }}
         />
       </div>
@@ -1275,9 +1255,9 @@ function HowItWorksSection() {
       icon: "03",
     },
     {
-      title: "Execute and track",
+      title: "Track your portfolio",
       description:
-        "Place trades and monitor your portfolio performance in one dashboard.",
+        "Connect your wallet address to monitor positions and measure performance over time.",
       icon: "04",
     },
   ];
@@ -1321,7 +1301,7 @@ function HowItWorksSection() {
         <div className="relative">
           {/* Vertical connector line */}
           <div
-            className="absolute left-[39px] top-8 bottom-8 w-px hidden md:block"
+            className="absolute left-9.75 top-8 bottom-8 w-px hidden md:block"
             style={{
               background: `linear-gradient(to bottom, ${colors.cyan}, ${colors.purple}, transparent)`,
               boxShadow: `0 0 10px ${colors.cyanGlow}`,
@@ -1337,7 +1317,7 @@ function HowItWorksSection() {
                   transition={{ duration: 0.2 }}
                 >
                   <motion.div
-                    className="flex-shrink-0 w-20 h-20 rounded-2xl flex items-center justify-center font-mono text-2xl font-bold relative overflow-hidden"
+                    className="shrink-0 w-20 h-20 rounded-2xl flex items-center justify-center font-mono text-2xl font-bold relative overflow-hidden"
                     style={{
                       background: `linear-gradient(135deg, ${colors.surface}, ${colors.bgSecondary})`,
                       border: `1px solid ${colors.border}`,
@@ -1399,7 +1379,7 @@ function PricingSection() {
     >
       <div className="absolute inset-0 pointer-events-none">
         <div
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[600px] rounded-full blur-[150px]"
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-200 h-150 rounded-full blur-[150px]"
           style={{ background: colors.cyanDim, opacity: 0.3 }}
         />
       </div>
@@ -1547,7 +1527,7 @@ function PricingSection() {
                   "Unlimited signals",
                   "Full portfolio tracking",
                   "Priority alerts",
-                  "Sports picks (coming soon)",
+                  "Advanced analytics",
                 ].map((feature) => (
                   <li
                     key={feature}
@@ -1642,19 +1622,16 @@ function Footer() {
           >
             <a
               href="/privacy"
-              className="hover:text-[var(--text)] transition-colors"
+              className="hover:text-(--text) transition-colors"
             >
               Privacy Policy
             </a>
-            <a
-              href="/terms"
-              className="hover:text-[var(--text)] transition-colors"
-            >
+            <a href="/terms" className="hover:text-(--text) transition-colors">
               Terms of Service
             </a>
             <a
               href="/contact"
-              className="hover:text-[var(--text)] transition-colors"
+              className="hover:text-(--text) transition-colors"
             >
               Contact
             </a>
