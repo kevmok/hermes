@@ -1,19 +1,30 @@
-import { createClient, type GenericCtx } from "@convex-dev/better-auth";
+import { createClient, GenericCtx } from "@convex-dev/better-auth";
 import { convex, crossDomain } from "@convex-dev/better-auth/plugins";
 import { components } from "./_generated/api";
-import { DataModel } from "./_generated/dataModel";
-import { query } from "./_generated/server";
+import { DataModel, Id } from "./_generated/dataModel";
+import { query, QueryCtx } from "./_generated/server";
+import { api } from "./_generated/api";
 import { betterAuth, type BetterAuthOptions } from "better-auth/minimal";
 import authConfig from "./auth.config";
+import { admin } from "better-auth/plugins";
+import { autumn } from "autumn-js/better-auth";
+import betterAuthSchema from "./better-auth/schema";
+import { withoutSystemFields } from "convex-helpers";
+import { ConvexError } from "convex/values";
 
 const siteUrl = process.env.SITE_URL!;
 
-// The component client has methods needed for integrating Convex with Better Auth,
-// as well as helper methods for general use.
-export const authComponent = createClient<DataModel>(components.betterAuth);
+export const authComponent = createClient<DataModel, typeof betterAuthSchema>(
+  components.betterAuth,
+  {
+    local: {
+      schema: betterAuthSchema,
+    },
+  },
+);
 
-export const createAuth = (ctx: GenericCtx<DataModel>) => {
-  return betterAuth({
+export const createAuthOptions = (ctx: GenericCtx<DataModel>) => {
+  return {
     trustedOrigins: [siteUrl],
     database: authComponent.adapter(ctx),
     // Configure simple, non-verified email/password to get started
@@ -22,19 +33,44 @@ export const createAuth = (ctx: GenericCtx<DataModel>) => {
       requireEmailVerification: false,
     },
     plugins: [
+      admin(),
+      autumn(),
       // The cross domain plugin is required for client side frameworks
       crossDomain({ siteUrl }),
       // The Convex plugin is required for Convex compatibility
       convex({ authConfig }),
+      // tanstackStartCookies(),
     ],
-  });
+  } satisfies BetterAuthOptions;
 };
 
-// Example function for getting the current user
-// Feel free to edit, omit, etc.
+export const createAuth = (ctx: GenericCtx<DataModel>) => {
+  return betterAuth(createAuthOptions(ctx));
+};
+
+export const safeGetUser = async (ctx: QueryCtx) => {
+  const authUser = await authComponent.safeGetAuthUser(ctx);
+  if (!authUser) {
+    return;
+  }
+  const user = await ctx.db.get(authUser.userId as Id<"users">);
+  if (!user) {
+    return;
+  }
+  return { ...user, ...withoutSystemFields(authUser) };
+};
+
+export const getUser = async (ctx: QueryCtx) => {
+  const user = await safeGetUser(ctx);
+  if (!user) {
+    throw new ConvexError("Unauthenticated");
+  }
+  return user;
+};
+
 export const getCurrentUser = query({
   args: {},
   handler: async (ctx) => {
-    return authComponent.getAuthUser(ctx);
+    return await getUser(ctx);
   },
 });

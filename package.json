@@ -13,6 +13,7 @@
       "react-dom": "^19.0.0",
       "@t3-oss/env-core": "latest",
       "convex": "^1.31.2",
+      "convex-helpers": "^0.1.108",
       "zod": "^4.2.1"
     },
     "catalogs": {
@@ -33,7 +34,11 @@
         "@tanstack/react-store": "^0.8.0",
         "@tanstack/react-table": "8.21.3",
         "@tanstack/react-router-devtools": "1.142.7",
+        "@tanstack/react-query-devtools": "5.91.1",
         "@tanstack/query-db-collection": "^1.0.11"
+      },
+      "billing": {
+        "autumn-js": "^0.1.62"
       }
     }
   },
