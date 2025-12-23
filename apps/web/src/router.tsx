@@ -9,6 +9,8 @@ export const getRouter = () => {
   const router = createRouter({
     routeTree,
     context: { queryClient, convexQueryClient },
+    // defaultPendingComponent: () => <Loader />,
+    defaultNotFoundComponent: () => <div>Not Found</div>,
     defaultPreload: "intent",
     scrollRestoration: true,
     defaultPreloadStaleTime: 0,

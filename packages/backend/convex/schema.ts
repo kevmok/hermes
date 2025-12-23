@@ -2,23 +2,6 @@ import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 
 export default defineSchema({
-  // ============ USERS ============
-  users: defineTable({
-    name: v.string(),
-    email: v.string(),
-    emailVerified: v.boolean(),
-    image: v.optional(v.union(v.null(), v.string())),
-    createdAt: v.number(),
-    updatedAt: v.number(),
-    role: v.optional(v.union(v.null(), v.string())),
-    banned: v.optional(v.union(v.null(), v.boolean())),
-    banReason: v.optional(v.union(v.null(), v.string())),
-    banExpires: v.optional(v.union(v.null(), v.number())),
-    userId: v.optional(v.union(v.null(), v.string())),
-  })
-    .index("email", ["email"])
-    .index("userId", ["userId"]),
-
   // ============ MARKETS ============
 
   markets: defineTable({
