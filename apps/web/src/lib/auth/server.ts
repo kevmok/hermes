@@ -9,5 +9,5 @@ export const {
   fetchAuthAction,
 } = convexBetterAuthReactStart({
   convexUrl: env.VITE_CONVEX_URL,
-  convexSiteUrl: env.VITE_CONVEX_SITE_URL!,
+  convexSiteUrl: env.VITE_CONVEX_SITE_URL,
 });

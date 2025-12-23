@@ -34,7 +34,8 @@ export const Route = createRootRouteWithContext<{
       },
       {
         name: "description",
-        content: "Get the sharpest prediction market recommendations. Real-time signals and risk-adjusted trade ideas powered by advanced machine learning.",
+        content:
+          "Get the sharpest prediction market recommendations. Real-time signals and risk-adjusted trade ideas powered by advanced machine learning.",
       },
     ],
     links: [
@@ -61,14 +62,15 @@ export const Route = createRootRouteWithContext<{
   shellComponent: RootDocument,
   component: RootComponent,
   beforeLoad: async (ctx) => {
-    const token = await ctx.context.queryClient.ensureQueryData({
-      queryKey: ["token"],
-      queryFn: getAuth,
-    });
-    // const token = await getAuth();
+    // const token = await ctx.context.queryClient.ensureQueryData({
+    //   queryKey: ["token"],
+    //   queryFn: getAuth,
+    //   revalidateIfStale: true,
+    // });
+    const token = await getAuth();
     // all queries, mutations and actions through TanStack Query will be
     // authenticated during SSR if we have a valid token
-    console.log("token", token);
+    // console.log("token", token);
     if (token) {
       // During SSR only (the only time serverHttpClient exists),
       // set the auth token to make HTTP queries with.

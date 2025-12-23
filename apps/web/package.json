@@ -23,6 +23,7 @@
     "@tanstack/react-router-ssr-query": "catalog:tanstack",
     "@tanstack/react-start": "catalog:tanstack",
     "@tanstack/router-plugin": "catalog:tanstack",
+    "@tanstack/react-form": "catalog:tanstack",
     "better-auth": "catalog:auth",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
