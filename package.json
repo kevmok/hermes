@@ -18,7 +18,7 @@
     },
     "catalogs": {
       "auth": {
-        "better-auth": "1.4.7",
+        "better-auth": "1.4.8",
         "@convex-dev/better-auth": "^0.10.6"
       },
       "tanstack": {

@@ -68,6 +68,7 @@ export const Route = createRootRouteWithContext<{
     //   revalidateIfStale: true,
     // });
     const token = await getAuth();
+    console.log("token", token);
     // all queries, mutations and actions through TanStack Query will be
     // authenticated during SSR if we have a valid token
     // console.log("token", token);

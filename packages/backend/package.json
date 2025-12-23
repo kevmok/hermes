@@ -9,20 +9,22 @@
     "typecheck": "tsc --noEmit -p convex"
   },
   "dependencies": {
-    "autumn-js": "catalog:billing",
-    "better-auth": "catalog:auth",
     "@convex-dev/better-auth": "catalog:auth",
     "@effect/ai": "^0.33.0",
     "@effect/ai-anthropic": "^0.23.0",
     "@effect/ai-google": "^0.12.0",
     "@effect/ai-openai": "^0.37.0",
     "@effect/platform": "^0.94.0",
+    "autumn-js": "catalog:billing",
+    "better-auth": "catalog:auth",
+    "better-auth-convex": "^0.5.1",
     "convex": "catalog:",
     "convex-helpers": "catalog:",
     "effect": "^3.19.13"
   },
   "devDependencies": {
-    "@types/bun": "latest"
+    "@types/bun": "latest",
+    "@types/node": "^25.0.3"
   },
   "peerDependencies": {
     "typescript": "^5"
