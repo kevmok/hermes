@@ -13,10 +13,15 @@ import type * as ai_swarm from "../ai/swarm.js";
 import type * as analysis from "../analysis.js";
 import type * as auth from "../auth.js";
 import type * as crons from "../crons.js";
+import type * as globalFilters from "../globalFilters.js";
 import type * as http from "../http.js";
 import type * as insights from "../insights.js";
 import type * as markets from "../markets.js";
+import type * as performanceMetrics from "../performanceMetrics.js";
+import type * as resolution from "../resolution.js";
 import type * as scheduledJobs from "../scheduledJobs.js";
+import type * as signals from "../signals.js";
+import type * as users from "../users.js";
 import type * as watchlists from "../watchlists.js";
 
 import type {
@@ -31,10 +36,15 @@ declare const fullApi: ApiFromModules<{
   analysis: typeof analysis;
   auth: typeof auth;
   crons: typeof crons;
+  globalFilters: typeof globalFilters;
   http: typeof http;
   insights: typeof insights;
   markets: typeof markets;
+  performanceMetrics: typeof performanceMetrics;
+  resolution: typeof resolution;
   scheduledJobs: typeof scheduledJobs;
+  signals: typeof signals;
+  users: typeof users;
   watchlists: typeof watchlists;
 }>;
 

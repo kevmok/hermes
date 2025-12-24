@@ -40,7 +40,7 @@ export function ForgotPasswordForm({ onBack }: ForgotPasswordFormProps) {
     onSubmit: async ({ value }) => {
       setError(null);
       try {
-        const result = await authClient.forgetPassword({
+        const result = await authClient.requestPasswordReset({
           email: value.email,
           redirectTo: "/auth/reset-password",
         });
@@ -52,6 +52,7 @@ export function ForgotPasswordForm({ onBack }: ForgotPasswordFormProps) {
 
         setSuccess(true);
       } catch (err) {
+        console.error(err);
         setError("An unexpected error occurred. Please try again.");
       }
     },
@@ -85,7 +86,10 @@ export function ForgotPasswordForm({ onBack }: ForgotPasswordFormProps) {
             />
           </svg>
         </div>
-        <h3 className="text-xl font-semibold mb-2" style={{ color: colors.text }}>
+        <h3
+          className="text-xl font-semibold mb-2"
+          style={{ color: colors.text }}
+        >
           Check your email
         </h3>
         <p className="mb-6" style={{ color: colors.textMuted }}>
@@ -164,7 +168,9 @@ export function ForgotPasswordForm({ onBack }: ForgotPasswordFormProps) {
               />
               {isInvalid && (
                 <FieldError
-                  errors={field.state.meta.errors.map((e) => ({ message: String(e) }))}
+                  errors={field.state.meta.errors.map((e) => ({
+                    message: String(e),
+                  }))}
                 />
               )}
             </Field>

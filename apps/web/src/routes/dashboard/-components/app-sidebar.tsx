@@ -12,37 +12,46 @@ import {
   SidebarMenuItem,
   SidebarSeparator,
 } from "@/components/ui/sidebar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
   ChartLineData01Icon,
-  SparklesIcon,
-  StarIcon,
   Settings01Icon,
   Logout01Icon,
+  Sun01Icon,
+  Moon01Icon,
+  ComputerIcon,
+  Activity03Icon,
 } from "@hugeicons/core-free-icons";
 import { authClient } from "@/lib/auth/client";
+import { useTheme } from "@/lib/theme";
 
 const navItems = [
+  {
+    title: "Signals",
+    href: "/dashboard/signals",
+    icon: Activity03Icon,
+  },
   {
     title: "Markets",
     href: "/dashboard/markets",
     icon: ChartLineData01Icon,
-  },
-  {
-    title: "Insights",
-    href: "/dashboard/insights",
-    icon: SparklesIcon,
-  },
-  {
-    title: "Watchlist",
-    href: "/dashboard/watchlist",
-    icon: StarIcon,
   },
 ];
 
 export function AppSidebar() {
   const location = useLocation();
   const router = useRouter();
+  const { theme, setTheme } = useTheme();
+
+  const themeLabel =
+    theme === "system" ? "System" : theme === "dark" ? "Dark" : "Light";
 
   const handleSignOut = async () => {
     await authClient.signOut({
@@ -52,7 +61,6 @@ export function AppSidebar() {
         },
       },
     });
-    window.location.href = "/";
   };
 
   return (
@@ -84,16 +92,15 @@ export function AppSidebar() {
                 const isActive = location.pathname.startsWith(item.href);
                 return (
                   <SidebarMenuItem key={item.href}>
-                    <SidebarMenuButton
-                      isActive={isActive}
-                      tooltip={item.title}
-                      render={
-                        <Link to={item.href}>
-                          <HugeiconsIcon icon={item.icon} size={18} />
-                          <span>{item.title}</span>
-                        </Link>
-                      }
-                    />
+                    <SidebarMenuButton isActive={isActive}>
+                      <Link
+                        to={item.href}
+                        className="flex w-full items-center gap-3 rounded-md py-2 font-medium text-sm transition-colors"
+                      >
+                        <HugeiconsIcon icon={item.icon} size={18} />
+                        <span>{item.title}</span>
+                      </Link>
+                    </SidebarMenuButton>
                   </SidebarMenuItem>
                 );
               })}
@@ -104,25 +111,74 @@ export function AppSidebar() {
 
       <SidebarFooter>
         <SidebarSeparator />
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              tooltip="Settings"
+        <div className="flex items-center justify-between px-2 py-2 group-data-[collapsible=icon]:justify-center">
+          <DropdownMenu>
+            <DropdownMenuTrigger
               render={
-                <Link to="/dashboard/settings">
-                  <HugeiconsIcon icon={Settings01Icon} size={18} />
-                  <span>Settings</span>
-                </Link>
+                <button
+                  type="button"
+                  className="flex items-center justify-center size-8 rounded-md hover:bg-sidebar-accent transition-colors"
+                  aria-label={`Theme: ${themeLabel}`}
+                >
+                  <span className="relative flex items-center justify-center size-4.5">
+                    <HugeiconsIcon
+                      icon={Sun01Icon}
+                      size={18}
+                      className="absolute rotate-0 scale-100 transition-transform dark:-rotate-90 dark:scale-0"
+                    />
+                    <HugeiconsIcon
+                      icon={Moon01Icon}
+                      size={18}
+                      className="absolute rotate-90 scale-0 transition-transform dark:rotate-0 dark:scale-100"
+                    />
+                  </span>
+                </button>
               }
             />
-          </SidebarMenuItem>
-          <SidebarMenuItem>
-            <SidebarMenuButton tooltip="Sign out" onClick={handleSignOut}>
+            <DropdownMenuContent side="top" align="start" sideOffset={8}>
+              <DropdownMenuRadioGroup
+                value={theme}
+                onValueChange={(value) =>
+                  setTheme(value as "light" | "dark" | "system")
+                }
+              >
+                <DropdownMenuRadioItem value="light">
+                  <HugeiconsIcon icon={Sun01Icon} size={16} className="mr-2" />
+                  Light
+                </DropdownMenuRadioItem>
+                <DropdownMenuRadioItem value="dark">
+                  <HugeiconsIcon icon={Moon01Icon} size={16} className="mr-2" />
+                  Dark
+                </DropdownMenuRadioItem>
+                <DropdownMenuRadioItem value="system">
+                  <HugeiconsIcon
+                    icon={ComputerIcon}
+                    size={16}
+                    className="mr-2"
+                  />
+                  System
+                </DropdownMenuRadioItem>
+              </DropdownMenuRadioGroup>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <div className="flex items-center gap-1 group-data-[collapsible=icon]:hidden">
+            <Link
+              to="/dashboard/settings"
+              className="flex items-center justify-center size-8 rounded-md hover:bg-sidebar-accent transition-colors"
+              aria-label="Settings"
+            >
+              <HugeiconsIcon icon={Settings01Icon} size={18} />
+            </Link>
+            <button
+              type="button"
+              onClick={handleSignOut}
+              className="flex items-center justify-center size-8 rounded-md hover:bg-sidebar-accent transition-colors"
+              aria-label="Sign out"
+            >
               <HugeiconsIcon icon={Logout01Icon} size={18} />
-              <span>Sign out</span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
+            </button>
+          </div>
+        </div>
       </SidebarFooter>
     </Sidebar>
   );

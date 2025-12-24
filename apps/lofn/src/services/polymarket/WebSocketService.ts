@@ -2,7 +2,10 @@ import { Context, Effect, Queue, Schema, type Ref } from 'effect';
 import type pl from 'nodejs-polars';
 import { CONFIG } from '../../config';
 import { DataService } from '../data';
-import { ConvexDataService, type MarketData } from '../data/ConvexDataService';
+import {
+  ConvexDataService,
+  type MarketDataWithTrade,
+} from '../data/ConvexDataService';
 import {
   buildMarketRow,
   shouldIncludeTrade,
@@ -96,7 +99,9 @@ const processTradeMessage = (
     // Validate required fields
     if (!t.conditionId || !t.title || !t.size || !t.price || !t.outcome) return;
 
-    const sizeUsd = t.size * t.price;
+    // Per design decisions: size is already in USD from Polymarket
+    // DO NOT multiply by price - that was a bug
+    const sizeUsd = t.size;
 
     const tradeData: TradeData = {
       marketId: t.conditionId,
@@ -114,8 +119,11 @@ const processTradeMessage = (
     const row = buildMarketRow(tradeData);
     yield* updateMarketsRef(marketsRef, row);
 
-    // 2. Send to Convex (primary) - triggers AI analysis automatically
-    const marketData: MarketData = {
+    // 2. Determine trade side for signal context
+    const tradeSide = t.outcome.toUpperCase() === 'YES' ? 'YES' : 'NO';
+
+    // 3. Send to Convex with trade context - triggers signal generation
+    const marketDataWithTrade: MarketDataWithTrade = {
       polymarketId: t.conditionId,
       conditionId: t.conditionId,
       eventSlug: t.eventSlug ?? '',
@@ -126,9 +134,16 @@ const processTradeMessage = (
       volume24h: sizeUsd,
       totalVolume: sizeUsd,
       isActive: true,
+      tradeContext: {
+        size: sizeUsd,
+        price: t.price,
+        side: tradeSide as 'YES' | 'NO',
+        taker: t.proxyWallet, // proxyWallet is the taker address
+        timestamp: Date.now(),
+      },
     };
 
-    yield* convex.upsertMarket(marketData).pipe(
+    yield* convex.upsertMarketWithTrade(marketDataWithTrade).pipe(
       Effect.catchAll((error) => {
         console.error('Convex upsert failed:', error);
         return Effect.succeed(undefined); // Don't crash on Convex failures
@@ -136,6 +151,6 @@ const processTradeMessage = (
     );
 
     console.log(
-      `Trade: ${row.title.slice(0, 50)}... | $${sizeUsd.toFixed(0)} → Convex`,
+      `Trade: ${row.title.slice(0, 50)}... | $${sizeUsd.toFixed(0)} ${tradeSide} → Signal Pipeline`,
     );
   });

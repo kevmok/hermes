@@ -15,6 +15,8 @@ export default defineSchema({
     banReason: v.optional(v.union(v.null(), v.string())),
     banExpires: v.optional(v.union(v.null(), v.number())),
     userId: v.optional(v.union(v.null(), v.string())),
+    // Signal notification tracking
+    lastSeenSignalsAt: v.optional(v.number()),
   })
     .index("email_name", ["email", "name"])
     .index("name", ["name"])
@@ -86,6 +88,18 @@ export default defineSchema({
     updatedAt: v.number(),
     lastTradeAt: v.number(),
     lastAnalyzedAt: v.optional(v.number()),
+
+    // Outcome tracking fields for performance measurement
+    outcome: v.optional(
+      v.union(
+        v.literal("YES"),
+        v.literal("NO"),
+        v.literal("INVALID"),
+        v.null(),
+      ),
+    ),
+    resolvedAt: v.optional(v.number()),
+    resolutionSource: v.optional(v.string()),
   })
     .index("by_polymarket_id", ["polymarketId"])
     .index("by_event_slug", ["eventSlug"])
@@ -93,7 +107,8 @@ export default defineSchema({
     .index("by_volume", ["volume24h"])
     .index("by_last_trade", ["lastTradeAt"])
     .index("by_last_analyzed", ["lastAnalyzedAt"])
-    .index("by_category", ["category"]),
+    .index("by_category", ["category"])
+    .index("by_resolved", ["outcome", "resolvedAt"]),
 
   marketSnapshots: defineTable({
     marketId: v.id("markets"),
@@ -175,6 +190,60 @@ export default defineSchema({
     .index("by_confidence_level", ["confidenceLevel"])
     .index("by_timestamp", ["timestamp"]),
 
+  // ============ SIGNALS (Whale Trade-Triggered AI Consensus) ============
+
+  signals: defineTable({
+    marketId: v.id("markets"),
+
+    // Trigger trade details (single trade or aggregated array)
+    triggerTrade: v.union(
+      // Single trade
+      v.object({
+        size: v.number(), // Already in USD from Polymarket
+        price: v.number(),
+        side: v.union(v.literal("YES"), v.literal("NO")),
+        taker: v.optional(v.string()),
+        timestamp: v.number(),
+      }),
+      // Multiple trades aggregated within dedup window
+      v.array(
+        v.object({
+          size: v.number(),
+          price: v.number(),
+          side: v.union(v.literal("YES"), v.literal("NO")),
+          taker: v.optional(v.string()),
+          timestamp: v.number(),
+        }),
+      ),
+    ),
+
+    // AI consensus results
+    consensusDecision: v.union(
+      v.literal("YES"),
+      v.literal("NO"),
+      v.literal("NO_TRADE"),
+    ),
+    consensusPercentage: v.number(),
+    totalModels: v.number(),
+    agreeingModels: v.number(),
+    aggregatedReasoning: v.string(),
+    confidenceLevel: v.union(
+      v.literal("high"),
+      v.literal("medium"),
+      v.literal("low"),
+    ),
+    isHighConfidence: v.boolean(), // 80%+ consensus
+    priceAtTrigger: v.number(),
+
+    // When the signal was stored
+    signalTimestamp: v.number(),
+  })
+    .index("by_market", ["marketId"])
+    .index("by_timestamp", ["signalTimestamp"])
+    .index("by_decision", ["consensusDecision", "signalTimestamp"])
+    .index("by_high_confidence", ["isHighConfidence", "signalTimestamp"])
+    .index("by_market_time", ["marketId", "signalTimestamp"]),
+
   // ============ ANALYSIS REQUESTS (for on-demand) ============
 
   analysisRequests: defineTable({
@@ -210,4 +279,18 @@ export default defineSchema({
     .index("by_watchlist", ["watchlistId"])
     .index("by_market", ["marketId"])
     .index("by_watchlist_market", ["watchlistId", "marketId"]),
+
+  // ============ GLOBAL FILTERS (Singleton Config) ============
+
+  globalFilters: defineTable({
+    minTradeSize: v.number(), // Min trade size in USD (e.g., 500)
+    maxPriceYes: v.number(), // Max YES price to track (e.g., 0.98)
+    minPriceYes: v.number(), // Min YES price to track (e.g., 0.02)
+    minVolume24h: v.number(), // Min 24h volume in USD (e.g., 10000)
+    excludedCategories: v.array(v.string()), // Categories to exclude
+    deduplicationWindowMs: v.number(), // Dedup window in ms (e.g., 60000)
+    minConsensusPercentage: v.number(), // Min consensus to create signal (e.g., 60)
+    isEnabled: v.boolean(), // Master switch for signal generation
+    updatedAt: v.number(),
+  }),
 });

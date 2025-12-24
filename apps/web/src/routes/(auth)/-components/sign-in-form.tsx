@@ -44,14 +44,9 @@ export function SignInForm({ onForgotPassword }: SignInFormProps) {
     onSubmit: async ({ value }) => {
       setError(null);
       try {
-        const callbackURL =
-          typeof window !== "undefined"
-            ? `${window.location.origin}/authcallback`
-            : "/authcallback";
         const result = await authClient.signIn.email({
           email: value.email,
           password: value.password,
-          // callbackURL: callbackURL,
         });
 
         if (result.error) {
@@ -61,6 +56,7 @@ export function SignInForm({ onForgotPassword }: SignInFormProps) {
 
         navigate({ to: "/" });
       } catch (err) {
+        console.warn(err);
         setError("An unexpected error occurred. Please try again.");
       }
     },

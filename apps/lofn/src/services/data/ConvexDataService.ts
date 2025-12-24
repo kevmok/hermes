@@ -30,6 +30,18 @@ export interface MarketData {
   endDate?: number;
 }
 
+export interface TradeContext {
+  size: number;
+  price: number;
+  side: 'YES' | 'NO';
+  taker?: string;
+  timestamp: number;
+}
+
+export interface MarketDataWithTrade extends MarketData {
+  tradeContext: TradeContext;
+}
+
 export interface ModelPredictionData {
   analysisRunId: Id<'analysisRuns'>;
   marketId: Id<'markets'>;
@@ -66,6 +78,9 @@ export class ConvexDataService extends Context.Tag('ConvexDataService')<
   {
     readonly upsertMarket: (
       market: MarketData,
+    ) => Effect.Effect<Id<'markets'>, Error>;
+    readonly upsertMarketWithTrade: (
+      market: MarketDataWithTrade,
     ) => Effect.Effect<Id<'markets'>, Error>;
     readonly upsertMarketsBatch: (
       markets: MarketData[],
@@ -108,6 +123,12 @@ const make = Effect.sync(() => {
     Effect.tryPromise({
       try: () => client.mutation(api.markets.upsertMarket, market),
       catch: (e) => new Error(`Failed to upsert market: ${e}`),
+    }).pipe(Effect.retry(retrySchedule));
+
+  const upsertMarketWithTrade = (market: MarketDataWithTrade) =>
+    Effect.tryPromise({
+      try: () => client.mutation(api.markets.upsertMarketWithTrade, market),
+      catch: (e) => new Error(`Failed to upsert market with trade: ${e}`),
     }).pipe(Effect.retry(retrySchedule));
 
   const upsertMarketsBatch = (markets: MarketData[]) =>
@@ -189,6 +210,7 @@ const make = Effect.sync(() => {
 
   return {
     upsertMarket,
+    upsertMarketWithTrade,
     upsertMarketsBatch,
     recordSnapshot,
     getMarketsForAnalysis,

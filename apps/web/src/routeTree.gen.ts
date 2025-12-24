@@ -12,14 +12,15 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as DashboardRouteRouteImport } from './routes/dashboard/route'
 import { Route as authRouteRouteImport } from './routes/(auth)/route'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as TestIndexRouteImport } from './routes/test/index'
 import { Route as DashboardIndexRouteImport } from './routes/dashboard/index'
 import { Route as authAuthcallbackRouteImport } from './routes/(auth)/authcallback'
 import { Route as authAuthRouteImport } from './routes/(auth)/auth'
 import { Route as DashboardWatchlistIndexRouteImport } from './routes/dashboard/watchlist/index'
+import { Route as DashboardSignalsIndexRouteImport } from './routes/dashboard/signals/index'
 import { Route as DashboardSettingsIndexRouteImport } from './routes/dashboard/settings/index'
 import { Route as DashboardMarketsIndexRouteImport } from './routes/dashboard/markets/index'
 import { Route as DashboardInsightsIndexRouteImport } from './routes/dashboard/insights/index'
+import { Route as DashboardSignalsHistoryRouteImport } from './routes/dashboard/signals/history'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth.$'
 
 const DashboardRouteRoute = DashboardRouteRouteImport.update({
@@ -34,11 +35,6 @@ const authRouteRoute = authRouteRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const TestIndexRoute = TestIndexRouteImport.update({
-  id: '/test/',
-  path: '/test/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DashboardIndexRoute = DashboardIndexRouteImport.update({
@@ -61,6 +57,11 @@ const DashboardWatchlistIndexRoute = DashboardWatchlistIndexRouteImport.update({
   path: '/watchlist/',
   getParentRoute: () => DashboardRouteRoute,
 } as any)
+const DashboardSignalsIndexRoute = DashboardSignalsIndexRouteImport.update({
+  id: '/signals/',
+  path: '/signals/',
+  getParentRoute: () => DashboardRouteRoute,
+} as any)
 const DashboardSettingsIndexRoute = DashboardSettingsIndexRouteImport.update({
   id: '/settings/',
   path: '/settings/',
@@ -76,6 +77,11 @@ const DashboardInsightsIndexRoute = DashboardInsightsIndexRouteImport.update({
   path: '/insights/',
   getParentRoute: () => DashboardRouteRoute,
 } as any)
+const DashboardSignalsHistoryRoute = DashboardSignalsHistoryRouteImport.update({
+  id: '/signals/history',
+  path: '/signals/history',
+  getParentRoute: () => DashboardRouteRoute,
+} as any)
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   id: '/api/auth/$',
   path: '/api/auth/$',
@@ -88,11 +94,12 @@ export interface FileRoutesByFullPath {
   '/auth': typeof authAuthRoute
   '/authcallback': typeof authAuthcallbackRoute
   '/dashboard/': typeof DashboardIndexRoute
-  '/test': typeof TestIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/dashboard/signals/history': typeof DashboardSignalsHistoryRoute
   '/dashboard/insights': typeof DashboardInsightsIndexRoute
   '/dashboard/markets': typeof DashboardMarketsIndexRoute
   '/dashboard/settings': typeof DashboardSettingsIndexRoute
+  '/dashboard/signals': typeof DashboardSignalsIndexRoute
   '/dashboard/watchlist': typeof DashboardWatchlistIndexRoute
 }
 export interface FileRoutesByTo {
@@ -100,11 +107,12 @@ export interface FileRoutesByTo {
   '/auth': typeof authAuthRoute
   '/authcallback': typeof authAuthcallbackRoute
   '/dashboard': typeof DashboardIndexRoute
-  '/test': typeof TestIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/dashboard/signals/history': typeof DashboardSignalsHistoryRoute
   '/dashboard/insights': typeof DashboardInsightsIndexRoute
   '/dashboard/markets': typeof DashboardMarketsIndexRoute
   '/dashboard/settings': typeof DashboardSettingsIndexRoute
+  '/dashboard/signals': typeof DashboardSignalsIndexRoute
   '/dashboard/watchlist': typeof DashboardWatchlistIndexRoute
 }
 export interface FileRoutesById {
@@ -115,11 +123,12 @@ export interface FileRoutesById {
   '/(auth)/auth': typeof authAuthRoute
   '/(auth)/authcallback': typeof authAuthcallbackRoute
   '/dashboard/': typeof DashboardIndexRoute
-  '/test/': typeof TestIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/dashboard/signals/history': typeof DashboardSignalsHistoryRoute
   '/dashboard/insights/': typeof DashboardInsightsIndexRoute
   '/dashboard/markets/': typeof DashboardMarketsIndexRoute
   '/dashboard/settings/': typeof DashboardSettingsIndexRoute
+  '/dashboard/signals/': typeof DashboardSignalsIndexRoute
   '/dashboard/watchlist/': typeof DashboardWatchlistIndexRoute
 }
 export interface FileRouteTypes {
@@ -130,11 +139,12 @@ export interface FileRouteTypes {
     | '/auth'
     | '/authcallback'
     | '/dashboard/'
-    | '/test'
     | '/api/auth/$'
+    | '/dashboard/signals/history'
     | '/dashboard/insights'
     | '/dashboard/markets'
     | '/dashboard/settings'
+    | '/dashboard/signals'
     | '/dashboard/watchlist'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -142,11 +152,12 @@ export interface FileRouteTypes {
     | '/auth'
     | '/authcallback'
     | '/dashboard'
-    | '/test'
     | '/api/auth/$'
+    | '/dashboard/signals/history'
     | '/dashboard/insights'
     | '/dashboard/markets'
     | '/dashboard/settings'
+    | '/dashboard/signals'
     | '/dashboard/watchlist'
   id:
     | '__root__'
@@ -156,11 +167,12 @@ export interface FileRouteTypes {
     | '/(auth)/auth'
     | '/(auth)/authcallback'
     | '/dashboard/'
-    | '/test/'
     | '/api/auth/$'
+    | '/dashboard/signals/history'
     | '/dashboard/insights/'
     | '/dashboard/markets/'
     | '/dashboard/settings/'
+    | '/dashboard/signals/'
     | '/dashboard/watchlist/'
   fileRoutesById: FileRoutesById
 }
@@ -168,7 +180,6 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   authRouteRoute: typeof authRouteRouteWithChildren
   DashboardRouteRoute: typeof DashboardRouteRouteWithChildren
-  TestIndexRoute: typeof TestIndexRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
 }
 
@@ -193,13 +204,6 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/test/': {
-      id: '/test/'
-      path: '/test'
-      fullPath: '/test'
-      preLoaderRoute: typeof TestIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/dashboard/': {
@@ -230,6 +234,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardWatchlistIndexRouteImport
       parentRoute: typeof DashboardRouteRoute
     }
+    '/dashboard/signals/': {
+      id: '/dashboard/signals/'
+      path: '/signals'
+      fullPath: '/dashboard/signals'
+      preLoaderRoute: typeof DashboardSignalsIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
     '/dashboard/settings/': {
       id: '/dashboard/settings/'
       path: '/settings'
@@ -249,6 +260,13 @@ declare module '@tanstack/react-router' {
       path: '/insights'
       fullPath: '/dashboard/insights'
       preLoaderRoute: typeof DashboardInsightsIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/signals/history': {
+      id: '/dashboard/signals/history'
+      path: '/signals/history'
+      fullPath: '/dashboard/signals/history'
+      preLoaderRoute: typeof DashboardSignalsHistoryRouteImport
       parentRoute: typeof DashboardRouteRoute
     }
     '/api/auth/$': {
@@ -277,17 +295,21 @@ const authRouteRouteWithChildren = authRouteRoute._addFileChildren(
 
 interface DashboardRouteRouteChildren {
   DashboardIndexRoute: typeof DashboardIndexRoute
+  DashboardSignalsHistoryRoute: typeof DashboardSignalsHistoryRoute
   DashboardInsightsIndexRoute: typeof DashboardInsightsIndexRoute
   DashboardMarketsIndexRoute: typeof DashboardMarketsIndexRoute
   DashboardSettingsIndexRoute: typeof DashboardSettingsIndexRoute
+  DashboardSignalsIndexRoute: typeof DashboardSignalsIndexRoute
   DashboardWatchlistIndexRoute: typeof DashboardWatchlistIndexRoute
 }
 
 const DashboardRouteRouteChildren: DashboardRouteRouteChildren = {
   DashboardIndexRoute: DashboardIndexRoute,
+  DashboardSignalsHistoryRoute: DashboardSignalsHistoryRoute,
   DashboardInsightsIndexRoute: DashboardInsightsIndexRoute,
   DashboardMarketsIndexRoute: DashboardMarketsIndexRoute,
   DashboardSettingsIndexRoute: DashboardSettingsIndexRoute,
+  DashboardSignalsIndexRoute: DashboardSignalsIndexRoute,
   DashboardWatchlistIndexRoute: DashboardWatchlistIndexRoute,
 }
 
@@ -299,7 +321,6 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   authRouteRoute: authRouteRouteWithChildren,
   DashboardRouteRoute: DashboardRouteRouteWithChildren,
-  TestIndexRoute: TestIndexRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
 }
 export const routeTree = rootRouteImport

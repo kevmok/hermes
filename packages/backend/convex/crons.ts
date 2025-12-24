@@ -10,6 +10,13 @@ crons.interval(
   internal.scheduledJobs.runAutomaticAnalysis,
 );
 
+// Update market resolutions hourly from Polymarket
+crons.interval(
+  'Update market resolutions',
+  { hours: 1 },
+  internal.resolution.runResolutionUpdater,
+);
+
 // Clean up old data daily at 4 AM UTC
 crons.daily(
   'Clean up old snapshots',

@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { convexQuery } from "@convex-dev/react-query";
 import { useQuery } from "@tanstack/react-query";
@@ -5,6 +6,7 @@ import { api } from "backend/convex/_generated/api";
 import { DataTable } from "../-components/data-table";
 import { marketColumns } from "../-components/market-columns";
 import { StatsCards } from "../-components/stats-cards";
+import { MarketDetailModal } from "../-components/market-detail-modal";
 
 export const Route = createFileRoute("/dashboard/markets/")({
   loader: async ({ context }) => {
@@ -19,6 +21,8 @@ export const Route = createFileRoute("/dashboard/markets/")({
 });
 
 function MarketsPage() {
+  const [selectedMarketId, setSelectedMarketId] = useState<string | null>(null);
+
   const { data: markets, isLoading: marketsLoading } = useQuery(
     convexQuery(api.markets.listActiveMarkets, { limit: 100, sortBy: "volume" })
   );
@@ -56,6 +60,13 @@ function MarketsPage() {
         searchKey="title"
         searchPlaceholder="Search markets..."
         isLoading={marketsLoading}
+        onRowClick={(market) => setSelectedMarketId(market._id)}
+      />
+
+      <MarketDetailModal
+        marketId={selectedMarketId}
+        open={!!selectedMarketId}
+        onOpenChange={(open) => !open && setSelectedMarketId(null)}
       />
     </div>
   );

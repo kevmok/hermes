@@ -1,5 +1,5 @@
 import { v } from 'convex/values';
-import { internalQuery, mutation, query } from './_generated/server';
+import { internalMutation, internalQuery, mutation, query } from './_generated/server';
 import { internal } from './_generated/api';
 
 // ============ COLLECTOR MUTATIONS (called by lofn collector service) ============
@@ -8,6 +8,15 @@ import { internal } from './_generated/api';
 
 // Analysis throttling: only trigger analysis once per hour per market
 const ONE_HOUR_MS = 60 * 60 * 1000;
+
+// Trade context validator for signal creation
+const tradeContextValidator = v.object({
+  size: v.number(),
+  price: v.number(),
+  side: v.union(v.literal('YES'), v.literal('NO')),
+  taker: v.optional(v.string()),
+  timestamp: v.number(),
+});
 
 export const upsertMarket = mutation({
   args: {
@@ -67,6 +76,66 @@ export const upsertMarket = mutation({
     // Always analyze new markets
     await ctx.scheduler.runAfter(0, internal.analysis.analyzeMarketWithSwarm, {
       marketId,
+    });
+
+    return marketId;
+  },
+});
+
+// Upsert market with trade context for signal generation
+// This is the preferred method for whale trade processing
+export const upsertMarketWithTrade = mutation({
+  args: {
+    polymarketId: v.string(),
+    conditionId: v.optional(v.string()),
+    eventSlug: v.string(),
+    title: v.string(),
+    description: v.optional(v.string()),
+    category: v.optional(v.string()),
+    imageUrl: v.optional(v.string()),
+    currentYesPrice: v.number(),
+    currentNoPrice: v.number(),
+    volume24h: v.number(),
+    totalVolume: v.number(),
+    isActive: v.boolean(),
+    endDate: v.optional(v.number()),
+    // Trade context for signal creation
+    tradeContext: tradeContextValidator,
+  },
+  handler: async (ctx, args) => {
+    const { tradeContext, ...marketArgs } = args;
+
+    const existing = await ctx.db
+      .query('markets')
+      .withIndex('by_polymarket_id', (q) =>
+        q.eq('polymarketId', args.polymarketId),
+      )
+      .first();
+
+    const now = Date.now();
+
+    let marketId;
+    if (existing) {
+      await ctx.db.patch(existing._id, {
+        ...marketArgs,
+        updatedAt: now,
+        lastTradeAt: now,
+      });
+      marketId = existing._id;
+    } else {
+      marketId = await ctx.db.insert('markets', {
+        ...marketArgs,
+        createdAt: now,
+        updatedAt: now,
+        lastTradeAt: now,
+      });
+    }
+
+    // Always trigger signal analysis for qualifying trades
+    // The action will handle deduplication and consensus thresholds
+    await ctx.scheduler.runAfter(0, internal.analysis.analyzeTradeForSignal, {
+      marketId,
+      tradeContext,
     });
 
     return marketId;
@@ -295,5 +364,84 @@ export const deactivateMarket = mutation({
       isActive: false,
       updatedAt: Date.now(),
     });
+  },
+});
+
+// ============ OUTCOME TRACKING ============
+
+export const updateMarketOutcome = internalMutation({
+  args: {
+    marketId: v.id('markets'),
+    outcome: v.union(
+      v.literal('YES'),
+      v.literal('NO'),
+      v.literal('INVALID'),
+      v.null(),
+    ),
+    resolutionSource: v.optional(v.string()),
+  },
+  returns: v.null(),
+  handler: async (ctx, args): Promise<null> => {
+    await ctx.db.patch(args.marketId, {
+      outcome: args.outcome,
+      resolvedAt: Date.now(),
+      resolutionSource: args.resolutionSource,
+      isActive: false,
+      updatedAt: Date.now(),
+    });
+    return null;
+  },
+});
+
+export const getResolvedMarkets = query({
+  args: {
+    limit: v.optional(v.number()),
+    since: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const limit = args.limit ?? 100;
+
+    const markets = await ctx.db
+      .query('markets')
+      .withIndex('by_resolved')
+      .filter((q) =>
+        q.and(
+          q.neq(q.field('outcome'), undefined),
+          args.since ? q.gte(q.field('resolvedAt'), args.since) : true,
+        ),
+      )
+      .order('desc')
+      .take(limit);
+
+    return markets;
+  },
+});
+
+export const getUnresolvedMarketsWithSignals = query({
+  args: {
+    limit: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    // Get active markets that have signals but no outcome yet
+    const activeMarkets = await ctx.db
+      .query('markets')
+      .withIndex('by_active', (q) => q.eq('isActive', true))
+      .filter((q) => q.eq(q.field('outcome'), undefined))
+      .take(args.limit ?? 100);
+
+    // Filter to only markets that have signals
+    const marketsWithSignals = [];
+    for (const market of activeMarkets) {
+      const hasSignal = await ctx.db
+        .query('signals')
+        .withIndex('by_market', (q) => q.eq('marketId', market._id))
+        .first();
+
+      if (hasSignal) {
+        marketsWithSignals.push(market);
+      }
+    }
+
+    return marketsWithSignals;
   },
 });
