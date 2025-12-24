@@ -24,6 +24,8 @@
     "@tanstack/react-start": "catalog:tanstack",
     "@tanstack/router-plugin": "catalog:tanstack",
     "@tanstack/react-form": "catalog:tanstack",
+    "@tanstack/react-table": "catalog:tanstack",
+    "backend": "workspace:*",
     "better-auth": "catalog:auth",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",

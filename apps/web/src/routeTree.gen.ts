@@ -9,13 +9,24 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as DashboardRouteRouteImport } from './routes/dashboard/route'
 import { Route as authRouteRouteImport } from './routes/(auth)/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as TestIndexRouteImport } from './routes/test/index'
+import { Route as DashboardIndexRouteImport } from './routes/dashboard/index'
 import { Route as authAuthcallbackRouteImport } from './routes/(auth)/authcallback'
 import { Route as authAuthRouteImport } from './routes/(auth)/auth'
+import { Route as DashboardWatchlistIndexRouteImport } from './routes/dashboard/watchlist/index'
+import { Route as DashboardSettingsIndexRouteImport } from './routes/dashboard/settings/index'
+import { Route as DashboardMarketsIndexRouteImport } from './routes/dashboard/markets/index'
+import { Route as DashboardInsightsIndexRouteImport } from './routes/dashboard/insights/index'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth.$'
 
+const DashboardRouteRoute = DashboardRouteRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const authRouteRoute = authRouteRouteImport.update({
   id: '/(auth)',
   getParentRoute: () => rootRouteImport,
@@ -30,6 +41,11 @@ const TestIndexRoute = TestIndexRouteImport.update({
   path: '/test/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DashboardIndexRoute = DashboardIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => DashboardRouteRoute,
+} as any)
 const authAuthcallbackRoute = authAuthcallbackRouteImport.update({
   id: '/authcallback',
   path: '/authcallback',
@@ -40,6 +56,26 @@ const authAuthRoute = authAuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => authRouteRoute,
 } as any)
+const DashboardWatchlistIndexRoute = DashboardWatchlistIndexRouteImport.update({
+  id: '/watchlist/',
+  path: '/watchlist/',
+  getParentRoute: () => DashboardRouteRoute,
+} as any)
+const DashboardSettingsIndexRoute = DashboardSettingsIndexRouteImport.update({
+  id: '/settings/',
+  path: '/settings/',
+  getParentRoute: () => DashboardRouteRoute,
+} as any)
+const DashboardMarketsIndexRoute = DashboardMarketsIndexRouteImport.update({
+  id: '/markets/',
+  path: '/markets/',
+  getParentRoute: () => DashboardRouteRoute,
+} as any)
+const DashboardInsightsIndexRoute = DashboardInsightsIndexRouteImport.update({
+  id: '/insights/',
+  path: '/insights/',
+  getParentRoute: () => DashboardRouteRoute,
+} as any)
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   id: '/api/auth/$',
   path: '/api/auth/$',
@@ -48,51 +84,103 @@ const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/dashboard': typeof DashboardRouteRouteWithChildren
   '/auth': typeof authAuthRoute
   '/authcallback': typeof authAuthcallbackRoute
+  '/dashboard/': typeof DashboardIndexRoute
   '/test': typeof TestIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/dashboard/insights': typeof DashboardInsightsIndexRoute
+  '/dashboard/markets': typeof DashboardMarketsIndexRoute
+  '/dashboard/settings': typeof DashboardSettingsIndexRoute
+  '/dashboard/watchlist': typeof DashboardWatchlistIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof authAuthRoute
   '/authcallback': typeof authAuthcallbackRoute
+  '/dashboard': typeof DashboardIndexRoute
   '/test': typeof TestIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/dashboard/insights': typeof DashboardInsightsIndexRoute
+  '/dashboard/markets': typeof DashboardMarketsIndexRoute
+  '/dashboard/settings': typeof DashboardSettingsIndexRoute
+  '/dashboard/watchlist': typeof DashboardWatchlistIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/(auth)': typeof authRouteRouteWithChildren
+  '/dashboard': typeof DashboardRouteRouteWithChildren
   '/(auth)/auth': typeof authAuthRoute
   '/(auth)/authcallback': typeof authAuthcallbackRoute
+  '/dashboard/': typeof DashboardIndexRoute
   '/test/': typeof TestIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/dashboard/insights/': typeof DashboardInsightsIndexRoute
+  '/dashboard/markets/': typeof DashboardMarketsIndexRoute
+  '/dashboard/settings/': typeof DashboardSettingsIndexRoute
+  '/dashboard/watchlist/': typeof DashboardWatchlistIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth' | '/authcallback' | '/test' | '/api/auth/$'
+  fullPaths:
+    | '/'
+    | '/dashboard'
+    | '/auth'
+    | '/authcallback'
+    | '/dashboard/'
+    | '/test'
+    | '/api/auth/$'
+    | '/dashboard/insights'
+    | '/dashboard/markets'
+    | '/dashboard/settings'
+    | '/dashboard/watchlist'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/authcallback' | '/test' | '/api/auth/$'
+  to:
+    | '/'
+    | '/auth'
+    | '/authcallback'
+    | '/dashboard'
+    | '/test'
+    | '/api/auth/$'
+    | '/dashboard/insights'
+    | '/dashboard/markets'
+    | '/dashboard/settings'
+    | '/dashboard/watchlist'
   id:
     | '__root__'
     | '/'
     | '/(auth)'
+    | '/dashboard'
     | '/(auth)/auth'
     | '/(auth)/authcallback'
+    | '/dashboard/'
     | '/test/'
     | '/api/auth/$'
+    | '/dashboard/insights/'
+    | '/dashboard/markets/'
+    | '/dashboard/settings/'
+    | '/dashboard/watchlist/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   authRouteRoute: typeof authRouteRouteWithChildren
+  DashboardRouteRoute: typeof DashboardRouteRouteWithChildren
   TestIndexRoute: typeof TestIndexRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/dashboard': {
+      id: '/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof DashboardRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/(auth)': {
       id: '/(auth)'
       path: ''
@@ -114,6 +202,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TestIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/dashboard/': {
+      id: '/dashboard/'
+      path: '/'
+      fullPath: '/dashboard/'
+      preLoaderRoute: typeof DashboardIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
     '/(auth)/authcallback': {
       id: '/(auth)/authcallback'
       path: '/authcallback'
@@ -127,6 +222,34 @@ declare module '@tanstack/react-router' {
       fullPath: '/auth'
       preLoaderRoute: typeof authAuthRouteImport
       parentRoute: typeof authRouteRoute
+    }
+    '/dashboard/watchlist/': {
+      id: '/dashboard/watchlist/'
+      path: '/watchlist'
+      fullPath: '/dashboard/watchlist'
+      preLoaderRoute: typeof DashboardWatchlistIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/settings/': {
+      id: '/dashboard/settings/'
+      path: '/settings'
+      fullPath: '/dashboard/settings'
+      preLoaderRoute: typeof DashboardSettingsIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/markets/': {
+      id: '/dashboard/markets/'
+      path: '/markets'
+      fullPath: '/dashboard/markets'
+      preLoaderRoute: typeof DashboardMarketsIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/insights/': {
+      id: '/dashboard/insights/'
+      path: '/insights'
+      fullPath: '/dashboard/insights'
+      preLoaderRoute: typeof DashboardInsightsIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
     }
     '/api/auth/$': {
       id: '/api/auth/$'
@@ -152,9 +275,30 @@ const authRouteRouteWithChildren = authRouteRoute._addFileChildren(
   authRouteRouteChildren,
 )
 
+interface DashboardRouteRouteChildren {
+  DashboardIndexRoute: typeof DashboardIndexRoute
+  DashboardInsightsIndexRoute: typeof DashboardInsightsIndexRoute
+  DashboardMarketsIndexRoute: typeof DashboardMarketsIndexRoute
+  DashboardSettingsIndexRoute: typeof DashboardSettingsIndexRoute
+  DashboardWatchlistIndexRoute: typeof DashboardWatchlistIndexRoute
+}
+
+const DashboardRouteRouteChildren: DashboardRouteRouteChildren = {
+  DashboardIndexRoute: DashboardIndexRoute,
+  DashboardInsightsIndexRoute: DashboardInsightsIndexRoute,
+  DashboardMarketsIndexRoute: DashboardMarketsIndexRoute,
+  DashboardSettingsIndexRoute: DashboardSettingsIndexRoute,
+  DashboardWatchlistIndexRoute: DashboardWatchlistIndexRoute,
+}
+
+const DashboardRouteRouteWithChildren = DashboardRouteRoute._addFileChildren(
+  DashboardRouteRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   authRouteRoute: authRouteRouteWithChildren,
+  DashboardRouteRoute: DashboardRouteRouteWithChildren,
   TestIndexRoute: TestIndexRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
 }
