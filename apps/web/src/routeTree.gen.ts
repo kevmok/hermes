@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as authRouteRouteImport } from './routes/(auth)/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as TestIndexRouteImport } from './routes/test/index'
+import { Route as authAuthcallbackRouteImport } from './routes/(auth)/authcallback'
 import { Route as authAuthRouteImport } from './routes/(auth)/auth'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth.$'
 
@@ -29,6 +30,11 @@ const TestIndexRoute = TestIndexRouteImport.update({
   path: '/test/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const authAuthcallbackRoute = authAuthcallbackRouteImport.update({
+  id: '/authcallback',
+  path: '/authcallback',
+  getParentRoute: () => authRouteRoute,
+} as any)
 const authAuthRoute = authAuthRouteImport.update({
   id: '/auth',
   path: '/auth',
@@ -43,12 +49,14 @@ const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof authAuthRoute
+  '/authcallback': typeof authAuthcallbackRoute
   '/test': typeof TestIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof authAuthRoute
+  '/authcallback': typeof authAuthcallbackRoute
   '/test': typeof TestIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
@@ -57,15 +65,23 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/(auth)': typeof authRouteRouteWithChildren
   '/(auth)/auth': typeof authAuthRoute
+  '/(auth)/authcallback': typeof authAuthcallbackRoute
   '/test/': typeof TestIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth' | '/test' | '/api/auth/$'
+  fullPaths: '/' | '/auth' | '/authcallback' | '/test' | '/api/auth/$'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/test' | '/api/auth/$'
-  id: '__root__' | '/' | '/(auth)' | '/(auth)/auth' | '/test/' | '/api/auth/$'
+  to: '/' | '/auth' | '/authcallback' | '/test' | '/api/auth/$'
+  id:
+    | '__root__'
+    | '/'
+    | '/(auth)'
+    | '/(auth)/auth'
+    | '/(auth)/authcallback'
+    | '/test/'
+    | '/api/auth/$'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -98,6 +114,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TestIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/(auth)/authcallback': {
+      id: '/(auth)/authcallback'
+      path: '/authcallback'
+      fullPath: '/authcallback'
+      preLoaderRoute: typeof authAuthcallbackRouteImport
+      parentRoute: typeof authRouteRoute
+    }
     '/(auth)/auth': {
       id: '/(auth)/auth'
       path: '/auth'
@@ -117,10 +140,12 @@ declare module '@tanstack/react-router' {
 
 interface authRouteRouteChildren {
   authAuthRoute: typeof authAuthRoute
+  authAuthcallbackRoute: typeof authAuthcallbackRoute
 }
 
 const authRouteRouteChildren: authRouteRouteChildren = {
   authAuthRoute: authAuthRoute,
+  authAuthcallbackRoute: authAuthcallbackRoute,
 }
 
 const authRouteRouteWithChildren = authRouteRoute._addFileChildren(

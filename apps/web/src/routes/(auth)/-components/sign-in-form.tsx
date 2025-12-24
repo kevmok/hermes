@@ -21,7 +21,7 @@ const colors = {
 };
 
 const signInSchema = z.object({
-  email: z.string().email("Please enter a valid email address"),
+  email: z.email("Please enter a valid email address"),
   password: z.string().min(1, "Password is required"),
 });
 
@@ -44,10 +44,14 @@ export function SignInForm({ onForgotPassword }: SignInFormProps) {
     onSubmit: async ({ value }) => {
       setError(null);
       try {
+        const callbackURL =
+          typeof window !== "undefined"
+            ? `${window.location.origin}/authcallback`
+            : "/authcallback";
         const result = await authClient.signIn.email({
           email: value.email,
           password: value.password,
-          // callbackURL: "/",
+          // callbackURL: callbackURL,
         });
 
         if (result.error) {

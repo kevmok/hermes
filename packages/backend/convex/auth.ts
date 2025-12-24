@@ -28,16 +28,26 @@ export const authClient = createClient<DataModel, typeof schema>({
 // 3. Auth options factory
 export const createAuthOptions = (ctx: QueryCtx) =>
   ({
-    trustedOrigins: [siteUrl],
-    plugins: [
-      admin(),
-      autumn(),
-      crossDomain({ siteUrl }),
-      convex({
-        authConfig,
-        jwks: process.env.JWKS,
-      }),
+    baseURL: siteUrl,
+    trustedOrigins: [
+      "*",
+      siteUrl,
+      "http://localhost:3000",
+      "http://127.0.0.1:3000",
     ],
+    advanced: {
+      //   // Use unique cookie prefix to avoid conflicts with other Better Auth apps
+      cookiePrefix: "herm",
+      // crossSubDomainCookies: {
+      //   enabled: false,
+      // },
+      // defaultCookieAttributes: {
+      //   sameSite: "none" as const,
+      //   secure: true,
+      //   httpOnly: true,
+      //   path: "/",
+      // },
+    },
     session: {
       expiresIn: 60 * 60 * 24 * 30, // 30 days
       updateAge: 60 * 60 * 24 * 15, // 15 days
@@ -47,6 +57,15 @@ export const createAuthOptions = (ctx: QueryCtx) =>
       enabled: true,
       requireEmailVerification: false,
     },
+    plugins: [
+      admin(),
+      autumn(),
+      // crossDomain({ siteUrl }),
+      convex({
+        authConfig,
+        jwks: process.env.JWKS,
+      }),
+    ],
   }) satisfies BetterAuthOptions;
 
 // 4. Create auth instance

@@ -62,13 +62,13 @@ export const Route = createRootRouteWithContext<{
   shellComponent: RootDocument,
   component: RootComponent,
   beforeLoad: async (ctx) => {
+    // getAuthToken();
     // const token = await ctx.context.queryClient.ensureQueryData({
     //   queryKey: ["token"],
     //   queryFn: getAuth,
     //   revalidateIfStale: true,
     // });
     const token = await getAuth();
-    console.log("token", token);
     // all queries, mutations and actions through TanStack Query will be
     // authenticated during SSR if we have a valid token
     // console.log("token", token);
