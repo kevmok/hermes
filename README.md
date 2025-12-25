@@ -1,15 +1,20 @@
-# lofn
+# Lofn Monorepo
 
-To install dependencies:
+Polymarket prediction market analysis platform with AI-powered signals.
+
+## Structure
+
+- `apps/web` - Dashboard frontend (TanStack Start + React)
+- `apps/lofn` - Market data collector (Effect.ts + WebSocket)
+- `packages/backend` - Convex serverless backend
+
+## Quick Start
 
 ```bash
 bun install
+bun run dev
 ```
 
-To run:
+## Documentation
 
-```bash
-bun run index.ts
-```
-
-This project was created using `bun init` in bun v1.3.3. [Bun](https://bun.com) is a fast all-in-one JavaScript runtime.
+See [CLAUDE.md](./CLAUDE.md) for comprehensive documentation.

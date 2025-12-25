@@ -1,0 +1,22 @@
+{
+  "$schema": "https://unpkg.com/knip@5/schema.json",
+  "workspaces": {
+    ".": {
+      "entry": ["apps/*/src/index.ts"],
+      "ignore": ["**/plans/**", "**/*.md"]
+    },
+    "apps/web": {
+      "entry": ["src/main.tsx", "src/routes/**/*.tsx"],
+      "ignore": ["**/*.test.ts", "**/*.spec.ts", "src/routeTree.gen.ts"]
+    },
+    "apps/lofn": {
+      "entry": ["src/index.ts"],
+      "ignore": ["**/*.test.ts"]
+    },
+    "packages/backend": {
+      "entry": ["convex/**/*.ts"],
+      "ignore": ["convex/_generated/**"]
+    }
+  },
+  "ignoreDependencies": ["@types/*"]
+}
