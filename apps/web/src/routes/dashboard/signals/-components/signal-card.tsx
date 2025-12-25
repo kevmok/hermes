@@ -31,6 +31,20 @@ export interface Signal {
     outcome?: "YES" | "NO" | "INVALID" | null;
     resolvedAt?: number;
   } | null;
+  // NEW: Structured AI output fields
+  voteDistribution?: {
+    YES: number;
+    NO: number;
+    NO_TRADE: number;
+  };
+  averageConfidence?: number;
+  confidenceRange?: {
+    min: number;
+    max: number;
+  };
+  aggregatedKeyFactors?: string[];
+  aggregatedRisks?: string[];
+  schemaVersion?: string;
 }
 
 interface SignalCardProps {
@@ -238,15 +252,22 @@ export function SignalCard({ signal, index = 0, onSelect }: SignalCardProps) {
           )}
         </div>
 
-        {/* Consensus meter */}
+        {/* Consensus meter with vote distribution */}
         <div className="mb-4">
           <div className="flex items-center justify-between mb-1.5">
             <span className="text-[10px] font-semibold tracking-widest text-muted-foreground/60 uppercase">
               AI Consensus
             </span>
-            <span className="text-sm font-bold tabular-nums text-white">
-              {signal.consensusPercentage.toFixed(0)}%
-            </span>
+            <div className="flex items-center gap-2">
+              {signal.averageConfidence !== undefined && (
+                <span className="text-[10px] text-muted-foreground/60">
+                  {signal.averageConfidence.toFixed(0)}% avg conf
+                </span>
+              )}
+              <span className="text-sm font-bold tabular-nums text-white">
+                {signal.consensusPercentage.toFixed(0)}%
+              </span>
+            </div>
           </div>
           <div className="relative h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
             <div
@@ -259,6 +280,23 @@ export function SignalCard({ signal, index = 0, onSelect }: SignalCardProps) {
               style={{ width: `${consensusWidth}%` }}
             />
           </div>
+          {/* Vote distribution mini-bar */}
+          {signal.voteDistribution && (
+            <div className="flex items-center gap-3 mt-2 text-[10px] text-muted-foreground/60">
+              <span className="flex items-center gap-1">
+                <span className="w-2 h-2 rounded-full bg-emerald-500/60" />
+                <span>YES: {signal.voteDistribution.YES}</span>
+              </span>
+              <span className="flex items-center gap-1">
+                <span className="w-2 h-2 rounded-full bg-red-500/60" />
+                <span>NO: {signal.voteDistribution.NO}</span>
+              </span>
+              <span className="flex items-center gap-1">
+                <span className="w-2 h-2 rounded-full bg-amber-500/60" />
+                <span>HOLD: {signal.voteDistribution.NO_TRADE}</span>
+              </span>
+            </div>
+          )}
         </div>
 
         {/* Price info */}
@@ -293,9 +331,47 @@ export function SignalCard({ signal, index = 0, onSelect }: SignalCardProps) {
         )}
 
         {/* Reasoning */}
-        <p className="text-sm text-muted-foreground/80 leading-relaxed line-clamp-3 mb-4">
+        <p className="text-sm text-muted-foreground/80 leading-relaxed line-clamp-2 mb-3">
           {signal.aggregatedReasoning}
         </p>
+
+        {/* Key Factors (structured output) */}
+        {signal.aggregatedKeyFactors && signal.aggregatedKeyFactors.length > 0 && (
+          <div className="mb-3">
+            <span className="text-[10px] font-semibold tracking-widest text-muted-foreground/60 uppercase block mb-1.5">
+              Key Factors
+            </span>
+            <div className="flex flex-wrap gap-1.5">
+              {signal.aggregatedKeyFactors.slice(0, 3).map((factor, i) => (
+                <span
+                  key={i}
+                  className="text-[10px] px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-300/80 border border-cyan-500/20"
+                >
+                  {factor.length > 40 ? `${factor.slice(0, 40)}...` : factor}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Risks (structured output) */}
+        {signal.aggregatedRisks && signal.aggregatedRisks.length > 0 && (
+          <div className="mb-4">
+            <span className="text-[10px] font-semibold tracking-widest text-muted-foreground/60 uppercase block mb-1.5">
+              Risks
+            </span>
+            <div className="flex flex-wrap gap-1.5">
+              {signal.aggregatedRisks.slice(0, 2).map((risk, i) => (
+                <span
+                  key={i}
+                  className="text-[10px] px-2 py-0.5 rounded-full bg-red-500/10 text-red-300/80 border border-red-500/20"
+                >
+                  {risk.length > 40 ? `${risk.slice(0, 40)}...` : risk}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Action button */}
         {polymarketUrl && (

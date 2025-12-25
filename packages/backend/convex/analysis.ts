@@ -301,11 +301,8 @@ export const analyzeMarketWithSwarm = internalAction({
         return { success: false, error: "No AI models configured" };
       }
 
-      // Aggregate reasoning from results
-      const aggregatedReasoning = swarmResponse.results
-        .filter((r) => r.decision === swarmResponse.consensusDecision)
-        .map((r) => `${r.modelName}: ${r.reasoning.slice(0, 200)}`)
-        .join(" | ");
+      // Use aggregated reasoning from structured response
+      const aggregatedReasoning = swarmResponse.aggregatedReasoning;
 
       // Save insight directly (no analysisRun tracking for simplicity)
       const insightId: Id<"insights"> = await ctx.runMutation(
@@ -390,23 +387,23 @@ export const executeMarketAnalysis = internalAction({
         throw new Error("No AI models configured");
       }
 
-      // Save individual predictions for tracking
+      // Save individual predictions for tracking (with structured data)
       for (const result of swarmResponse.results) {
-        await ctx.runMutation(api.analysis.saveModelPrediction, {
-          analysisRunId: runId,
-          marketId: args.marketId,
-          modelName: result.modelName,
-          decision: result.decision,
-          reasoning: result.reasoning,
-          responseTimeMs: result.responseTimeMs,
-        });
+        if (result.prediction) {
+          await ctx.runMutation(api.analysis.saveModelPrediction, {
+            analysisRunId: runId,
+            marketId: args.marketId,
+            modelName: result.modelName,
+            decision: result.prediction.decision,
+            reasoning: result.prediction.reasoning.summary,
+            responseTimeMs: result.responseTimeMs,
+            confidence: result.prediction.confidence,
+          });
+        }
       }
 
-      // Aggregate reasoning
-      const aggregatedReasoning = swarmResponse.results
-        .filter((r) => r.decision === swarmResponse.consensusDecision)
-        .map((r) => `${r.modelName}: ${r.reasoning.slice(0, 200)}`)
-        .join(" | ");
+      // Use aggregated reasoning from structured response
+      const aggregatedReasoning = swarmResponse.aggregatedReasoning;
 
       // Save insight
       const insightId: Id<"insights"> = await ctx.runMutation(
@@ -556,13 +553,10 @@ export const analyzeTradeForSignal = internalAction({
         };
       }
 
-      // Aggregate reasoning from models that agree with consensus
-      const aggregatedReasoning = swarmResponse.results
-        .filter((r) => r.decision === swarmResponse.consensusDecision)
-        .map((r) => `${r.modelName}: ${r.reasoning.slice(0, 200)}`)
-        .join(" | ");
+      // Use aggregated reasoning from structured response
+      const aggregatedReasoning = swarmResponse.aggregatedReasoning;
 
-      // Create signal with trade context
+      // Create signal with trade context and structured AI consensus data
       const signalId: Id<"signals"> = await ctx.runMutation(
         internal.signals.createSignal,
         {
@@ -574,6 +568,12 @@ export const analyzeTradeForSignal = internalAction({
           agreeingModels: swarmResponse.successfulModels,
           aggregatedReasoning,
           priceAtTrigger: market.currentYesPrice,
+          // NEW: Structured output fields
+          voteDistribution: swarmResponse.voteDistribution,
+          averageConfidence: swarmResponse.averageConfidence,
+          confidenceRange: swarmResponse.confidenceRange,
+          aggregatedKeyFactors: swarmResponse.aggregatedKeyFactors,
+          aggregatedRisks: swarmResponse.aggregatedRisks,
         },
       );
 

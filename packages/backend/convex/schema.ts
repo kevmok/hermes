@@ -225,7 +225,7 @@ export default defineSchema({
     ),
     consensusPercentage: v.number(),
     totalModels: v.number(),
-    agreeingModels: v.number(),
+    agreeingModels: v.number(), // Kept for backwards compatibility
     aggregatedReasoning: v.string(),
     confidenceLevel: v.union(
       v.literal("high"),
@@ -234,6 +234,31 @@ export default defineSchema({
     ),
     isHighConfidence: v.boolean(), // 80%+ consensus
     priceAtTrigger: v.number(),
+
+    // NEW: Vote distribution across all models
+    voteDistribution: v.optional(
+      v.object({
+        YES: v.number(),
+        NO: v.number(),
+        NO_TRADE: v.number(),
+      }),
+    ),
+
+    // NEW: Confidence metrics from structured outputs
+    averageConfidence: v.optional(v.number()), // 0-100 average across agreeing models
+    confidenceRange: v.optional(
+      v.object({
+        min: v.number(),
+        max: v.number(),
+      }),
+    ),
+
+    // NEW: Structured aggregated insights
+    aggregatedKeyFactors: v.optional(v.array(v.string())), // Top 5 key factors
+    aggregatedRisks: v.optional(v.array(v.string())), // Top 3 risks
+
+    // Schema version for backwards compatibility
+    schemaVersion: v.optional(v.string()), // "2.0.0" for structured outputs
 
     // When the signal was stored
     signalTimestamp: v.number(),

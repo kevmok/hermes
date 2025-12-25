@@ -29,6 +29,23 @@ export const createSignal = internalMutation({
     agreeingModels: v.number(),
     aggregatedReasoning: v.string(),
     priceAtTrigger: v.number(),
+    // NEW: Structured output fields (optional for backwards compatibility)
+    voteDistribution: v.optional(
+      v.object({
+        YES: v.number(),
+        NO: v.number(),
+        NO_TRADE: v.number(),
+      }),
+    ),
+    averageConfidence: v.optional(v.number()),
+    confidenceRange: v.optional(
+      v.object({
+        min: v.number(),
+        max: v.number(),
+      }),
+    ),
+    aggregatedKeyFactors: v.optional(v.array(v.string())),
+    aggregatedRisks: v.optional(v.array(v.string())),
   },
   returns: v.id("signals"),
   handler: async (ctx, args): Promise<Id<"signals">> => {
@@ -52,6 +69,13 @@ export const createSignal = internalMutation({
       isHighConfidence: args.consensusPercentage >= 80,
       priceAtTrigger: args.priceAtTrigger,
       signalTimestamp: Date.now(),
+      // NEW: Structured output fields
+      voteDistribution: args.voteDistribution,
+      averageConfidence: args.averageConfidence,
+      confidenceRange: args.confidenceRange,
+      aggregatedKeyFactors: args.aggregatedKeyFactors,
+      aggregatedRisks: args.aggregatedRisks,
+      schemaVersion: args.voteDistribution ? "2.0.0" : undefined, // Mark as v2 if structured
     });
   },
 });
@@ -83,6 +107,76 @@ export const aggregateTradeToSignal = internalMutation({
 
 // ============ QUERIES ============
 
+// Common signal object validator for query returns
+const signalObjectValidator = v.object({
+  _id: v.id("signals"),
+  _creationTime: v.number(),
+  marketId: v.id("markets"),
+  triggerTrade: v.union(tradeObjectValidator, v.array(tradeObjectValidator)),
+  consensusDecision: v.union(
+    v.literal("YES"),
+    v.literal("NO"),
+    v.literal("NO_TRADE"),
+  ),
+  consensusPercentage: v.number(),
+  totalModels: v.number(),
+  agreeingModels: v.number(),
+  aggregatedReasoning: v.string(),
+  confidenceLevel: v.union(
+    v.literal("high"),
+    v.literal("medium"),
+    v.literal("low"),
+  ),
+  isHighConfidence: v.boolean(),
+  priceAtTrigger: v.number(),
+  signalTimestamp: v.number(),
+  // NEW: Structured output fields
+  voteDistribution: v.optional(
+    v.object({
+      YES: v.number(),
+      NO: v.number(),
+      NO_TRADE: v.number(),
+    }),
+  ),
+  averageConfidence: v.optional(v.number()),
+  confidenceRange: v.optional(
+    v.object({
+      min: v.number(),
+      max: v.number(),
+    }),
+  ),
+  aggregatedKeyFactors: v.optional(v.array(v.string())),
+  aggregatedRisks: v.optional(v.array(v.string())),
+  schemaVersion: v.optional(v.string()),
+});
+
+const marketObjectValidator = v.object({
+  _id: v.id("markets"),
+  _creationTime: v.number(),
+  polymarketId: v.string(),
+  conditionId: v.optional(v.string()),
+  eventSlug: v.string(),
+  title: v.string(),
+  description: v.optional(v.string()),
+  category: v.optional(v.string()),
+  imageUrl: v.optional(v.string()),
+  currentYesPrice: v.number(),
+  currentNoPrice: v.number(),
+  volume24h: v.number(),
+  totalVolume: v.number(),
+  isActive: v.boolean(),
+  endDate: v.optional(v.number()),
+  createdAt: v.number(),
+  updatedAt: v.number(),
+  lastTradeAt: v.number(),
+  lastAnalyzedAt: v.optional(v.number()),
+  outcome: v.optional(
+    v.union(v.literal("YES"), v.literal("NO"), v.literal("INVALID"), v.null()),
+  ),
+  resolvedAt: v.optional(v.number()),
+  resolutionSource: v.optional(v.string()),
+});
+
 export const getLatestSignals = query({
   args: {
     limit: v.optional(v.number()),
@@ -90,64 +184,8 @@ export const getLatestSignals = query({
   },
   returns: v.array(
     v.object({
-      _id: v.id("signals"),
-      _creationTime: v.number(),
-      marketId: v.id("markets"),
-      triggerTrade: v.union(
-        tradeObjectValidator,
-        v.array(tradeObjectValidator),
-      ),
-      consensusDecision: v.union(
-        v.literal("YES"),
-        v.literal("NO"),
-        v.literal("NO_TRADE"),
-      ),
-      consensusPercentage: v.number(),
-      totalModels: v.number(),
-      agreeingModels: v.number(),
-      aggregatedReasoning: v.string(),
-      confidenceLevel: v.union(
-        v.literal("high"),
-        v.literal("medium"),
-        v.literal("low"),
-      ),
-      isHighConfidence: v.boolean(),
-      priceAtTrigger: v.number(),
-      signalTimestamp: v.number(),
-      market: v.union(
-        v.object({
-          _id: v.id("markets"),
-          _creationTime: v.number(),
-          polymarketId: v.string(),
-          conditionId: v.optional(v.string()),
-          eventSlug: v.string(),
-          title: v.string(),
-          description: v.optional(v.string()),
-          category: v.optional(v.string()),
-          imageUrl: v.optional(v.string()),
-          currentYesPrice: v.number(),
-          currentNoPrice: v.number(),
-          volume24h: v.number(),
-          totalVolume: v.number(),
-          isActive: v.boolean(),
-          endDate: v.optional(v.number()),
-          createdAt: v.number(),
-          updatedAt: v.number(),
-          lastTradeAt: v.number(),
-          lastAnalyzedAt: v.optional(v.number()),
-          outcome: v.optional(
-            v.union(
-              v.literal("YES"),
-              v.literal("NO"),
-              v.literal("INVALID"),
-              v.null(),
-            ),
-          ),
-          resolvedAt: v.optional(v.number()),
-          resolutionSource: v.optional(v.string()),
-        }),
-        v.null(),
-      ),
+      ...signalObjectValidator.fields,
+      market: v.union(marketObjectValidator, v.null()),
     }),
   ),
   handler: async (ctx, args) => {

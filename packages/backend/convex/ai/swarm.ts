@@ -1,73 +1,121 @@
-import { LanguageModel } from '@effect/ai';
-import { Duration, Effect, Layer, Schedule } from 'effect';
-import { PrimaryModelLayer, OpenAiLayer, GoogleLayer } from './models';
+import { LanguageModel } from "@effect/ai";
+import { Duration, Effect, Layer, Schedule } from "effect";
+import { PrimaryModelLayer, OpenAiLayer, GoogleLayer } from "./models";
+import {
+  PredictionOutputSchema,
+  type PredictionOutput,
+  type Decision,
+  type SwarmResult,
+  type SwarmResponse,
+} from "./schema";
 
-export interface SwarmResult {
-  modelName: string;
-  decision: 'YES' | 'NO' | 'NO_TRADE';
-  reasoning: string;
-  responseTimeMs: number;
-  error?: string;
-}
+// Re-export types for external use
+export type { SwarmResult, SwarmResponse, PredictionOutput, Decision };
 
-export interface SwarmResponse {
-  results: SwarmResult[];
-  consensusDecision: 'YES' | 'NO' | 'NO_TRADE';
-  consensusPercentage: number;
-  totalModels: number;
-  successfulModels: number;
-}
-
-// Parse decision from model response text
-const parseDecision = (text: string): 'YES' | 'NO' | 'NO_TRADE' => {
-  const upper = text.toUpperCase();
-  if (
-    upper.includes('"YES"') ||
-    upper.includes('DECISION: YES') ||
-    upper.includes('"DECISION":"YES"') ||
-    upper.includes('"DECISION": "YES"')
-  ) {
-    return 'YES';
-  }
-  if (
-    upper.includes('"NO"') ||
-    upper.includes('DECISION: NO') ||
-    upper.includes('"DECISION":"NO"') ||
-    upper.includes('"DECISION": "NO"')
-  ) {
-    // Make sure it's not "NO_TRADE"
-    if (!upper.includes('NO_TRADE')) {
-      return 'NO';
-    }
-  }
-  return 'NO_TRADE';
-};
-
-// Calculate consensus from results
+/**
+ * Calculate confidence-weighted consensus from model results.
+ *
+ * Instead of simple majority voting, this weighs each vote by its confidence score.
+ * A high-confidence YES (90%) counts more than a low-confidence NO (40%).
+ */
 const calculateConsensus = (results: SwarmResult[]): SwarmResponse => {
-  const successfulResults = results.filter((r) => !r.error);
-  const tradingResults = successfulResults.filter(
-    (r) => r.decision !== 'NO_TRADE',
+  const successfulResults = results.filter(
+    (r): r is SwarmResult & { prediction: PredictionOutput } =>
+      r.prediction !== null
   );
 
-  let consensusDecision: 'YES' | 'NO' | 'NO_TRADE' = 'NO_TRADE';
-  let consensusPercentage = 0;
+  // Initialize vote distribution
+  const voteDistribution = { YES: 0, NO: 0, NO_TRADE: 0 };
 
-  if (tradingResults.length > 0) {
-    const yesCount = tradingResults.filter((r) => r.decision === 'YES').length;
-    const noCount = tradingResults.filter((r) => r.decision === 'NO').length;
+  if (successfulResults.length === 0) {
+    return {
+      results,
+      consensusDecision: "NO_TRADE",
+      consensusPercentage: 0,
+      totalModels: results.length,
+      successfulModels: 0,
+      voteDistribution,
+      averageConfidence: 0,
+      confidenceRange: { min: 0, max: 0 },
+      aggregatedKeyFactors: [],
+      aggregatedRisks: [],
+      aggregatedReasoning: "",
+    };
+  }
 
-    if (yesCount > noCount) {
-      consensusDecision = 'YES';
-      consensusPercentage = (yesCount / tradingResults.length) * 100;
-    } else if (noCount > yesCount) {
-      consensusDecision = 'NO';
-      consensusPercentage = (noCount / tradingResults.length) * 100;
-    } else {
-      consensusDecision = 'NO_TRADE';
-      consensusPercentage = 50;
+  // Count votes by decision
+  for (const result of successfulResults) {
+    voteDistribution[result.prediction.decision]++;
+  }
+
+  // Filter to only trading decisions (YES or NO) for consensus
+  const tradingResults = successfulResults.filter(
+    (r) => r.prediction.decision !== "NO_TRADE"
+  );
+
+  // Default to NO_TRADE if no trading votes
+  if (tradingResults.length === 0) {
+    const allConfidences = successfulResults.map((r) => r.prediction.confidence);
+    return {
+      results,
+      consensusDecision: "NO_TRADE",
+      consensusPercentage: 100,
+      totalModels: results.length,
+      successfulModels: successfulResults.length,
+      voteDistribution,
+      averageConfidence:
+        allConfidences.reduce((a, b) => a + b, 0) / allConfidences.length,
+      confidenceRange: {
+        min: Math.min(...allConfidences),
+        max: Math.max(...allConfidences),
+      },
+      aggregatedKeyFactors: aggregateKeyFactors(successfulResults),
+      aggregatedRisks: aggregateRisks(successfulResults),
+      aggregatedReasoning: aggregateReasoning(successfulResults),
+    };
+  }
+
+  // Calculate confidence-weighted scores for YES and NO
+  let yesWeightedScore = 0;
+  let noWeightedScore = 0;
+
+  for (const result of tradingResults) {
+    const confidence = result.prediction.confidence;
+    if (result.prediction.decision === "YES") {
+      yesWeightedScore += confidence;
+    } else if (result.prediction.decision === "NO") {
+      noWeightedScore += confidence;
     }
   }
+
+  // Determine winner based on weighted scores
+  let consensusDecision: Decision;
+  let agreeingResults: typeof successfulResults;
+
+  if (yesWeightedScore > noWeightedScore) {
+    consensusDecision = "YES";
+    agreeingResults = successfulResults.filter(
+      (r) => r.prediction.decision === "YES"
+    );
+  } else if (noWeightedScore > yesWeightedScore) {
+    consensusDecision = "NO";
+    agreeingResults = successfulResults.filter(
+      (r) => r.prediction.decision === "NO"
+    );
+  } else {
+    // Tie - default to NO_TRADE
+    consensusDecision = "NO_TRADE";
+    agreeingResults = successfulResults;
+  }
+
+  // Calculate consensus percentage based on agreeing models
+  const consensusPercentage =
+    (agreeingResults.length / successfulResults.length) * 100;
+
+  // Calculate confidence stats from agreeing models
+  const confidences = agreeingResults.map((r) => r.prediction.confidence);
+  const averageConfidence =
+    confidences.reduce((a, b) => a + b, 0) / confidences.length;
 
   return {
     results,
@@ -75,27 +123,94 @@ const calculateConsensus = (results: SwarmResult[]): SwarmResponse => {
     consensusPercentage,
     totalModels: results.length,
     successfulModels: successfulResults.length,
+    voteDistribution,
+    averageConfidence,
+    confidenceRange: {
+      min: Math.min(...confidences),
+      max: Math.max(...confidences),
+    },
+    aggregatedKeyFactors: aggregateKeyFactors(agreeingResults),
+    aggregatedRisks: aggregateRisks(agreeingResults),
+    aggregatedReasoning: aggregateReasoning(agreeingResults),
   };
 };
 
-// Query a single model and return result
+/**
+ * Aggregate key factors from multiple model predictions.
+ * Deduplicates and takes top 5.
+ */
+const aggregateKeyFactors = (
+  results: Array<{ prediction: PredictionOutput }>
+): string[] => {
+  const allFactors = results.flatMap((r) => r.prediction.reasoning.keyFactors);
+  // Deduplicate by lowercasing and comparing
+  const seen = new Set<string>();
+  const unique: string[] = [];
+  for (const factor of allFactors) {
+    const key = factor.toLowerCase().trim();
+    if (!seen.has(key)) {
+      seen.add(key);
+      unique.push(factor);
+    }
+  }
+  return unique.slice(0, 5);
+};
+
+/**
+ * Aggregate risk factors from multiple model predictions.
+ * Deduplicates and takes top 3.
+ */
+const aggregateRisks = (
+  results: Array<{ prediction: PredictionOutput }>
+): string[] => {
+  const allRisks = results.flatMap((r) => r.prediction.reasoning.risks);
+  const seen = new Set<string>();
+  const unique: string[] = [];
+  for (const risk of allRisks) {
+    const key = risk.toLowerCase().trim();
+    if (!seen.has(key)) {
+      seen.add(key);
+      unique.push(risk);
+    }
+  }
+  return unique.slice(0, 3);
+};
+
+/**
+ * Aggregate reasoning summaries from agreeing models.
+ */
+const aggregateReasoning = (
+  results: Array<{ prediction: PredictionOutput }>
+): string => {
+  return results
+    .map((r) => r.prediction.reasoning.summary)
+    .join(" | ")
+    .slice(0, 1000);
+};
+
+/**
+ * Query a single model using structured output (generateObject).
+ */
 const queryWithLayer = (
   name: string,
   // biome-ignore lint/suspicious/noExplicitAny: Effect Layer types are complex
   layer: Layer.Layer<LanguageModel.LanguageModel, any, any>,
   systemPrompt: string,
-  userPrompt: string,
+  userPrompt: string
 ) =>
   Effect.gen(function* () {
     const startTime = Date.now();
 
     const result = yield* Effect.gen(function* () {
       const model = yield* LanguageModel.LanguageModel;
-      const response = yield* model.generateText({
+      // Use message array format to include system prompt
+      const response = yield* model.generateObject({
         prompt: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userPrompt },
+          { role: "system" as const, content: systemPrompt },
+          { role: "user" as const, content: userPrompt },
         ],
+        schema: PredictionOutputSchema,
+        objectName: "prediction",
       });
       return response;
     }).pipe(
@@ -103,55 +218,77 @@ const queryWithLayer = (
       Effect.timeout(Duration.seconds(120)),
       Effect.catchAll((error) =>
         Effect.succeed({
-          text: '',
+          value: null as PredictionOutput | null,
           error: String(error),
-        }),
-      ),
+        })
+      )
     );
 
     const responseTimeMs = Date.now() - startTime;
-    const text = result.text;
     const error = (result as { error?: string }).error;
 
     return {
       modelName: name,
-      decision: error ? ('NO_TRADE' as const) : parseDecision(text),
-      reasoning: text.slice(0, 500),
+      prediction: result.value,
       responseTimeMs,
       error,
     } satisfies SwarmResult;
   });
 
-// Build prompt for market analysis
+/**
+ * Build prompts for market analysis with structured output.
+ */
 export const buildPrompt = (market: {
   title: string;
   currentYesPrice: number;
+  currentNoPrice: number;
   eventSlug: string;
+  volume24h?: number;
+  totalVolume?: number;
+  description?: string;
+  category?: string;
 }): { systemPrompt: string; userPrompt: string } => {
-  const systemPrompt = `You are an expert prediction market analyst. Analyze the given market and decide whether to bet YES, NO, or abstain (NO_TRADE).
+  const systemPrompt = `You are an expert prediction market analyst. Analyze the given market and provide a structured trading recommendation.
 
-Your response must include a JSON object with:
-- "decision": "YES" | "NO" | "NO_TRADE"
-- "reasoning": Brief explanation (max 200 chars)
+Your analysis should consider:
+1. Current market price vs your estimated true probability
+2. Edge assessment (is the market underpriced, overpriced, or fair?)
+3. Key factors supporting your decision
+4. Risk factors that could invalidate your analysis
 
-Consider:
-1. Current market price vs your probability estimate
-2. Edge (difference between your estimate and market)
-3. Confidence in your analysis
-4. Risk/reward ratio
+Decision Guidelines:
+- Recommend YES if you believe the market is underpriced (true probability > market price + 10%)
+- Recommend NO if you believe the market is overpriced (true probability < market price - 10%)
+- Recommend NO_TRADE if the edge is small (<10%) or uncertainty is high
 
-Only recommend YES or NO if you see a clear edge (>10% difference). Otherwise, recommend NO_TRADE.`;
+Confidence Guidelines:
+- 80-100: Very confident, strong edge with clear supporting evidence
+- 60-79: Moderately confident, reasonable edge with some uncertainty
+- 40-59: Low confidence, small edge or significant uncertainty
+- 0-39: Very low confidence, recommend NO_TRADE unless strong contrarian signal
 
-  const userPrompt = `Market: ${market.title}
-Current YES price: ${(market.currentYesPrice * 100).toFixed(1)}%
-Event: ${market.eventSlug}
+Provide 1-5 key factors supporting your decision and up to 3 risk factors.`;
 
-Analyze this market and provide your trading decision.`;
+  const userPrompt = `Analyze this prediction market:
+
+**Market Question**: ${market.title}
+**Current YES Price**: ${(market.currentYesPrice * 100).toFixed(1)}%
+**Current NO Price**: ${(market.currentNoPrice * 100).toFixed(1)}%
+${market.volume24h ? `**24h Volume**: $${market.volume24h.toLocaleString()}` : ""}
+${market.totalVolume ? `**Total Volume**: $${market.totalVolume.toLocaleString()}` : ""}
+${market.description ? `**Description**: ${market.description}` : ""}
+${market.category ? `**Category**: ${market.category}` : ""}
+**Event Slug**: ${market.eventSlug}
+
+Provide your trading decision with structured reasoning.`;
 
   return { systemPrompt, userPrompt };
 };
 
-// Query all configured models and return consensus
+/**
+ * Query all configured AI models and return consensus decision.
+ * Uses structured outputs for type-safe responses.
+ */
 export const querySwarm = (systemPrompt: string, userPrompt: string) =>
   Effect.gen(function* () {
     // Build list of available models based on API keys
@@ -163,52 +300,58 @@ export const querySwarm = (systemPrompt: string, userPrompt: string) =>
 
     if (process.env.ANTHROPIC_KEY) {
       models.push({
-        name: 'claude-sonnet-4',
+        name: "claude-sonnet-4",
         layer: PrimaryModelLayer,
       });
     }
 
     if (process.env.OPENAI_KEY) {
       models.push({
-        name: 'gpt-4o',
+        name: "gpt-4o",
         layer: OpenAiLayer,
       });
     }
 
     if (process.env.GEMINI_KEY) {
       models.push({
-        name: 'gemini-1.5-pro',
+        name: "gemini-1.5-pro",
         layer: GoogleLayer,
       });
     }
 
     if (models.length === 0) {
-      console.warn('No AI models configured - check API keys');
+      console.warn("No AI models configured - check API keys");
       return {
         results: [],
-        consensusDecision: 'NO_TRADE' as const,
+        consensusDecision: "NO_TRADE" as const,
         consensusPercentage: 0,
         totalModels: 0,
         successfulModels: 0,
+        voteDistribution: { YES: 0, NO: 0, NO_TRADE: 0 },
+        averageConfidence: 0,
+        confidenceRange: { min: 0, max: 0 },
+        aggregatedKeyFactors: [],
+        aggregatedRisks: [],
+        aggregatedReasoning: "",
       };
     }
 
-    console.log(`Querying ${models.length} models...`);
+    console.log(`Querying ${models.length} models with structured output...`);
     const startTime = Date.now();
 
     // Retry schedule: exponential backoff starting at 1s, max 3 retries
     const retrySchedule = Schedule.exponential(Duration.seconds(1)).pipe(
-      Schedule.intersect(Schedule.recurs(3)),
+      Schedule.intersect(Schedule.recurs(3))
     );
 
     // Query all models with limited concurrency and retry on transient failures
     const results = yield* Effect.all(
       models.map(({ name, layer }) =>
         queryWithLayer(name, layer, systemPrompt, userPrompt).pipe(
-          Effect.retry(retrySchedule),
-        ),
+          Effect.retry(retrySchedule)
+        )
       ),
-      { concurrency: 3 },
+      { concurrency: 3 }
     );
 
     const totalTime = Date.now() - startTime;
@@ -216,12 +359,15 @@ export const querySwarm = (systemPrompt: string, userPrompt: string) =>
 
     // Log individual results
     for (const result of results) {
-      const status = result.error
-        ? `ERROR: ${result.error.slice(0, 50)}`
-        : result.decision;
-      console.log(
-        `  ${result.modelName}: ${status} (${result.responseTimeMs}ms)`,
-      );
+      if (result.error) {
+        console.log(
+          `  ${result.modelName}: ERROR: ${result.error.slice(0, 50)} (${result.responseTimeMs}ms)`
+        );
+      } else if (result.prediction) {
+        console.log(
+          `  ${result.modelName}: ${result.prediction.decision} (${result.prediction.confidence}% confidence, ${result.responseTimeMs}ms)`
+        );
+      }
     }
 
     return calculateConsensus(results);
