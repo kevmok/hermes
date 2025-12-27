@@ -4,10 +4,10 @@
  * Internal actions fetch from the API directly.
  * Public actions use ActionCache for TTL-based caching.
  */
-import { action, internalAction } from "../_generated/server";
-import { v } from "convex/values";
-import { api as polymarketApi } from "./client";
-import { marketBySlugCache, marketByIdCache } from "./cache";
+import { action, internalAction } from '../_generated/server';
+import { v } from 'convex/values';
+import { api as polymarketApi } from './client';
+import { marketBySlugCache, marketByIdCache } from './cache';
 
 // ============ INTERNAL ACTIONS (used by cache) ============
 
@@ -33,7 +33,12 @@ export const getMarketBySlug = action({
   args: { slug: v.string() },
   returns: v.any(),
   handler: async (ctx, args) => {
-    return marketBySlugCache.fetch(ctx, { slug: args.slug });
+    try {
+      return await marketBySlugCache.fetch(ctx, { slug: args.slug });
+    } catch (error) {
+      console.error('Polymarket getMarketBySlug error:', error);
+      return null;
+    }
   },
 });
 
@@ -41,7 +46,12 @@ export const getMarketById = action({
   args: { id: v.string() },
   returns: v.any(),
   handler: async (ctx, args) => {
-    return marketByIdCache.fetch(ctx, { id: args.id });
+    try {
+      return await marketByIdCache.fetch(ctx, { id: args.id });
+    } catch (error) {
+      console.error('Polymarket getMarketById error:', error);
+      return null;
+    }
   },
 });
 
@@ -55,12 +65,17 @@ export const listMarkets = action({
   },
   returns: v.any(),
   handler: async (_ctx, args) => {
-    return polymarketApi.listMarkets({
-      limit: args.limit,
-      offset: args.offset,
-      active: args.active,
-      closed: args.closed,
-    });
+    try {
+      return await polymarketApi.listMarkets({
+        limit: args.limit,
+        offset: args.offset,
+        active: args.active,
+        closed: args.closed,
+      });
+    } catch (error) {
+      console.error('Polymarket listMarkets error:', error);
+      return [];
+    }
   },
 });
 

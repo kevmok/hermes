@@ -4,10 +4,10 @@
  * Internal actions fetch from the API directly.
  * Public actions use ActionCache for TTL-based caching.
  */
-import { action, internalAction } from "../_generated/server";
-import { v } from "convex/values";
-import { api as polymarketApi } from "./client";
-import { eventBySlugCache, eventByIdCache } from "./cache";
+import { action, internalAction } from '../_generated/server';
+import { v } from 'convex/values';
+import { api as polymarketApi } from './client';
+import { eventBySlugCache, eventByIdCache } from './cache';
 
 // ============ INTERNAL ACTIONS (used by cache) ============
 
@@ -33,7 +33,12 @@ export const getEventBySlug = action({
   args: { slug: v.string() },
   returns: v.any(),
   handler: async (ctx, args) => {
-    return eventBySlugCache.fetch(ctx, { slug: args.slug });
+    try {
+      return await eventBySlugCache.fetch(ctx, { slug: args.slug });
+    } catch (error) {
+      console.error('Polymarket getEventBySlug error:', error);
+      return null;
+    }
   },
 });
 
@@ -41,7 +46,12 @@ export const getEventById = action({
   args: { id: v.string() },
   returns: v.any(),
   handler: async (ctx, args) => {
-    return eventByIdCache.fetch(ctx, { id: args.id });
+    try {
+      return await eventByIdCache.fetch(ctx, { id: args.id });
+    } catch (error) {
+      console.error('Polymarket getEventById error:', error);
+      return null;
+    }
   },
 });
 
@@ -57,14 +67,20 @@ export const listEvents = action({
   },
   returns: v.any(),
   handler: async (_ctx, args) => {
-    return polymarketApi.listEvents({
-      limit: args.limit,
-      offset: args.offset,
-      active: args.active,
-      closed: args.closed,
-      order: args.order,
-      ascending: args.ascending,
-    });
+    try {
+      return await polymarketApi.listEvents({
+        limit: args.limit,
+        offset: args.offset,
+        active: args.active,
+        closed: args.closed,
+        order: args.order,
+        ascending: args.ascending,
+      });
+    } catch (error) {
+      console.error('Polymarket listEvents error:', error);
+      // Return empty array on error to allow graceful degradation
+      return [];
+    }
   },
 });
 
