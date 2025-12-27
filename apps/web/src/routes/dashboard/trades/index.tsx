@@ -258,7 +258,8 @@ function StatCard({
   );
 }
 
-function formatVolume(volume: number): string {
+function formatVolume(volume: number | undefined | null): string {
+  if (volume == null || isNaN(volume)) return '$0';
   if (volume >= 1_000_000) return `$${(volume / 1_000_000).toFixed(1)}M`;
   if (volume >= 1_000) return `$${(volume / 1_000).toFixed(1)}K`;
   return `$${volume.toFixed(0)}`;
