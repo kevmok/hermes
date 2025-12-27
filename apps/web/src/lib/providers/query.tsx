@@ -3,7 +3,8 @@ import { ConvexQueryClient } from '@convex-dev/react-query';
 import { env } from '../env/client';
 
 const convexQueryClient = new ConvexQueryClient(env.VITE_CONVEX_URL, {
-  expectAuth: true,
+  // Disable expectAuth for now to debug - queries shouldn't require auth
+  expectAuth: false,
 });
 
 const queryClient = new QueryClient({
