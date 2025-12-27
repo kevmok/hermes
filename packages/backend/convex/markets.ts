@@ -224,7 +224,7 @@ export const listActiveMarkets = query({
     limit: v.optional(v.number()),
     eventSlug: v.optional(v.string()),
     sortBy: v.optional(
-      v.union(v.literal('recent'), v.literal('analyzed')),
+      v.union(v.literal('recent'), v.literal('analyzed'), v.literal('volume')),
     ),
   },
   handler: async (ctx, args) => {
@@ -249,7 +249,7 @@ export const listActiveMarkets = query({
     if (args.sortBy === 'analyzed') {
       markets.sort((a, b) => (b.lastAnalyzedAt ?? 0) - (a.lastAnalyzedAt ?? 0));
     } else {
-      // Default: recent (by lastTradeAt)
+      // Default: recent (by lastTradeAt) - also used for 'volume' since markets don't store volume
       markets.sort((a, b) => b.lastTradeAt - a.lastTradeAt);
     }
 

@@ -21,7 +21,7 @@ export const marketsQueries = {
   active: (options?: {
     limit?: number;
     eventSlug?: string;
-    sortBy?: 'recent' | 'analyzed';
+    sortBy?: 'recent' | 'analyzed' | 'volume';
   }) =>
     convexQuery(api.markets.listActiveMarkets, {
       limit: options?.limit ?? 20,

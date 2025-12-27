@@ -9,7 +9,7 @@ import {
   MoneyBag02Icon,
   Time01Icon,
 } from '@hugeicons/core-free-icons';
-import type { TrackedEvent } from '../index';
+import type { TrackedEvent } from './event-columns';
 
 interface TrackedEventCardProps {
   event: TrackedEvent;

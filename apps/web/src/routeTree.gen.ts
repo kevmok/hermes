@@ -15,14 +15,16 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as DashboardIndexRouteImport } from './routes/dashboard/index'
 import { Route as authAuthcallbackRouteImport } from './routes/(auth)/authcallback'
 import { Route as authAuthRouteImport } from './routes/(auth)/auth'
+import { Route as DashboardTradesRouteRouteImport } from './routes/dashboard/trades/route'
+import { Route as DashboardEventsRouteRouteImport } from './routes/dashboard/events/route'
 import { Route as DashboardWatchlistIndexRouteImport } from './routes/dashboard/watchlist/index'
-import { Route as DashboardTradesIndexRouteImport } from './routes/dashboard/trades/index'
 import { Route as DashboardSignalsIndexRouteImport } from './routes/dashboard/signals/index'
 import { Route as DashboardSettingsIndexRouteImport } from './routes/dashboard/settings/index'
 import { Route as DashboardMarketsIndexRouteImport } from './routes/dashboard/markets/index'
 import { Route as DashboardInsightsIndexRouteImport } from './routes/dashboard/insights/index'
-import { Route as DashboardEventsIndexRouteImport } from './routes/dashboard/events/index'
+import { Route as DashboardTradesSignalIdRouteImport } from './routes/dashboard/trades/$signalId'
 import { Route as DashboardSignalsHistoryRouteImport } from './routes/dashboard/signals/history'
+import { Route as DashboardEventsEventIdRouteImport } from './routes/dashboard/events/$eventId'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth.$'
 
 const DashboardRouteRoute = DashboardRouteRouteImport.update({
@@ -54,14 +56,19 @@ const authAuthRoute = authAuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => authRouteRoute,
 } as any)
+const DashboardTradesRouteRoute = DashboardTradesRouteRouteImport.update({
+  id: '/trades',
+  path: '/trades',
+  getParentRoute: () => DashboardRouteRoute,
+} as any)
+const DashboardEventsRouteRoute = DashboardEventsRouteRouteImport.update({
+  id: '/events',
+  path: '/events',
+  getParentRoute: () => DashboardRouteRoute,
+} as any)
 const DashboardWatchlistIndexRoute = DashboardWatchlistIndexRouteImport.update({
   id: '/watchlist/',
   path: '/watchlist/',
-  getParentRoute: () => DashboardRouteRoute,
-} as any)
-const DashboardTradesIndexRoute = DashboardTradesIndexRouteImport.update({
-  id: '/trades/',
-  path: '/trades/',
   getParentRoute: () => DashboardRouteRoute,
 } as any)
 const DashboardSignalsIndexRoute = DashboardSignalsIndexRouteImport.update({
@@ -84,15 +91,20 @@ const DashboardInsightsIndexRoute = DashboardInsightsIndexRouteImport.update({
   path: '/insights/',
   getParentRoute: () => DashboardRouteRoute,
 } as any)
-const DashboardEventsIndexRoute = DashboardEventsIndexRouteImport.update({
-  id: '/events/',
-  path: '/events/',
-  getParentRoute: () => DashboardRouteRoute,
+const DashboardTradesSignalIdRoute = DashboardTradesSignalIdRouteImport.update({
+  id: '/$signalId',
+  path: '/$signalId',
+  getParentRoute: () => DashboardTradesRouteRoute,
 } as any)
 const DashboardSignalsHistoryRoute = DashboardSignalsHistoryRouteImport.update({
   id: '/signals/history',
   path: '/signals/history',
   getParentRoute: () => DashboardRouteRoute,
+} as any)
+const DashboardEventsEventIdRoute = DashboardEventsEventIdRouteImport.update({
+  id: '/$eventId',
+  path: '/$eventId',
+  getParentRoute: () => DashboardEventsRouteRoute,
 } as any)
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   id: '/api/auth/$',
@@ -103,32 +115,36 @@ const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/dashboard': typeof DashboardRouteRouteWithChildren
+  '/dashboard/events': typeof DashboardEventsRouteRouteWithChildren
+  '/dashboard/trades': typeof DashboardTradesRouteRouteWithChildren
   '/auth': typeof authAuthRoute
   '/authcallback': typeof authAuthcallbackRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/dashboard/events/$eventId': typeof DashboardEventsEventIdRoute
   '/dashboard/signals/history': typeof DashboardSignalsHistoryRoute
-  '/dashboard/events': typeof DashboardEventsIndexRoute
+  '/dashboard/trades/$signalId': typeof DashboardTradesSignalIdRoute
   '/dashboard/insights': typeof DashboardInsightsIndexRoute
   '/dashboard/markets': typeof DashboardMarketsIndexRoute
   '/dashboard/settings': typeof DashboardSettingsIndexRoute
   '/dashboard/signals': typeof DashboardSignalsIndexRoute
-  '/dashboard/trades': typeof DashboardTradesIndexRoute
   '/dashboard/watchlist': typeof DashboardWatchlistIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/dashboard/events': typeof DashboardEventsRouteRouteWithChildren
+  '/dashboard/trades': typeof DashboardTradesRouteRouteWithChildren
   '/auth': typeof authAuthRoute
   '/authcallback': typeof authAuthcallbackRoute
   '/dashboard': typeof DashboardIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/dashboard/events/$eventId': typeof DashboardEventsEventIdRoute
   '/dashboard/signals/history': typeof DashboardSignalsHistoryRoute
-  '/dashboard/events': typeof DashboardEventsIndexRoute
+  '/dashboard/trades/$signalId': typeof DashboardTradesSignalIdRoute
   '/dashboard/insights': typeof DashboardInsightsIndexRoute
   '/dashboard/markets': typeof DashboardMarketsIndexRoute
   '/dashboard/settings': typeof DashboardSettingsIndexRoute
   '/dashboard/signals': typeof DashboardSignalsIndexRoute
-  '/dashboard/trades': typeof DashboardTradesIndexRoute
   '/dashboard/watchlist': typeof DashboardWatchlistIndexRoute
 }
 export interface FileRoutesById {
@@ -136,17 +152,19 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/(auth)': typeof authRouteRouteWithChildren
   '/dashboard': typeof DashboardRouteRouteWithChildren
+  '/dashboard/events': typeof DashboardEventsRouteRouteWithChildren
+  '/dashboard/trades': typeof DashboardTradesRouteRouteWithChildren
   '/(auth)/auth': typeof authAuthRoute
   '/(auth)/authcallback': typeof authAuthcallbackRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/dashboard/events/$eventId': typeof DashboardEventsEventIdRoute
   '/dashboard/signals/history': typeof DashboardSignalsHistoryRoute
-  '/dashboard/events/': typeof DashboardEventsIndexRoute
+  '/dashboard/trades/$signalId': typeof DashboardTradesSignalIdRoute
   '/dashboard/insights/': typeof DashboardInsightsIndexRoute
   '/dashboard/markets/': typeof DashboardMarketsIndexRoute
   '/dashboard/settings/': typeof DashboardSettingsIndexRoute
   '/dashboard/signals/': typeof DashboardSignalsIndexRoute
-  '/dashboard/trades/': typeof DashboardTradesIndexRoute
   '/dashboard/watchlist/': typeof DashboardWatchlistIndexRoute
 }
 export interface FileRouteTypes {
@@ -154,49 +172,55 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/dashboard'
+    | '/dashboard/events'
+    | '/dashboard/trades'
     | '/auth'
     | '/authcallback'
     | '/dashboard/'
     | '/api/auth/$'
+    | '/dashboard/events/$eventId'
     | '/dashboard/signals/history'
-    | '/dashboard/events'
+    | '/dashboard/trades/$signalId'
     | '/dashboard/insights'
     | '/dashboard/markets'
     | '/dashboard/settings'
     | '/dashboard/signals'
-    | '/dashboard/trades'
     | '/dashboard/watchlist'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/dashboard/events'
+    | '/dashboard/trades'
     | '/auth'
     | '/authcallback'
     | '/dashboard'
     | '/api/auth/$'
+    | '/dashboard/events/$eventId'
     | '/dashboard/signals/history'
-    | '/dashboard/events'
+    | '/dashboard/trades/$signalId'
     | '/dashboard/insights'
     | '/dashboard/markets'
     | '/dashboard/settings'
     | '/dashboard/signals'
-    | '/dashboard/trades'
     | '/dashboard/watchlist'
   id:
     | '__root__'
     | '/'
     | '/(auth)'
     | '/dashboard'
+    | '/dashboard/events'
+    | '/dashboard/trades'
     | '/(auth)/auth'
     | '/(auth)/authcallback'
     | '/dashboard/'
     | '/api/auth/$'
+    | '/dashboard/events/$eventId'
     | '/dashboard/signals/history'
-    | '/dashboard/events/'
+    | '/dashboard/trades/$signalId'
     | '/dashboard/insights/'
     | '/dashboard/markets/'
     | '/dashboard/settings/'
     | '/dashboard/signals/'
-    | '/dashboard/trades/'
     | '/dashboard/watchlist/'
   fileRoutesById: FileRoutesById
 }
@@ -251,18 +275,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof authAuthRouteImport
       parentRoute: typeof authRouteRoute
     }
+    '/dashboard/trades': {
+      id: '/dashboard/trades'
+      path: '/trades'
+      fullPath: '/dashboard/trades'
+      preLoaderRoute: typeof DashboardTradesRouteRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/events': {
+      id: '/dashboard/events'
+      path: '/events'
+      fullPath: '/dashboard/events'
+      preLoaderRoute: typeof DashboardEventsRouteRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
     '/dashboard/watchlist/': {
       id: '/dashboard/watchlist/'
       path: '/watchlist'
       fullPath: '/dashboard/watchlist'
       preLoaderRoute: typeof DashboardWatchlistIndexRouteImport
-      parentRoute: typeof DashboardRouteRoute
-    }
-    '/dashboard/trades/': {
-      id: '/dashboard/trades/'
-      path: '/trades'
-      fullPath: '/dashboard/trades'
-      preLoaderRoute: typeof DashboardTradesIndexRouteImport
       parentRoute: typeof DashboardRouteRoute
     }
     '/dashboard/signals/': {
@@ -293,12 +324,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardInsightsIndexRouteImport
       parentRoute: typeof DashboardRouteRoute
     }
-    '/dashboard/events/': {
-      id: '/dashboard/events/'
-      path: '/events'
-      fullPath: '/dashboard/events'
-      preLoaderRoute: typeof DashboardEventsIndexRouteImport
-      parentRoute: typeof DashboardRouteRoute
+    '/dashboard/trades/$signalId': {
+      id: '/dashboard/trades/$signalId'
+      path: '/$signalId'
+      fullPath: '/dashboard/trades/$signalId'
+      preLoaderRoute: typeof DashboardTradesSignalIdRouteImport
+      parentRoute: typeof DashboardTradesRouteRoute
     }
     '/dashboard/signals/history': {
       id: '/dashboard/signals/history'
@@ -306,6 +337,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/dashboard/signals/history'
       preLoaderRoute: typeof DashboardSignalsHistoryRouteImport
       parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/events/$eventId': {
+      id: '/dashboard/events/$eventId'
+      path: '/$eventId'
+      fullPath: '/dashboard/events/$eventId'
+      preLoaderRoute: typeof DashboardEventsEventIdRouteImport
+      parentRoute: typeof DashboardEventsRouteRoute
     }
     '/api/auth/$': {
       id: '/api/auth/$'
@@ -331,27 +369,49 @@ const authRouteRouteWithChildren = authRouteRoute._addFileChildren(
   authRouteRouteChildren,
 )
 
+interface DashboardEventsRouteRouteChildren {
+  DashboardEventsEventIdRoute: typeof DashboardEventsEventIdRoute
+}
+
+const DashboardEventsRouteRouteChildren: DashboardEventsRouteRouteChildren = {
+  DashboardEventsEventIdRoute: DashboardEventsEventIdRoute,
+}
+
+const DashboardEventsRouteRouteWithChildren =
+  DashboardEventsRouteRoute._addFileChildren(DashboardEventsRouteRouteChildren)
+
+interface DashboardTradesRouteRouteChildren {
+  DashboardTradesSignalIdRoute: typeof DashboardTradesSignalIdRoute
+}
+
+const DashboardTradesRouteRouteChildren: DashboardTradesRouteRouteChildren = {
+  DashboardTradesSignalIdRoute: DashboardTradesSignalIdRoute,
+}
+
+const DashboardTradesRouteRouteWithChildren =
+  DashboardTradesRouteRoute._addFileChildren(DashboardTradesRouteRouteChildren)
+
 interface DashboardRouteRouteChildren {
+  DashboardEventsRouteRoute: typeof DashboardEventsRouteRouteWithChildren
+  DashboardTradesRouteRoute: typeof DashboardTradesRouteRouteWithChildren
   DashboardIndexRoute: typeof DashboardIndexRoute
   DashboardSignalsHistoryRoute: typeof DashboardSignalsHistoryRoute
-  DashboardEventsIndexRoute: typeof DashboardEventsIndexRoute
   DashboardInsightsIndexRoute: typeof DashboardInsightsIndexRoute
   DashboardMarketsIndexRoute: typeof DashboardMarketsIndexRoute
   DashboardSettingsIndexRoute: typeof DashboardSettingsIndexRoute
   DashboardSignalsIndexRoute: typeof DashboardSignalsIndexRoute
-  DashboardTradesIndexRoute: typeof DashboardTradesIndexRoute
   DashboardWatchlistIndexRoute: typeof DashboardWatchlistIndexRoute
 }
 
 const DashboardRouteRouteChildren: DashboardRouteRouteChildren = {
+  DashboardEventsRouteRoute: DashboardEventsRouteRouteWithChildren,
+  DashboardTradesRouteRoute: DashboardTradesRouteRouteWithChildren,
   DashboardIndexRoute: DashboardIndexRoute,
   DashboardSignalsHistoryRoute: DashboardSignalsHistoryRoute,
-  DashboardEventsIndexRoute: DashboardEventsIndexRoute,
   DashboardInsightsIndexRoute: DashboardInsightsIndexRoute,
   DashboardMarketsIndexRoute: DashboardMarketsIndexRoute,
   DashboardSettingsIndexRoute: DashboardSettingsIndexRoute,
   DashboardSignalsIndexRoute: DashboardSignalsIndexRoute,
-  DashboardTradesIndexRoute: DashboardTradesIndexRoute,
   DashboardWatchlistIndexRoute: DashboardWatchlistIndexRoute,
 }
 

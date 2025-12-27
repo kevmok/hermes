@@ -47,7 +47,7 @@ export const signalsQueries = {
   stats: () => convexQuery(api.signals.getSignalStats, {}),
 
   /** Get signal with related predictions */
-  withPredictions: (signalId: Id<'signals'>) =>
+  withPredictions: (signalId: Id<'signals'> | null) =>
     convexQuery(api.signals.getSignalWithPredictions, { signalId }),
 
   /** Get signals since a timestamp (for notifications) */

@@ -354,8 +354,9 @@ export const getSignalStats = query({
 // ============ SIGNAL DETAIL WITH PREDICTIONS ============
 
 export const getSignalWithPredictions = query({
-  args: { signalId: v.id('signals') },
+  args: { signalId: v.union(v.id('signals'), v.null()) },
   handler: async (ctx, args) => {
+    if (!args.signalId) return null;
     const signal = await ctx.db.get(args.signalId);
     if (!signal) return null;
 
