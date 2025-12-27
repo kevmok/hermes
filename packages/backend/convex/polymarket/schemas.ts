@@ -11,8 +11,8 @@ export interface Market {
   question?: string | null;
   slug?: string | null;
   description?: string | null;
-  outcomes?: string | null; // JSON string array
-  outcomePrices?: string | null; // JSON string array
+  outcomes?: string | null; // JSON string array e.g. "[\"Yes\", \"No\"]"
+  outcomePrices?: string | null; // JSON string array e.g. "[\"0.65\", \"0.35\"]"
   volume?: string | null;
   volumeNum?: number | null;
   volume24hr?: number | null;
@@ -27,6 +27,11 @@ export interface Market {
   endDate?: string | null;
   image?: string | null;
   icon?: string | null;
+  // Resolution-related fields (from Polymarket API)
+  acceptingOrders?: boolean | null;
+  closedTime?: string | null;
+  umaResolutionStatus?: string | null;
+  resolvedBy?: string | null;
 }
 
 // ============ EVENTS (Gamma API) ============
@@ -47,6 +52,11 @@ export interface Event {
   startDate?: string | null;
   endDate?: string | null;
   negRisk?: boolean | null;
+  // Resolution/status fields (from Polymarket API)
+  live?: boolean | null;
+  ended?: boolean | null;
+  closedTime?: string | null;
+  finishedTimestamp?: string | null;
 }
 
 // ============ USER POSITIONS (Data API) ============

@@ -76,6 +76,8 @@ export const getEventBySlugInternal = internalQuery({
       lastTradeAt: v.number(),
       tradeCount: v.number(),
       totalVolume: v.number(),
+      closed: v.optional(v.boolean()),
+      resolvedAt: v.optional(v.number()),
     }),
     v.null(),
   ),
@@ -84,6 +86,18 @@ export const getEventBySlugInternal = internalQuery({
       .query("events")
       .withIndex("by_event_slug", (q) => q.eq("eventSlug", args.eventSlug))
       .first();
+  },
+});
+
+export const getUnclosedEvents = internalQuery({
+  args: { limit: v.optional(v.number()) },
+  handler: async (ctx, args) => {
+    // Query events that are active and not yet closed
+    return ctx.db
+      .query("events")
+      .withIndex("by_active", (q) => q.eq("isActive", true))
+      .filter((q) => q.neq(q.field("closed"), true))
+      .take(args.limit ?? 100);
   },
 });
 
@@ -100,6 +114,9 @@ const eventValidator = v.object({
   lastTradeAt: v.number(),
   tradeCount: v.number(),
   totalVolume: v.number(),
+  // Resolution tracking
+  closed: v.optional(v.boolean()),
+  resolvedAt: v.optional(v.number()),
 });
 
 export const listTrackedEvents = query({

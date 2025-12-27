@@ -168,7 +168,7 @@ export function MarketDetailModal({
                   </p>
                 )}
               </div>
-              <div className="p-4 rounded-lg bg-white/[0.02] border border-white/[0.06]">
+              <div className="p-4 rounded-lg bg-white/2 border border-white/6">
                 <span className="text-[10px] font-semibold tracking-widest text-muted-foreground/60 uppercase block mb-1">
                   24h Volume
                 </span>

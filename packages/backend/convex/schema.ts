@@ -79,11 +79,15 @@ export default defineSchema({
     lastTradeAt: v.number(),
     tradeCount: v.number(),
     totalVolume: v.number(), // Sum of all trade sizes for this event
+    // Resolution tracking
+    closed: v.optional(v.boolean()), // Event has closed on Polymarket
+    resolvedAt: v.optional(v.number()), // When we detected closure
   })
     .index("by_event_slug", ["eventSlug"])
     .index("by_last_trade", ["lastTradeAt"])
     .index("by_active", ["isActive", "lastTradeAt"])
-    .index("by_volume", ["totalVolume"]),
+    .index("by_volume", ["totalVolume"])
+    .index("by_closed", ["closed"]),
 
   // ============ MARKETS (Simplified - static data only) ============
 

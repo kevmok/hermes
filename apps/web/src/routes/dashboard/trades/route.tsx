@@ -1,38 +1,52 @@
-import { createFileRoute, Outlet, useNavigate, useMatch } from '@tanstack/react-router';
-import { useQuery } from '@tanstack/react-query';
-import { z } from 'zod';
-import { Sheet, SheetContent } from '@/components/ui/sheet';
-import { tradesQueries, signalsQueries } from '@/lib/queries';
-import { queryClient } from '@/lib/providers/query';
-import { SignalsTable } from './-components/signals-table';
-import { HugeiconsIcon } from '@hugeicons/react';
+import {
+  createFileRoute,
+  Outlet,
+  useNavigate,
+  useMatch,
+} from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
+import { z } from "zod";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
+import { tradesQueries, signalsQueries } from "@/lib/queries";
+import { queryClient } from "@/lib/providers/query";
+import { SignalsTable } from "./-components/signals-table";
+import { HugeiconsIcon } from "@hugeicons/react";
 import {
   Activity03Icon,
   FlashIcon,
   ChartLineData01Icon,
   MoneyBag02Icon,
-} from '@hugeicons/core-free-icons';
+} from "@hugeicons/core-free-icons";
 
 // Search params schema with zod validation
 const searchSchema = z.object({
-  decision: z.enum(['YES', 'NO', 'NO_TRADE', 'all']).default('all').catch('all'),
-  confidence: z.enum(['high', 'medium', 'low', 'all']).default('all').catch('all'),
-  sort: z.enum(['timestamp', 'confidence', 'consensusPercentage']).default('timestamp').catch('timestamp'),
-  order: z.enum(['asc', 'desc']).default('desc').catch('desc'),
+  decision: z
+    .enum(["YES", "NO", "NO_TRADE", "all"])
+    .default("all")
+    .catch("all"),
+  confidence: z
+    .enum(["high", "medium", "low", "all"])
+    .default("all")
+    .catch("all"),
+  sort: z
+    .enum(["timestamp", "confidence", "consensusPercentage"])
+    .default("timestamp")
+    .catch("timestamp"),
+  order: z.enum(["asc", "desc"]).default("desc").catch("desc"),
   page: z.coerce.number().default(1).catch(1),
 });
 
-export const Route = createFileRoute('/dashboard/trades')({
+export const Route = createFileRoute("/dashboard/trades")({
   validateSearch: searchSchema,
   loaderDeps: ({ search }) => search,
   loader: async ({ deps: search }) => {
     // Prefetch signals and stats data
-    await Promise.all([
+    await Promise.allSettled([
       queryClient.ensureQueryData({
         ...signalsQueries.paginated({
           limit: 50,
-          onlyHighConfidence: search.confidence === 'high',
-          decision: search.decision !== 'all' ? search.decision : undefined,
+          onlyHighConfidence: search.confidence === "high",
+          decision: search.decision !== "all" ? search.decision : undefined,
         }),
         revalidateIfStale: true,
       }),
@@ -52,7 +66,7 @@ function TradesLayout() {
 
   // Check if child route (drawer) is active
   const childMatch = useMatch({
-    from: '/dashboard/trades/$signalId',
+    from: "/dashboard/trades/$signalId",
     shouldThrow: false,
   });
 
@@ -61,12 +75,12 @@ function TradesLayout() {
   );
 
   const handleDrawerClose = () => {
-    navigate({ to: '/dashboard/trades', search });
+    navigate({ to: "/dashboard/trades", search });
   };
 
   const handleRowClick = (signalId: string) => {
     navigate({
-      to: '/dashboard/trades/$signalId',
+      to: "/dashboard/trades/$signalId",
       params: { signalId },
       search,
     });
@@ -86,7 +100,7 @@ function TradesLayout() {
           className="absolute inset-0 opacity-[0.03]"
           style={{
             backgroundImage: `linear-gradient(rgba(168, 85, 247, 0.3) 1px, transparent 1px), linear-gradient(90deg, rgba(168, 85, 247, 0.3) 1px, transparent 1px)`,
-            backgroundSize: '32px 32px',
+            backgroundSize: "32px 32px",
           }}
         />
 
@@ -116,7 +130,7 @@ function TradesLayout() {
               </div>
               <p className="text-muted-foreground max-w-lg">
                 Multi-model AI consensus signals generated from whale trades.
-                High confidence signals have{' '}
+                High confidence signals have{" "}
                 <span className="text-cyan-400 font-semibold">80%+</span> model
                 agreement.
               </p>
@@ -173,7 +187,10 @@ function TradesLayout() {
       </div>
 
       {/* Signal Detail Drawer */}
-      <Sheet open={!!childMatch} onOpenChange={(open) => !open && handleDrawerClose()}>
+      <Sheet
+        open={!!childMatch}
+        onOpenChange={(open) => !open && handleDrawerClose()}
+      >
         <SheetContent className="w-[600px] sm:max-w-[600px] overflow-y-auto p-0">
           <Outlet />
         </SheetContent>
@@ -225,7 +242,7 @@ function StatCard({
           <div className="h-8 w-16 bg-white/5 rounded animate-pulse" />
         ) : (
           <span
-            className={`text-2xl font-bold tabular-nums tracking-tight ${highlight ? 'text-emerald-400' : 'text-white'}`}
+            className={`text-2xl font-bold tabular-nums tracking-tight ${highlight ? "text-emerald-400" : "text-white"}`}
           >
             {value}
           </span>
@@ -236,7 +253,7 @@ function StatCard({
 }
 
 function formatVolume(volume: number | undefined | null): string {
-  if (volume == null || Number.isNaN(volume)) return '$0';
+  if (volume == null || Number.isNaN(volume)) return "$0";
   if (volume >= 1_000_000) return `$${(volume / 1_000_000).toFixed(1)}M`;
   if (volume >= 1_000) return `$${(volume / 1_000).toFixed(1)}K`;
   return `$${volume.toFixed(0)}`;

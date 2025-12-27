@@ -128,6 +128,21 @@ export const listEvents = (
   return fetchJsonArray<Event>(`${GAMMA_API}/events?${query}`);
 };
 
+export const getEventsBySlugs = (
+  slugs: string[]
+): Effect.Effect<Event[], PolymarketApiError> => {
+  if (slugs.length === 0) return Effect.succeed([]);
+
+  // Polymarket API requires repeating the param for each value
+  const query = new URLSearchParams();
+  for (const slug of slugs) {
+    query.append("slug", slug);
+  }
+  query.set("limit", String(slugs.length));
+
+  return fetchJsonArray<Event>(`${GAMMA_API}/events?${query}`);
+};
+
 // ============ MARKETS API ============
 
 export const getMarketBySlug = (
@@ -150,6 +165,21 @@ export const listMarkets = (
   query.set("offset", String(params.offset ?? 0));
   if (params.active !== undefined) query.set("active", String(params.active));
   if (params.closed !== undefined) query.set("closed", String(params.closed));
+
+  return fetchJsonArray<Market>(`${GAMMA_API}/markets?${query}`);
+};
+
+export const getMarketsByConditionIds = (
+  conditionIds: string[]
+): Effect.Effect<Market[], PolymarketApiError> => {
+  if (conditionIds.length === 0) return Effect.succeed([]);
+
+  // Polymarket API requires repeating the param for each value
+  const query = new URLSearchParams();
+  for (const id of conditionIds) {
+    query.append("condition_ids", id);
+  }
+  query.set("limit", String(conditionIds.length));
 
   return fetchJsonArray<Market>(`${GAMMA_API}/markets?${query}`);
 };
@@ -263,11 +293,15 @@ export const api = {
   getEventBySlug: (slug: string) => Effect.runPromise(getEventBySlug(slug)),
   getEventById: (id: string) => Effect.runPromise(getEventById(id)),
   listEvents: (params: ListEventsParams = {}) => Effect.runPromise(listEvents(params)),
+  getEventsBySlugs: (slugs: string[]) =>
+    Effect.runPromise(getEventsBySlugs(slugs)),
 
   // Markets
   getMarketBySlug: (slug: string) => Effect.runPromise(getMarketBySlug(slug)),
   getMarketById: (id: string) => Effect.runPromise(getMarketById(id)),
   listMarkets: (params: ListMarketsParams = {}) => Effect.runPromise(listMarkets(params)),
+  getMarketsByConditionIds: (conditionIds: string[]) =>
+    Effect.runPromise(getMarketsByConditionIds(conditionIds)),
 
   // User data
   getUserPositions: (user: string, params: PositionsParams = {}) =>
