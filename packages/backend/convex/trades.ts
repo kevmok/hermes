@@ -138,19 +138,25 @@ export const listTrades = query({
     nextCursor: v.union(v.string(), v.null()),
   }),
   handler: async (ctx, args) => {
-    const limit = args.limit ?? 50;
+    try {
+      console.log('[listTrades] Starting query with args:', args);
+      const limit = args.limit ?? 50;
 
-    // Simple query with ordering by timestamp index
-    const trades = await ctx.db
-      .query('trades')
-      .withIndex('by_timestamp')
-      .order('desc')
-      .take(limit);
+      const trades = await ctx.db
+        .query('trades')
+        .withIndex('by_timestamp')
+        .order('desc')
+        .take(limit);
 
-    return {
-      trades,
-      nextCursor: null, // Simplified - no pagination for now
-    };
+      console.log('[listTrades] Found', trades.length, 'trades');
+      return {
+        trades,
+        nextCursor: null,
+      };
+    } catch (error) {
+      console.error('[listTrades] Error:', error);
+      throw error;
+    }
   },
 });
 
@@ -164,19 +170,25 @@ export const listWhaleTrades = query({
     nextCursor: v.union(v.string(), v.null()),
   }),
   handler: async (ctx, args) => {
-    const limit = args.limit ?? 50;
+    try {
+      console.log('[listWhaleTrades] Starting query with args:', args);
+      const limit = args.limit ?? 50;
 
-    // Query whale trades using the composite index
-    const trades = await ctx.db
-      .query('trades')
-      .withIndex('by_whale', (q) => q.eq('isWhale', true))
-      .order('desc')
-      .take(limit);
+      const trades = await ctx.db
+        .query('trades')
+        .withIndex('by_whale', (q) => q.eq('isWhale', true))
+        .order('desc')
+        .take(limit);
 
-    return {
-      trades,
-      nextCursor: null, // Simplified - no pagination for now
-    };
+      console.log('[listWhaleTrades] Found', trades.length, 'whale trades');
+      return {
+        trades,
+        nextCursor: null,
+      };
+    } catch (error) {
+      console.error('[listWhaleTrades] Error:', error);
+      throw error;
+    }
   },
 });
 
@@ -239,30 +251,41 @@ export const getTradeStats = query({
     whaleVolume: v.number(),
   }),
   handler: async (ctx, args) => {
-    const since = args.sinceTimestamp ?? Date.now() / 1000 - 24 * 60 * 60; // Default: last 24h
+    try {
+      console.log('[getTradeStats] Starting query with args:', args);
+      const since = args.sinceTimestamp ?? Date.now() / 1000 - 24 * 60 * 60; // Default: last 24h
+      console.log('[getTradeStats] Querying trades since:', since);
 
-    const trades = await ctx.db
-      .query('trades')
-      .withIndex('by_timestamp', (q) => q.gt('timestamp', since))
-      .collect();
+      const trades = await ctx.db
+        .query('trades')
+        .withIndex('by_timestamp', (q) => q.gt('timestamp', since))
+        .collect();
 
-    let totalVolume = 0;
-    let whaleTrades = 0;
-    let whaleVolume = 0;
+      console.log('[getTradeStats] Found', trades.length, 'trades');
 
-    for (const trade of trades) {
-      totalVolume += trade.size;
-      if (trade.isWhale) {
-        whaleTrades++;
-        whaleVolume += trade.size;
+      let totalVolume = 0;
+      let whaleTrades = 0;
+      let whaleVolume = 0;
+
+      for (const trade of trades) {
+        totalVolume += trade.size;
+        if (trade.isWhale) {
+          whaleTrades++;
+          whaleVolume += trade.size;
+        }
       }
-    }
 
-    return {
-      totalTrades: trades.length,
-      totalVolume,
-      whaleTrades,
-      whaleVolume,
-    };
+      const result = {
+        totalTrades: trades.length,
+        totalVolume,
+        whaleTrades,
+        whaleVolume,
+      };
+      console.log('[getTradeStats] Returning:', result);
+      return result;
+    } catch (error) {
+      console.error('[getTradeStats] Error:', error);
+      throw error;
+    }
   },
 });

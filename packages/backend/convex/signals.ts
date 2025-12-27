@@ -242,40 +242,72 @@ export const getSignalsWithPagination = query({
     nextCursor: v.optional(v.id('signals')),
   }),
   handler: async (ctx, args) => {
-    const limit = args.limit ?? 20;
+    try {
+      console.log('[getSignalsWithPagination] Starting query with args:', args);
+      const limit = args.limit ?? 20;
 
-    let signals: Doc<'signals'>[];
+      let signals: Doc<'signals'>[];
 
-    if (args.onlyHighConfidence) {
-      signals = await ctx.db
-        .query('signals')
-        .withIndex('by_high_confidence', (q) => q.eq('isHighConfidence', true))
-        .order('desc')
-        .take(limit + 1);
-    } else if (args.decision !== undefined) {
-      const decision = args.decision;
-      signals = await ctx.db
-        .query('signals')
-        .withIndex('by_decision', (q) => q.eq('consensusDecision', decision))
-        .order('desc')
-        .take(limit + 1);
-    } else {
-      signals = await ctx.db
-        .query('signals')
-        .withIndex('by_timestamp')
-        .order('desc')
-        .take(limit + 1);
+      if (args.onlyHighConfidence) {
+        console.log(
+          '[getSignalsWithPagination] Querying high confidence signals',
+        );
+        signals = await ctx.db
+          .query('signals')
+          .withIndex('by_high_confidence', (q) =>
+            q.eq('isHighConfidence', true),
+          )
+          .order('desc')
+          .take(limit + 1);
+      } else if (args.decision !== undefined) {
+        console.log(
+          '[getSignalsWithPagination] Querying by decision:',
+          args.decision,
+        );
+        const decision = args.decision;
+        signals = await ctx.db
+          .query('signals')
+          .withIndex('by_decision', (q) => q.eq('consensusDecision', decision))
+          .order('desc')
+          .take(limit + 1);
+      } else {
+        console.log(
+          '[getSignalsWithPagination] Querying all signals by timestamp',
+        );
+        signals = await ctx.db
+          .query('signals')
+          .withIndex('by_timestamp')
+          .order('desc')
+          .take(limit + 1);
+      }
+
+      console.log(
+        '[getSignalsWithPagination] Found',
+        signals.length,
+        'signals',
+      );
+
+      const hasMore = signals.length > limit;
+      const items = hasMore ? signals.slice(0, -1) : signals;
+
+      console.log('[getSignalsWithPagination] Enriching with markets...');
+      const enrichedItems = await enrichSignalsWithMarkets(ctx, items);
+      console.log(
+        '[getSignalsWithPagination] Enriched',
+        enrichedItems.length,
+        'items',
+      );
+
+      const lastItem = items[items.length - 1];
+      return {
+        items: enrichedItems,
+        hasMore,
+        nextCursor: hasMore && lastItem ? lastItem._id : undefined,
+      };
+    } catch (error) {
+      console.error('[getSignalsWithPagination] Error:', error);
+      throw error;
     }
-
-    const hasMore = signals.length > limit;
-    const items = hasMore ? signals.slice(0, -1) : signals;
-
-    const lastItem = items[items.length - 1];
-    return {
-      items: await enrichSignalsWithMarkets(ctx, items),
-      hasMore,
-      nextCursor: hasMore && lastItem ? lastItem._id : undefined,
-    };
   },
 });
 
