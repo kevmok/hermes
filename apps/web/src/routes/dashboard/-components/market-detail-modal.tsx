@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { convexQuery } from "@convex-dev/react-query";
+import { convexQuery, convexAction } from "@convex-dev/react-query";
 import { api } from "backend/convex/_generated/api";
 import type { Id } from "backend/convex/_generated/dataModel";
 import {
@@ -53,11 +53,20 @@ export function MarketDetailModal({
   open,
   onOpenChange,
 }: MarketDetailModalProps) {
+  // Fetch static market data from DB
   const { data: market, isLoading: marketLoading } = useQuery({
     ...convexQuery(api.markets.getMarket, {
       marketId: marketId as Id<"markets">,
     }),
     enabled: !!marketId && open,
+  });
+
+  // Fetch real-time prices from Polymarket API
+  const { data: liveMarket, isLoading: liveLoading } = useQuery({
+    ...convexAction(api.polymarket.markets.getMarketBySlug, {
+      slug: market?.slug ?? "",
+    }),
+    enabled: !!market?.slug && open,
   });
 
   const { data: signals, isLoading: signalsLoading } = useQuery({
@@ -73,6 +82,18 @@ export function MarketDetailModal({
   const polymarketUrl = market?.eventSlug
     ? `https://polymarket.com/event/${market.eventSlug}`
     : null;
+
+  // Parse real-time prices from API response
+  const yesPrice = liveMarket?.outcomePrices
+    ? parseFloat(liveMarket.outcomePrices[0] ?? "0")
+    : null;
+  const noPrice = liveMarket?.outcomePrices
+    ? parseFloat(liveMarket.outcomePrices[1] ?? "0")
+    : null;
+  const volume24h = liveMarket?.volume24hr
+    ? parseFloat(liveMarket.volume24hr)
+    : null;
+  const totalVolume = liveMarket?.volumeNum ?? null;
 
   if (!marketId) return null;
 
@@ -100,13 +121,11 @@ export function MarketDetailModal({
                   <DialogTitle className="text-xl leading-tight pr-4">
                     {market.title}
                   </DialogTitle>
-                  {market.category && (
-                    <DialogDescription className="mt-2">
-                      <Badge variant="secondary" className="text-xs">
-                        {market.category}
-                      </Badge>
-                    </DialogDescription>
-                  )}
+                  <DialogDescription className="mt-2">
+                    <Badge variant="secondary" className="text-xs">
+                      {market.eventSlug}
+                    </Badge>
+                  </DialogDescription>
                 </div>
                 <Badge
                   variant={market.isActive ? "default" : "secondary"}
@@ -121,39 +140,61 @@ export function MarketDetailModal({
               </div>
             </DialogHeader>
 
-            {/* Price & Volume Stats */}
+            {/* Price & Volume Stats - fetched from Polymarket API */}
             <div className="grid grid-cols-2 gap-4 py-4">
               <div className="p-4 rounded-lg bg-white/2 border border-white/6">
                 <span className="text-[10px] font-semibold tracking-widest text-muted-foreground/60 uppercase block mb-1">
                   YES Price
                 </span>
-                <p className="text-2xl font-bold tabular-nums text-emerald-400">
-                  {(market.currentYesPrice * 100).toFixed(0)}%
-                </p>
+                {liveLoading ? (
+                  <div className="h-8 w-16 bg-white/6 rounded animate-pulse" />
+                ) : (
+                  <p className="text-2xl font-bold tabular-nums text-emerald-400">
+                    {yesPrice !== null
+                      ? `${(yesPrice * 100).toFixed(0)}%`
+                      : "—"}
+                  </p>
+                )}
               </div>
               <div className="p-4 rounded-lg bg-white/2 border border-white/6">
                 <span className="text-[10px] font-semibold tracking-widest text-muted-foreground/60 uppercase block mb-1">
                   NO Price
                 </span>
-                <p className="text-2xl font-bold tabular-nums text-red-400">
-                  {(market.currentNoPrice * 100).toFixed(0)}%
-                </p>
+                {liveLoading ? (
+                  <div className="h-8 w-16 bg-white/6 rounded animate-pulse" />
+                ) : (
+                  <p className="text-2xl font-bold tabular-nums text-red-400">
+                    {noPrice !== null ? `${(noPrice * 100).toFixed(0)}%` : "—"}
+                  </p>
+                )}
               </div>
               <div className="p-4 rounded-lg bg-white/[0.02] border border-white/[0.06]">
                 <span className="text-[10px] font-semibold tracking-widest text-muted-foreground/60 uppercase block mb-1">
                   24h Volume
                 </span>
-                <p className="text-xl font-semibold tabular-nums">
-                  ${market.volume24h?.toLocaleString() ?? 0}
-                </p>
+                {liveLoading ? (
+                  <div className="h-7 w-20 bg-white/6 rounded animate-pulse" />
+                ) : (
+                  <p className="text-xl font-semibold tabular-nums">
+                    {volume24h !== null
+                      ? `$${volume24h.toLocaleString(undefined, { maximumFractionDigits: 0 })}`
+                      : "—"}
+                  </p>
+                )}
               </div>
               <div className="p-4 rounded-lg bg-white/[0.02] border border-white/[0.06]">
                 <span className="text-[10px] font-semibold tracking-widest text-muted-foreground/60 uppercase block mb-1">
                   Total Volume
                 </span>
-                <p className="text-xl font-semibold tabular-nums">
-                  ${market.totalVolume?.toLocaleString() ?? 0}
-                </p>
+                {liveLoading ? (
+                  <div className="h-7 w-20 bg-white/6 rounded animate-pulse" />
+                ) : (
+                  <p className="text-xl font-semibold tabular-nums">
+                    {totalVolume !== null
+                      ? `$${totalVolume.toLocaleString(undefined, { maximumFractionDigits: 0 })}`
+                      : "—"}
+                  </p>
+                )}
               </div>
             </div>
 

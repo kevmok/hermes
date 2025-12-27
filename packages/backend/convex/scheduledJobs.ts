@@ -1,77 +1,30 @@
 import { v } from 'convex/values';
 import { internalAction, internalMutation } from './_generated/server';
-import { api, internal } from './_generated/api';
-import type { Id } from './_generated/dataModel';
 
-interface MarketForAnalysis {
-  _id: Id<'markets'>;
-  polymarketId: string;
-  title: string;
-  eventSlug: string;
-  currentYesPrice: number;
-  currentNoPrice: number;
-  volume24h: number;
-}
-
+// Scheduled analysis is deprecated - analysis now happens on trade events
+// Markets no longer store volatile price data, so scheduled analysis cannot
+// determine prices without fetching from API. Trade-triggered analysis uses
+// the price from the trade context.
 export const runAutomaticAnalysis = internalAction({
   args: {},
   returns: v.object({
     analyzed: v.number(),
     total: v.optional(v.number()),
     errors: v.optional(v.number()),
+    skipped: v.optional(v.boolean()),
   }),
-  handler: async (
-    ctx,
-  ): Promise<{ analyzed: number; total?: number; errors?: number }> => {
-    // Get top markets by activity that haven't been analyzed recently
-    const markets: MarketForAnalysis[] = await ctx.runQuery(
-      api.markets.getMarketsNeedingAnalysis,
-      {
-        limit: 10,
-        minHoursSinceLastAnalysis: 6,
-      },
-    );
-
-    if (markets.length === 0) {
-      console.log('No markets need analysis');
-      return { analyzed: 0 };
-    }
-
-    // Create batch analysis run
-    const runId: Id<'analysisRuns'> = await ctx.runMutation(
-      api.analysis.createAnalysisRun,
-      {
-        triggerType: 'scheduled',
-      },
-    );
-
-    let analyzed = 0;
-    const errors: string[] = [];
-
-    for (const market of markets) {
-      try {
-        await ctx.runAction(internal.analysis.executeMarketAnalysis, {
-          marketId: market._id,
-        });
-        analyzed++;
-      } catch (error) {
-        const msg = `Failed to analyze market ${market._id}: ${error}`;
-        console.error(msg);
-        errors.push(msg);
-      }
-    }
-
-    await ctx.runMutation(api.analysis.updateAnalysisRun, {
-      runId,
-      status: errors.length === markets.length ? 'failed' : 'completed',
-      marketsAnalyzed: analyzed,
-      errorMessage: errors.length > 0 ? errors.join('; ') : undefined,
-    });
-
+  handler: async (): Promise<{
+    analyzed: number;
+    total?: number;
+    errors?: number;
+    skipped?: boolean;
+  }> => {
+    // Scheduled analysis is deprecated - prices are no longer stored in DB
+    // Analysis now triggers automatically when whale trades come in
     console.log(
-      `Automatic analysis completed: ${analyzed}/${markets.length} markets`,
+      'Scheduled analysis skipped - analysis now happens on trade events',
     );
-    return { analyzed, total: markets.length, errors: errors.length };
+    return { analyzed: 0, skipped: true };
   },
 });
 

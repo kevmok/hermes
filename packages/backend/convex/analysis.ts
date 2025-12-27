@@ -245,11 +245,15 @@ export const requestMarketAnalysis = mutation({
       requestedAt: Date.now(),
     });
 
-    // Schedule the analysis
-    await ctx.scheduler.runAfter(0, internal.analysis.executeMarketAnalysis, {
-      requestId,
-      marketId: args.marketId,
-    });
+    // Schedule the analysis (action will fetch prices from Polymarket API)
+    await ctx.scheduler.runAfter(
+      0,
+      internal.analysis.executeMarketAnalysisOnDemand,
+      {
+        requestId,
+        marketId: args.marketId,
+      },
+    );
 
     return {
       status: "pending" as const,
@@ -261,10 +265,13 @@ export const requestMarketAnalysis = mutation({
 
 // ============ INTERNAL ACTIONS ============
 
-// Analyze market using Effect.ts swarm - called on market upsert
+// Analyze market using Effect.ts swarm
+// Prices must be passed since markets table no longer stores volatile price data
 export const analyzeMarketWithSwarm = internalAction({
   args: {
     marketId: v.id("markets"),
+    yesPrice: v.number(),
+    noPrice: v.number(),
   },
   returns: v.object({
     success: v.boolean(),
@@ -290,7 +297,10 @@ export const analyzeMarketWithSwarm = internalAction({
       }
 
       // Build prompts and query swarm using Effect.ts
-      const { systemPrompt, userPrompt } = buildPrompt(market);
+      const { systemPrompt, userPrompt } = buildPrompt(market, {
+        yesPrice: args.yesPrice,
+        noPrice: args.noPrice,
+      });
       const swarmResponse = await Effect.runPromise(
         querySwarm(systemPrompt, userPrompt) as Effect.Effect<SwarmResponse>,
       );
@@ -314,7 +324,7 @@ export const analyzeMarketWithSwarm = internalAction({
           totalModels: swarmResponse.totalModels,
           agreeingModels: swarmResponse.successfulModels,
           aggregatedReasoning,
-          priceAtAnalysis: market.currentYesPrice,
+          priceAtAnalysis: args.yesPrice,
         },
       );
 
@@ -336,10 +346,13 @@ export const analyzeMarketWithSwarm = internalAction({
 });
 
 // Legacy executeMarketAnalysis - kept for on-demand requests with full tracking
+// Prices must be passed since markets table no longer stores volatile price data
 export const executeMarketAnalysis = internalAction({
   args: {
     requestId: v.optional(v.id("analysisRequests")),
     marketId: v.id("markets"),
+    yesPrice: v.number(),
+    noPrice: v.number(),
   },
   returns: v.object({
     success: v.boolean(),
@@ -378,7 +391,10 @@ export const executeMarketAnalysis = internalAction({
       if (!market) throw new Error("Market not found");
 
       // Build prompts and query swarm
-      const { systemPrompt, userPrompt } = buildPrompt(market);
+      const { systemPrompt, userPrompt } = buildPrompt(market, {
+        yesPrice: args.yesPrice,
+        noPrice: args.noPrice,
+      });
       const swarmResponse = await Effect.runPromise(
         querySwarm(systemPrompt, userPrompt) as Effect.Effect<SwarmResponse>,
       );
@@ -416,7 +432,7 @@ export const executeMarketAnalysis = internalAction({
           totalModels: swarmResponse.totalModels,
           agreeingModels: swarmResponse.successfulModels,
           aggregatedReasoning,
-          priceAtAnalysis: market.currentYesPrice,
+          priceAtAnalysis: args.yesPrice,
         },
       );
 
@@ -454,6 +470,83 @@ export const executeMarketAnalysis = internalAction({
       }
 
       throw error;
+    }
+  },
+});
+
+// On-demand analysis that fetches prices from Polymarket API first
+// Used by requestMarketAnalysis when user requests analysis without trade context
+export const executeMarketAnalysisOnDemand = internalAction({
+  args: {
+    requestId: v.id("analysisRequests"),
+    marketId: v.id("markets"),
+  },
+  returns: v.object({
+    success: v.boolean(),
+    insightId: v.optional(v.id("insights")),
+    error: v.optional(v.string()),
+  }),
+  handler: async (
+    ctx,
+    args,
+  ): Promise<{
+    success: boolean;
+    insightId?: Id<"insights">;
+    error?: string;
+  }> => {
+    try {
+      // Get market to find its slug for API lookup
+      const market = await ctx.runQuery(api.markets.getMarket, {
+        marketId: args.marketId,
+      });
+
+      if (!market) {
+        await ctx.runMutation(internal.analysis.updateAnalysisRequest, {
+          requestId: args.requestId,
+          status: "failed",
+          errorMessage: "Market not found",
+        });
+        return { success: false, error: "Market not found" };
+      }
+
+      // Fetch current prices from Polymarket API
+      const marketData = await ctx.runAction(api.polymarket.markets.getMarketBySlug, {
+        slug: market.slug,
+      });
+
+      if (!marketData) {
+        await ctx.runMutation(internal.analysis.updateAnalysisRequest, {
+          requestId: args.requestId,
+          status: "failed",
+          errorMessage: "Could not fetch market prices from Polymarket API",
+        });
+        return { success: false, error: "Could not fetch market prices" };
+      }
+
+      // Extract prices from API response
+      const yesPrice = parseFloat(marketData.outcomePrices?.[0] ?? "0.5");
+      const noPrice = parseFloat(marketData.outcomePrices?.[1] ?? "0.5");
+
+      // Now execute the full analysis with prices
+      const result = await ctx.runAction(internal.analysis.executeMarketAnalysis, {
+        requestId: args.requestId,
+        marketId: args.marketId,
+        yesPrice,
+        noPrice,
+      });
+
+      return result;
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+
+      await ctx.runMutation(internal.analysis.updateAnalysisRequest, {
+        requestId: args.requestId,
+        status: "failed",
+        errorMessage,
+      });
+
+      return { success: false, error: errorMessage };
     }
   },
 });
@@ -529,8 +622,18 @@ export const analyzeTradeForSignal = internalAction({
         return { success: false, reason: "Market not found" };
       }
 
+      // Use price from trade context - this is the price at the moment of the trade
+      const tradePrice = args.tradeContext.price;
+      // For binary markets: YES price is the trade price for YES side, or 1 - price for NO side
+      const yesPrice =
+        args.tradeContext.side === "YES" ? tradePrice : 1 - tradePrice;
+      const noPrice = 1 - yesPrice;
+
       // Build prompts and query swarm using Effect.ts
-      const { systemPrompt, userPrompt } = buildPrompt(market);
+      const { systemPrompt, userPrompt } = buildPrompt(market, {
+        yesPrice,
+        noPrice,
+      });
       const swarmResponse = await Effect.runPromise(
         querySwarm(systemPrompt, userPrompt) as Effect.Effect<SwarmResponse>,
       );
@@ -567,7 +670,7 @@ export const analyzeTradeForSignal = internalAction({
           totalModels: swarmResponse.totalModels,
           agreeingModels: swarmResponse.successfulModels,
           aggregatedReasoning,
-          priceAtTrigger: market.currentYesPrice,
+          priceAtTrigger: yesPrice,
           // NEW: Structured output fields
           voteDistribution: swarmResponse.voteDistribution,
           averageConfidence: swarmResponse.averageConfidence,

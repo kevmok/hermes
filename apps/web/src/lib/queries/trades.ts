@@ -36,6 +36,13 @@ export const tradesQueries = {
       limit: limit ?? 50,
     }),
 
+  /** Get trades by event slug */
+  byEvent: (eventSlug: string, limit?: number) =>
+    convexQuery(api.trades.getTradesByEvent, {
+      eventSlug,
+      limit: limit ?? 50,
+    }),
+
   /** Get trades by wallet address */
   byWallet: (proxyWallet: string, limit?: number) =>
     convexQuery(api.trades.getTradesByWallet, {

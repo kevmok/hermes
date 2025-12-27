@@ -150,22 +150,17 @@ const signalObjectValidator = v.object({
   schemaVersion: v.optional(v.string()),
 });
 
+// Simplified market object - no volatile price data
 const marketObjectValidator = v.object({
   _id: v.id('markets'),
   _creationTime: v.number(),
   polymarketId: v.string(),
   conditionId: v.optional(v.string()),
+  slug: v.string(),
   eventSlug: v.string(),
   title: v.string(),
-  description: v.optional(v.string()),
-  category: v.optional(v.string()),
   imageUrl: v.optional(v.string()),
-  currentYesPrice: v.number(),
-  currentNoPrice: v.number(),
-  volume24h: v.number(),
-  totalVolume: v.number(),
   isActive: v.boolean(),
-  endDate: v.optional(v.number()),
   createdAt: v.number(),
   updatedAt: v.number(),
   lastTradeAt: v.number(),
@@ -174,7 +169,6 @@ const marketObjectValidator = v.object({
     v.union(v.literal('YES'), v.literal('NO'), v.literal('INVALID'), v.null()),
   ),
   resolvedAt: v.optional(v.number()),
-  resolutionSource: v.optional(v.string()),
 });
 
 export const getLatestSignals = query({
@@ -400,8 +394,8 @@ export const getSignalWithPredictions = query({
             _id: market._id,
             title: market.title,
             eventSlug: market.eventSlug,
-            currentYesPrice: market.currentYesPrice,
             outcome: market.outcome,
+            resolvedAt: market.resolvedAt,
           }
         : null,
       predictions,

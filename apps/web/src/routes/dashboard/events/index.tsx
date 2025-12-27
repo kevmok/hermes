@@ -1,68 +1,63 @@
 import { useState } from 'react';
 import { createFileRoute } from '@tanstack/react-router';
 import { useQuery } from '@tanstack/react-query';
-import { eventsActions, marketsQueries } from '@/lib/queries';
+import { eventsQueries } from '@/lib/queries';
 import { queryClient } from '@/lib/providers/query';
-import { EventCard } from './-components/event-card';
+import { TrackedEventCard } from './-components/tracked-event-card';
+import { EventDetailModal } from './-components/event-detail-modal';
 import { MarketDetailModal } from './-components/market-detail-modal';
 import { DataLoading, DataEmpty, DataError } from '@/components/ui/data-states';
 import { Button } from '@/components/ui/button';
 import { HugeiconsIcon } from '@hugeicons/react';
 import {
   Calendar03Icon,
-  FilterIcon,
+  Activity03Icon,
   SortingAZ01Icon,
 } from '@hugeicons/core-free-icons';
 
 export const Route = createFileRoute('/dashboard/events/')({
   loader: async () => {
-    // Prefetch events and active markets
-    await Promise.all([
-      queryClient.ensureQueryData({
-        ...eventsActions.list({ limit: 20, active: true }),
-        revalidateIfStale: true,
-      }),
-      queryClient.ensureQueryData({
-        ...marketsQueries.active({ limit: 50, sortBy: 'volume' }),
-        revalidateIfStale: true,
-      }),
-    ]);
+    // Prefetch tracked events with signal counts
+    await queryClient.ensureQueryData({
+      ...eventsQueries.withSignals(30),
+      revalidateIfStale: true,
+    });
     return {};
   },
   component: EventsPage,
 });
 
-type SortOption = 'volume24hr' | 'startDate' | 'endDate' | 'liquidity';
-type FilterOption = 'all' | 'active' | 'ending_soon';
+type SortOption = 'recent' | 'volume';
 
 function EventsPage() {
-  const [sortBy, setSortBy] = useState<SortOption>('volume24hr');
-  const [filter, setFilter] = useState<FilterOption>('active');
+  const [sortBy, setSortBy] = useState<SortOption>('recent');
   const [selectedMarketSlug, setSelectedMarketSlug] = useState<string | null>(
     null,
   );
+  const [selectedEventSlug, setSelectedEventSlug] = useState<string | null>(
+    null,
+  );
 
+  // Get tracked events with signal counts
   const {
     data: events,
     isLoading,
     error,
     refetch,
-  } = useQuery(
-    eventsActions.list({
-      limit: 30,
-      active: filter === 'active' || filter === 'ending_soon',
-      order: sortBy,
-      ascending: false,
-    }),
-  );
+  } = useQuery(eventsQueries.withSignals(50));
 
-  // Get our database markets for enrichment
-  const { data: dbMarkets } = useQuery(
-    marketsQueries.active({ limit: 100, sortBy: 'volume' }),
-  );
+  // Get event stats for header
+  const { data: stats } = useQuery(eventsQueries.stats());
 
-  // Create a map of polymarket IDs to our database markets
-  const marketMap = new Map(dbMarkets?.map((m) => [m.polymarketId, m]) ?? []);
+  // Sort events client-side based on sortBy
+  const sortedEvents = events
+    ? [...events].sort((a, b) => {
+        if (sortBy === 'volume') {
+          return b.totalVolume - a.totalVolume;
+        }
+        return b.lastTradeAt - a.lastTradeAt;
+      })
+    : [];
 
   return (
     <div className='min-h-screen'>
@@ -99,16 +94,16 @@ function EventsPage() {
                 </div>
                 <div>
                   <h1 className='text-3xl font-bold tracking-tight bg-gradient-to-r from-white via-amber-100 to-orange-200 bg-clip-text text-transparent'>
-                    Polymarket Events
+                    Tracked Events
                   </h1>
                   <p className='text-sm text-amber-300/60 font-mono'>
-                    BROWSE & ANALYZE
+                    WHALE ACTIVITY DETECTED
                   </p>
                 </div>
               </div>
               <p className='text-muted-foreground max-w-lg'>
-                Explore prediction markets by event. Each event can contain
-                multiple related markets.
+                Events with whale trades captured from our WebSocket feed.
+                Click to see markets and AI signals.
               </p>
             </div>
 
@@ -119,59 +114,37 @@ function EventsPage() {
                   Events
                 </span>
                 <span className='text-xl font-bold text-white'>
-                  {events?.length ?? 0}
+                  {stats?.totalEvents ?? events?.length ?? 0}
                 </span>
               </div>
               <div className='px-4 py-2 rounded-lg bg-white/[0.02] border border-white/[0.06]'>
                 <span className='text-[10px] uppercase tracking-widest text-muted-foreground/60 block'>
-                  Markets
+                  Trades
                 </span>
                 <span className='text-xl font-bold text-white'>
-                  {(events as PolymarketEvent[] | undefined)?.reduce(
-                    (sum, e) => sum + (e.markets?.length ?? 0),
-                    0,
-                  ) ?? 0}
+                  {stats?.totalTrades ?? 0}
+                </span>
+              </div>
+              <div className='px-4 py-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20'>
+                <span className='text-[10px] uppercase tracking-widest text-emerald-300/60 block'>
+                  Volume
+                </span>
+                <span className='text-xl font-bold text-emerald-400'>
+                  {formatVolume(stats?.totalVolume ?? 0)}
                 </span>
               </div>
             </div>
           </div>
 
-          {/* Filters & Sort */}
-          <div className='flex items-center gap-3 flex-wrap'>
-            {/* Filter buttons */}
-            <div className='flex items-center gap-1 p-1 rounded-lg bg-white/[0.02] border border-white/[0.06]'>
-              <HugeiconsIcon
-                icon={FilterIcon}
-                size={14}
-                className='ml-2 text-muted-foreground'
-              />
-              {(['all', 'active', 'ending_soon'] as const).map((f) => (
-                <Button
-                  key={f}
-                  variant={filter === f ? 'default' : 'ghost'}
-                  size='sm'
-                  className={
-                    filter === f ? 'bg-amber-500/20 text-amber-300' : ''
-                  }
-                  onClick={() => setFilter(f)}
-                >
-                  {f === 'all'
-                    ? 'All'
-                    : f === 'active'
-                      ? 'Active'
-                      : 'Ending Soon'}
-                </Button>
-              ))}
-            </div>
-
-            {/* Sort dropdown */}
+          {/* Sort options */}
+          <div className='flex items-center gap-3'>
             <div className='flex items-center gap-1 p-1 rounded-lg bg-white/[0.02] border border-white/[0.06]'>
               <HugeiconsIcon
                 icon={SortingAZ01Icon}
                 size={14}
                 className='ml-2 text-muted-foreground'
               />
-              {(['volume24hr', 'liquidity', 'endDate'] as const).map((s) => (
+              {(['recent', 'volume'] as const).map((s) => (
                 <Button
                   key={s}
                   variant={sortBy === s ? 'default' : 'ghost'}
@@ -181,13 +154,22 @@ function EventsPage() {
                   }
                   onClick={() => setSortBy(s)}
                 >
-                  {s === 'volume24hr'
-                    ? 'Volume'
-                    : s === 'liquidity'
-                      ? 'Liquidity'
-                      : 'End Date'}
+                  {s === 'recent' ? 'Recent' : 'Volume'}
                 </Button>
               ))}
+            </div>
+
+            {/* Signal indicator */}
+            <div className='flex items-center gap-2 px-3 py-1.5 rounded-full bg-cyan-500/10 border border-cyan-500/20'>
+              <HugeiconsIcon
+                icon={Activity03Icon}
+                size={14}
+                className='text-cyan-400'
+              />
+              <span className='text-xs text-cyan-300'>
+                {events?.filter((e) => e.signalCount > 0).length ?? 0} with
+                signals
+              </span>
             </div>
           </div>
         </div>
@@ -199,29 +181,40 @@ function EventsPage() {
           <DataLoading count={6} variant='grid' />
         ) : error ? (
           <DataError
-            message='Failed to load events from Polymarket'
+            message='Failed to load tracked events'
             onRetry={() => refetch()}
           />
-        ) : !events?.length ? (
+        ) : !sortedEvents.length ? (
           <DataEmpty
-            title='No events found'
-            description='Try adjusting your filters or check back later.'
+            title='No tracked events yet'
+            description='Events will appear here when whale trades are captured. Start the WebSocket collector to track live activity.'
             icon={Calendar03Icon}
           />
         ) : (
           <div className='grid gap-4 md:grid-cols-2 lg:grid-cols-3'>
-            {(events as PolymarketEvent[]).map((event, index) => (
-              <EventCard
-                key={event.id}
+            {sortedEvents.map((event, index) => (
+              <TrackedEventCard
+                key={event._id}
                 event={event}
                 index={index}
-                dbMarkets={marketMap}
+                onEventSelect={() => setSelectedEventSlug(event.eventSlug)}
                 onMarketSelect={setSelectedMarketSlug}
               />
             ))}
           </div>
         )}
       </div>
+
+      {/* Event Detail Modal */}
+      <EventDetailModal
+        eventSlug={selectedEventSlug}
+        open={!!selectedEventSlug}
+        onOpenChange={(open) => !open && setSelectedEventSlug(null)}
+        onMarketSelect={(slug) => {
+          setSelectedEventSlug(null);
+          setSelectedMarketSlug(slug);
+        }}
+      />
 
       {/* Market Detail Modal */}
       <MarketDetailModal
@@ -233,39 +226,27 @@ function EventsPage() {
   );
 }
 
-// Types for Polymarket API response
-interface PolymarketMarket {
-  id: string;
-  question: string;
-  conditionId: string;
-  slug: string;
-  outcomePrices: string;
-  volume: string;
-  volume24hr: number;
-  liquidity: string;
-  active: boolean;
-  closed: boolean;
-  archived: boolean;
+function formatVolume(volume: number | undefined | null): string {
+  if (volume == null || isNaN(volume)) return '$0';
+  if (volume >= 1_000_000) return `$${(volume / 1_000_000).toFixed(1)}M`;
+  if (volume >= 1_000) return `$${(volume / 1_000).toFixed(1)}K`;
+  return `$${volume.toFixed(0)}`;
 }
 
-interface PolymarketEvent {
-  id: string;
-  ticker: string;
-  slug: string;
+// Export types for tracked events
+export interface TrackedEvent {
+  _id: string;
+  _creationTime: number;
+  eventSlug: string;
   title: string;
-  description: string;
-  startDate: string;
-  creationDate: string;
-  endDate: string;
-  image: string;
-  icon: string;
-  active: boolean;
-  closed: boolean;
-  archived: boolean;
-  volume: number;
-  volume24hr: number;
-  liquidity: number;
-  markets: PolymarketMarket[];
+  imageUrl?: string;
+  isActive: boolean;
+  firstTradeAt: number;
+  lastTradeAt: number;
+  tradeCount: number;
+  totalVolume: number;
+  marketCount: number;
+  signalCount: number;
 }
 
-export type { PolymarketEvent, PolymarketMarket };
+export type { TrackedEvent as PolymarketEvent };

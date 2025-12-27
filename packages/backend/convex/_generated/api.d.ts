@@ -13,6 +13,7 @@ import type * as ai_swarm from "../ai/swarm.js";
 import type * as analysis from "../analysis.js";
 import type * as auth from "../auth.js";
 import type * as crons from "../crons.js";
+import type * as events from "../events.js";
 import type * as globalFilters from "../globalFilters.js";
 import type * as http from "../http.js";
 import type * as insights from "../insights.js";
@@ -44,6 +45,7 @@ declare const fullApi: ApiFromModules<{
   analysis: typeof analysis;
   auth: typeof auth;
   crons: typeof crons;
+  events: typeof events;
   globalFilters: typeof globalFilters;
   http: typeof http;
   insights: typeof insights;

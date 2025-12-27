@@ -73,7 +73,7 @@ export const fetchResolvedMarkets = internalAction({
         return [];
       }
 
-      const markets: GammaMarket[] = await response.json();
+      const markets = (await response.json()) as GammaMarket[];
 
       return markets
         .filter((m) => m.resolved && m.resolution)
@@ -119,7 +119,6 @@ export const updateMarketResolution = internalMutation({
     await ctx.db.patch(market._id, {
       outcome: args.outcome,
       resolvedAt: Date.now(),
-      resolutionSource: args.resolutionSource,
       isActive: false,
       updatedAt: Date.now(),
     });

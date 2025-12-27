@@ -243,7 +243,6 @@ export const getSignalsWithOutcomes = query({
                 eventSlug: market.eventSlug,
                 outcome: market.outcome,
                 resolvedAt: market.resolvedAt,
-                currentYesPrice: market.currentYesPrice,
               }
             : null,
           outcome,

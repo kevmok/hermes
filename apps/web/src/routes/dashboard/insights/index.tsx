@@ -97,9 +97,9 @@ interface InsightCardProps {
     confidenceLevel: "high" | "medium" | "low";
     aggregatedReasoning: string;
     timestamp: number;
+    priceAtAnalysis: number;
     market: {
       title: string;
-      currentYesPrice: number;
     } | null;
   };
 }
@@ -172,14 +172,12 @@ function InsightCard({ insight }: InsightCardProps) {
               {insight.consensusDecision.replace("_", " ")}
             </span>
           </div>
-          {insight.market && (
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-muted-foreground">Current:</span>
-              <span className="font-medium">
-                {(insight.market.currentYesPrice * 100).toFixed(0)}%
-              </span>
-            </div>
-          )}
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-muted-foreground">Price at analysis:</span>
+            <span className="font-medium">
+              {(insight.priceAtAnalysis * 100).toFixed(0)}%
+            </span>
+          </div>
         </div>
         <p className="text-sm text-muted-foreground line-clamp-3">
           {insight.aggregatedReasoning}

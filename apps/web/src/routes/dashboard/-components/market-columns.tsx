@@ -2,35 +2,22 @@ import type { ColumnDef } from "@tanstack/react-table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { ArrowUpDownIcon, ArrowUp01Icon, ArrowDown01Icon } from "@hugeicons/core-free-icons";
+import { ArrowUpDownIcon, Activity03Icon } from "@hugeicons/core-free-icons";
 
-// Type based on Convex schema
-interface Market {
+// Type based on simplified Convex schema (no volatile price data)
+export interface Market {
   _id: string;
   _creationTime: number;
   polymarketId: string;
+  slug: string;
   eventSlug: string;
   title: string;
-  description?: string;
-  category?: string;
-  currentYesPrice: number;
-  currentNoPrice: number;
-  volume24h: number;
-  totalVolume: number;
+  imageUrl?: string;
   isActive: boolean;
-  endDate?: number;
   lastTradeAt: number;
   lastAnalyzedAt?: number;
-}
-
-function formatVolume(value: number): string {
-  if (value >= 1_000_000) {
-    return `$${(value / 1_000_000).toFixed(1)}M`;
-  }
-  if (value >= 1_000) {
-    return `$${(value / 1_000).toFixed(1)}K`;
-  }
-  return `$${value.toFixed(0)}`;
+  outcome?: "YES" | "NO" | "INVALID" | null;
+  resolvedAt?: number;
 }
 
 function formatTimeAgo(timestamp: number): string {
@@ -62,76 +49,9 @@ export const marketColumns: ColumnDef<Market>[] = [
     cell: ({ row }) => (
       <div className="max-w-[400px]">
         <p className="font-medium truncate">{row.getValue("title")}</p>
-        {row.original.category && (
-          <p className="text-xs text-muted-foreground mt-0.5">{row.original.category}</p>
-        )}
+        <p className="text-xs text-muted-foreground mt-0.5">{row.original.eventSlug}</p>
       </div>
     ),
-  },
-  {
-    accessorKey: "currentYesPrice",
-    header: ({ column }) => (
-      <Button
-        variant="ghost"
-        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        className="px-0 hover:bg-transparent"
-      >
-        YES Price
-        <HugeiconsIcon icon={ArrowUpDownIcon} size={14} className="ml-2 opacity-50" />
-      </Button>
-    ),
-    cell: ({ row }) => {
-      const price = row.getValue("currentYesPrice") as number;
-      const percentage = (price * 100).toFixed(0);
-      const isHigh = price > 0.5;
-
-      return (
-        <div className="flex items-center gap-2">
-          <HugeiconsIcon
-            icon={isHigh ? ArrowUp01Icon : ArrowDown01Icon}
-            size={14}
-            className={isHigh ? "text-emerald-500" : "text-red-500"}
-          />
-          <span className={isHigh ? "text-emerald-500 font-medium" : "text-red-500 font-medium"}>
-            {percentage}%
-          </span>
-        </div>
-      );
-    },
-  },
-  {
-    accessorKey: "volume24h",
-    header: ({ column }) => (
-      <Button
-        variant="ghost"
-        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        className="px-0 hover:bg-transparent"
-      >
-        24h Volume
-        <HugeiconsIcon icon={ArrowUpDownIcon} size={14} className="ml-2 opacity-50" />
-      </Button>
-    ),
-    cell: ({ row }) => {
-      const volume = row.getValue("volume24h") as number;
-      return <span className="text-muted-foreground">{formatVolume(volume)}</span>;
-    },
-  },
-  {
-    accessorKey: "totalVolume",
-    header: ({ column }) => (
-      <Button
-        variant="ghost"
-        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        className="px-0 hover:bg-transparent"
-      >
-        Total Volume
-        <HugeiconsIcon icon={ArrowUpDownIcon} size={14} className="ml-2 opacity-50" />
-      </Button>
-    ),
-    cell: ({ row }) => {
-      const volume = row.getValue("totalVolume") as number;
-      return <span className="text-muted-foreground">{formatVolume(volume)}</span>;
-    },
   },
   {
     accessorKey: "lastTradeAt",
@@ -151,10 +71,54 @@ export const marketColumns: ColumnDef<Market>[] = [
     },
   },
   {
+    accessorKey: "lastAnalyzedAt",
+    header: ({ column }) => (
+      <Button
+        variant="ghost"
+        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        className="px-0 hover:bg-transparent"
+      >
+        Signals
+        <HugeiconsIcon icon={ArrowUpDownIcon} size={14} className="ml-2 opacity-50" />
+      </Button>
+    ),
+    cell: ({ row }) => {
+      const lastAnalyzed = row.getValue("lastAnalyzedAt") as number | undefined;
+      if (!lastAnalyzed) {
+        return <span className="text-muted-foreground/50 text-sm">—</span>;
+      }
+      return (
+        <div className="flex items-center gap-1.5">
+          <HugeiconsIcon icon={Activity03Icon} size={14} className="text-cyan-400" />
+          <span className="text-muted-foreground text-sm">{formatTimeAgo(lastAnalyzed)}</span>
+        </div>
+      );
+    },
+  },
+  {
     accessorKey: "isActive",
     header: "Status",
     cell: ({ row }) => {
       const isActive = row.getValue("isActive") as boolean;
+      const outcome = row.original.outcome;
+
+      if (outcome) {
+        return (
+          <Badge
+            variant="outline"
+            className={
+              outcome === "YES"
+                ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30"
+                : outcome === "NO"
+                  ? "bg-red-500/10 text-red-400 border-red-500/30"
+                  : "bg-amber-500/10 text-amber-400 border-amber-500/30"
+            }
+          >
+            {outcome}
+          </Badge>
+        );
+      }
+
       return (
         <Badge variant={isActive ? "default" : "secondary"}>
           {isActive ? "Active" : "Closed"}

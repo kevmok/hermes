@@ -27,7 +27,6 @@ export interface Signal {
     _id: string;
     title: string;
     eventSlug: string;
-    currentYesPrice: number;
     outcome?: 'YES' | 'NO' | 'INVALID' | null;
     resolvedAt?: number;
   } | null;
@@ -236,35 +235,37 @@ export function SignalCard({ signal, index = 0, onSelect }: SignalCardProps) {
         </div>
 
         {/* Price info */}
-        {signal.market && (
-          <div className='flex items-center gap-4 mb-4 p-3 rounded-lg bg-white/[0.02] border border-white/[0.04]'>
-            <div className='flex-1'>
-              <span className='text-[10px] font-semibold tracking-widest text-muted-foreground/60 uppercase block mb-0.5'>
-                Price @ Signal
-              </span>
-              <span className='text-lg font-bold tabular-nums text-white'>
-                {(signal.priceAtTrigger * 100).toFixed(0)}%
-              </span>
-            </div>
-            <div className='w-px h-8 bg-white/[0.08]' />
-            <div className='flex-1'>
-              <span className='text-[10px] font-semibold tracking-widest text-muted-foreground/60 uppercase block mb-0.5'>
-                Current
-              </span>
-              <span
-                className={`text-lg font-bold tabular-nums ${
-                  signal.market.currentYesPrice > signal.priceAtTrigger
-                    ? 'text-emerald-400'
-                    : signal.market.currentYesPrice < signal.priceAtTrigger
-                      ? 'text-red-400'
-                      : 'text-white'
-                }`}
-              >
-                {(signal.market.currentYesPrice * 100).toFixed(0)}%
-              </span>
-            </div>
+        <div className='flex items-center gap-4 mb-4 p-3 rounded-lg bg-white/[0.02] border border-white/[0.04]'>
+          <div className='flex-1'>
+            <span className='text-[10px] font-semibold tracking-widest text-muted-foreground/60 uppercase block mb-0.5'>
+              YES Price @ Signal
+            </span>
+            <span className='text-lg font-bold tabular-nums text-white'>
+              {(signal.priceAtTrigger * 100).toFixed(0)}%
+            </span>
           </div>
-        )}
+          {signal.market?.outcome && (
+            <>
+              <div className='w-px h-8 bg-white/[0.08]' />
+              <div className='flex-1'>
+                <span className='text-[10px] font-semibold tracking-widest text-muted-foreground/60 uppercase block mb-0.5'>
+                  Outcome
+                </span>
+                <span
+                  className={`text-lg font-bold tabular-nums ${
+                    signal.market.outcome === 'YES'
+                      ? 'text-emerald-400'
+                      : signal.market.outcome === 'NO'
+                        ? 'text-red-400'
+                        : 'text-amber-400'
+                  }`}
+                >
+                  {signal.market.outcome}
+                </span>
+              </div>
+            </>
+          )}
+        </div>
 
         {/* Reasoning */}
         <p className='text-sm text-muted-foreground/80 leading-relaxed line-clamp-2 mb-3'>

@@ -124,16 +124,13 @@ const processTradeMessage = (
     const tradeSide = t.outcome.toUpperCase() === 'YES' ? 'YES' : 'NO';
 
     // 3. Send to Convex with trade context - triggers signal generation
+    // Note: Simplified market data - no volatile prices/volumes (fetched on-demand from API)
     const marketDataWithTrade: MarketDataWithTrade = {
       polymarketId: t.conditionId,
       conditionId: t.conditionId,
+      slug: t.slug ?? t.conditionId, // Use slug from trade, fallback to conditionId
       eventSlug: t.eventSlug ?? '',
       title: t.title,
-      currentYesPrice:
-        t.outcome.toUpperCase() === 'YES' ? t.price : 1 - t.price,
-      currentNoPrice: t.outcome.toUpperCase() === 'NO' ? t.price : 1 - t.price,
-      volume24h: sizeUsd,
-      totalVolume: sizeUsd,
       isActive: true,
       tradeContext: {
         size: sizeUsd,
@@ -149,6 +146,7 @@ const processTradeMessage = (
       conditionId: t.conditionId,
       slug: t.slug ?? '',
       eventSlug: t.eventSlug ?? '',
+      title: t.title, // Include market title for display
       side: (t.side?.toUpperCase() === 'BUY' ? 'BUY' : 'SELL') as 'BUY' | 'SELL',
       size: sizeUsd,
       price: t.price,

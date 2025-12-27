@@ -237,17 +237,18 @@ const queryWithLayer = (
 
 /**
  * Build prompts for market analysis with structured output.
+ * Prices are passed separately since markets table no longer stores volatile price data.
  */
-export const buildPrompt = (market: {
-  title: string;
-  currentYesPrice: number;
-  currentNoPrice: number;
-  eventSlug: string;
-  volume24h?: number;
-  totalVolume?: number;
-  description?: string;
-  category?: string;
-}): { systemPrompt: string; userPrompt: string } => {
+export const buildPrompt = (
+  market: {
+    title: string;
+    eventSlug: string;
+  },
+  prices: {
+    yesPrice: number;
+    noPrice: number;
+  },
+): { systemPrompt: string; userPrompt: string } => {
   const systemPrompt = `You are an expert prediction market analyst. Analyze the given market and provide a structured trading recommendation.
 
 Your analysis should consider:
@@ -272,12 +273,8 @@ Provide 1-5 key factors supporting your decision and up to 3 risk factors.`;
   const userPrompt = `Analyze this prediction market:
 
 **Market Question**: ${market.title}
-**Current YES Price**: ${(market.currentYesPrice * 100).toFixed(1)}%
-**Current NO Price**: ${(market.currentNoPrice * 100).toFixed(1)}%
-${market.volume24h ? `**24h Volume**: $${market.volume24h.toLocaleString()}` : ""}
-${market.totalVolume ? `**Total Volume**: $${market.totalVolume.toLocaleString()}` : ""}
-${market.description ? `**Description**: ${market.description}` : ""}
-${market.category ? `**Category**: ${market.category}` : ""}
+**Current YES Price**: ${(prices.yesPrice * 100).toFixed(1)}%
+**Current NO Price**: ${(prices.noPrice * 100).toFixed(1)}%
 **Event Slug**: ${market.eventSlug}
 
 Provide your trading decision with structured reasoning.`;

@@ -68,22 +68,33 @@ export default defineSchema({
     createdAt: v.number(),
     expiresAt: v.optional(v.union(v.null(), v.number())),
   }),
-  // ============ MARKETS ============
+  // ============ EVENTS (Derived from trades) ============
+
+  events: defineTable({
+    eventSlug: v.string(), // Primary identifier (unique)
+    title: v.string(), // Event title (from trade's market title)
+    imageUrl: v.optional(v.string()),
+    isActive: v.boolean(),
+    firstTradeAt: v.number(),
+    lastTradeAt: v.number(),
+    tradeCount: v.number(),
+    totalVolume: v.number(), // Sum of all trade sizes for this event
+  })
+    .index("by_event_slug", ["eventSlug"])
+    .index("by_last_trade", ["lastTradeAt"])
+    .index("by_active", ["isActive", "lastTradeAt"])
+    .index("by_volume", ["totalVolume"]),
+
+  // ============ MARKETS (Simplified - static data only) ============
 
   markets: defineTable({
     polymarketId: v.string(), // External Polymarket condition ID
     conditionId: v.optional(v.string()), // Polymarket condition ID for trading
+    slug: v.string(), // Market slug for API lookups
     eventSlug: v.string(),
     title: v.string(),
-    description: v.optional(v.string()),
-    category: v.optional(v.string()),
     imageUrl: v.optional(v.string()),
-    currentYesPrice: v.number(),
-    currentNoPrice: v.number(),
-    volume24h: v.number(),
-    totalVolume: v.number(),
     isActive: v.boolean(),
-    endDate: v.optional(v.number()),
     createdAt: v.number(),
     updatedAt: v.number(),
     lastTradeAt: v.number(),
@@ -99,15 +110,13 @@ export default defineSchema({
       ),
     ),
     resolvedAt: v.optional(v.number()),
-    resolutionSource: v.optional(v.string()),
   })
     .index("by_polymarket_id", ["polymarketId"])
+    .index("by_slug", ["slug"])
     .index("by_event_slug", ["eventSlug"])
     .index("by_active", ["isActive"])
-    .index("by_volume", ["volume24h"])
     .index("by_last_trade", ["lastTradeAt"])
     .index("by_last_analyzed", ["lastAnalyzedAt"])
-    .index("by_category", ["category"])
     .index("by_resolved", ["outcome", "resolvedAt"]),
 
   marketSnapshots: defineTable({
@@ -128,6 +137,7 @@ export default defineSchema({
     conditionId: v.string(),
     slug: v.string(),
     eventSlug: v.string(),
+    title: v.string(), // Market title for display
 
     // Trade data
     side: v.union(v.literal("BUY"), v.literal("SELL")),

@@ -3,6 +3,7 @@
  *
  * Stores raw trade data from WebSocket feed.
  * Only essential fields are stored - market details fetched on-demand via API.
+ * Also updates the events table to track which events we're monitoring.
  */
 import {
   query,
@@ -10,6 +11,7 @@ import {
   internalMutation,
   internalQuery,
 } from './_generated/server';
+import { internal } from './_generated/api';
 import { v } from 'convex/values';
 import type { Id } from './_generated/dataModel';
 
@@ -29,7 +31,19 @@ const TradeInput = {
   isWhale: v.boolean(),
   traderName: v.optional(v.string()),
   traderPseudonym: v.optional(v.string()),
+  // Title from WebSocket payload - used to create/update event
+  title: v.optional(v.string()),
 };
+
+// Helper to derive event title from slug if not provided
+function deriveEventTitle(slug: string, eventSlug: string): string {
+  // Use eventSlug as base, convert kebab-case to Title Case
+  const base = eventSlug || slug;
+  return base
+    .split('-')
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+}
 
 // ============ INTERNAL MUTATIONS ============
 
@@ -37,7 +51,35 @@ export const insertTrade = internalMutation({
   args: TradeInput,
   returns: v.id('trades'),
   handler: async (ctx, args): Promise<Id<'trades'>> => {
-    return ctx.db.insert('trades', args);
+    // Insert the trade with title for display
+    const title = args.title || deriveEventTitle(args.slug, args.eventSlug);
+    const tradeId = await ctx.db.insert('trades', {
+      conditionId: args.conditionId,
+      slug: args.slug,
+      eventSlug: args.eventSlug,
+      title,
+      side: args.side,
+      size: args.size,
+      price: args.price,
+      timestamp: args.timestamp,
+      proxyWallet: args.proxyWallet,
+      outcome: args.outcome,
+      outcomeIndex: args.outcomeIndex,
+      transactionHash: args.transactionHash,
+      isWhale: args.isWhale,
+      traderName: args.traderName,
+      traderPseudonym: args.traderPseudonym,
+    });
+
+    // Upsert event to track this eventSlug
+    await ctx.scheduler.runAfter(0, internal.events.upsertEvent, {
+      eventSlug: args.eventSlug,
+      title,
+      tradeSize: args.size,
+      tradeTimestamp: args.timestamp,
+    });
+
+    return tradeId;
   },
 });
 
@@ -48,7 +90,36 @@ export const insertTradeWithSignal = internalMutation({
   },
   returns: v.id('trades'),
   handler: async (ctx, args): Promise<Id<'trades'>> => {
-    return ctx.db.insert('trades', args);
+    // Insert the trade with title for display and signal reference
+    const title = args.title || deriveEventTitle(args.slug, args.eventSlug);
+    const tradeId = await ctx.db.insert('trades', {
+      conditionId: args.conditionId,
+      slug: args.slug,
+      eventSlug: args.eventSlug,
+      title,
+      side: args.side,
+      size: args.size,
+      price: args.price,
+      timestamp: args.timestamp,
+      proxyWallet: args.proxyWallet,
+      outcome: args.outcome,
+      outcomeIndex: args.outcomeIndex,
+      transactionHash: args.transactionHash,
+      isWhale: args.isWhale,
+      traderName: args.traderName,
+      traderPseudonym: args.traderPseudonym,
+      signalId: args.signalId,
+    });
+
+    // Upsert event to track this eventSlug
+    await ctx.scheduler.runAfter(0, internal.events.upsertEvent, {
+      eventSlug: args.eventSlug,
+      title,
+      tradeSize: args.size,
+      tradeTimestamp: args.timestamp,
+    });
+
+    return tradeId;
   },
 });
 
@@ -70,7 +141,35 @@ export const recordTrade = mutation({
   args: TradeInput,
   returns: v.id('trades'),
   handler: async (ctx, args): Promise<Id<'trades'>> => {
-    return ctx.db.insert('trades', args);
+    // Insert the trade with title for display
+    const title = args.title || deriveEventTitle(args.slug, args.eventSlug);
+    const tradeId = await ctx.db.insert('trades', {
+      conditionId: args.conditionId,
+      slug: args.slug,
+      eventSlug: args.eventSlug,
+      title, // Include title for display in UI
+      side: args.side,
+      size: args.size,
+      price: args.price,
+      timestamp: args.timestamp,
+      proxyWallet: args.proxyWallet,
+      outcome: args.outcome,
+      outcomeIndex: args.outcomeIndex,
+      transactionHash: args.transactionHash,
+      isWhale: args.isWhale,
+      traderName: args.traderName,
+      traderPseudonym: args.traderPseudonym,
+    });
+
+    // Upsert event to track this eventSlug
+    await ctx.scheduler.runAfter(0, internal.events.upsertEvent, {
+      eventSlug: args.eventSlug,
+      title: title || deriveEventTitle(args.slug, args.eventSlug),
+      tradeSize: args.size,
+      tradeTimestamp: args.timestamp,
+    });
+
+    return tradeId;
   },
 });
 
@@ -180,6 +279,22 @@ export const getTradesByMarket = query({
     const trades = await ctx.db
       .query('trades')
       .withIndex('by_slug', (q) => q.eq('slug', args.slug))
+      .order('desc')
+      .take(args.limit ?? 50);
+    return trades;
+  },
+});
+
+export const getTradesByEvent = query({
+  args: {
+    eventSlug: v.string(),
+    limit: v.optional(v.number()),
+  },
+  returns: v.array(v.any()),
+  handler: async (ctx, args) => {
+    const trades = await ctx.db
+      .query('trades')
+      .withIndex('by_event_slug', (q) => q.eq('eventSlug', args.eventSlug))
       .order('desc')
       .take(args.limit ?? 50);
     return trades;

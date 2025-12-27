@@ -4,41 +4,28 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import {
   ChartLineData01Icon,
   SparklesIcon,
-  Dollar01Icon,
+  Activity03Icon,
 } from "@hugeicons/core-free-icons";
 
 interface StatsCardsProps {
   totalMarkets: number;
   highConfidenceInsights: number;
-  totalVolume24h: number;
+  marketsWithSignals: number;
   isLoading?: boolean;
-}
-
-function formatVolume(value: number): string {
-  if (value >= 1_000_000_000) {
-    return `$${(value / 1_000_000_000).toFixed(2)}B`;
-  }
-  if (value >= 1_000_000) {
-    return `$${(value / 1_000_000).toFixed(2)}M`;
-  }
-  if (value >= 1_000) {
-    return `$${(value / 1_000).toFixed(1)}K`;
-  }
-  return `$${value.toFixed(0)}`;
 }
 
 export function StatsCards({
   totalMarkets,
   highConfidenceInsights,
-  totalVolume24h,
+  marketsWithSignals,
   isLoading = false,
 }: StatsCardsProps) {
   const stats = [
     {
-      title: "Active Markets",
+      title: "Tracked Markets",
       value: totalMarkets.toLocaleString(),
       icon: ChartLineData01Icon,
-      description: "Markets being tracked",
+      description: "Markets with whale trades",
       iconColor: "text-cyan-400",
       bgGradient: "from-cyan-500/10 to-cyan-500/5",
     },
@@ -51,10 +38,10 @@ export function StatsCards({
       bgGradient: "from-emerald-500/10 to-emerald-500/5",
     },
     {
-      title: "24h Volume",
-      value: formatVolume(totalVolume24h),
-      icon: Dollar01Icon,
-      description: "Trading activity",
+      title: "With Signals",
+      value: marketsWithSignals.toLocaleString(),
+      icon: Activity03Icon,
+      description: "Markets analyzed by AI",
       iconColor: "text-purple-400",
       bgGradient: "from-purple-500/10 to-purple-500/5",
     },

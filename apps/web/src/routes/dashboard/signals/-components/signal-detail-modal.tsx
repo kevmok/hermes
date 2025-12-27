@@ -51,14 +51,40 @@ export function SignalDetailModal({
   open,
   onOpenChange,
 }: SignalDetailModalProps) {
+  // Early return before any hooks when no signalId - this is safe because
+  // the component won't be rendered meaningfully in this state
+  if (!signalId) {
+    return (
+      <Dialog open={false} onOpenChange={onOpenChange}>
+        <DialogContent className="sm:max-w-2xl" />
+      </Dialog>
+    );
+  }
+
+  return (
+    <SignalDetailContent
+      signalId={signalId}
+      open={open}
+      onOpenChange={onOpenChange}
+    />
+  );
+}
+
+function SignalDetailContent({
+  signalId,
+  open,
+  onOpenChange,
+}: {
+  signalId: string;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
   const { data: signalData, isLoading } = useQuery({
     ...convexQuery(api.signals.getSignalWithPredictions, {
       signalId: signalId as Id<"signals">,
     }),
-    enabled: !!signalId && open,
+    enabled: open,
   });
-
-  if (!signalId) return null;
 
   const config = signalData
     ? decisionConfig[signalData.consensusDecision]

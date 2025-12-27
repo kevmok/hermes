@@ -14,20 +14,15 @@ const retrySchedule = Schedule.exponential(Duration.seconds(1)).pipe(
   Schedule.intersect(Schedule.recurs(3)),
 );
 
+// Simplified market data - no volatile fields (prices fetched on-demand from API)
 export interface MarketData {
   polymarketId: string;
   conditionId?: string;
+  slug: string;
   eventSlug: string;
   title: string;
-  description?: string;
-  category?: string;
   imageUrl?: string;
-  currentYesPrice: number;
-  currentNoPrice: number;
-  volume24h: number;
-  totalVolume: number;
   isActive: boolean;
-  endDate?: number;
 }
 
 export interface TradeContext {
@@ -63,20 +58,21 @@ export interface InsightData {
   priceAtAnalysis: number;
 }
 
+// Markets for analysis - prices are fetched on-demand from Polymarket API
 export interface MarketForAnalysis {
   _id: Id<'markets'>;
   polymarketId: string;
+  slug: string;
   title: string;
   eventSlug: string;
-  currentYesPrice: number;
-  currentNoPrice: number;
-  volume24h: number;
+  lastTradeAt: number;
 }
 
 export interface RawTradeData {
   conditionId: string;
   slug: string;
   eventSlug: string;
+  title: string; // Market title for display
   side: 'BUY' | 'SELL';
   size: number;
   price: number;

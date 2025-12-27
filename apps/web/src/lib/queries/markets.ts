@@ -13,17 +13,19 @@ const MARKETS_STALE_TIME = 1000 * 60;
 
 /**
  * Query options for markets (database queries - reactive)
+ * Note: Markets table no longer stores volatile data (prices, volume)
+ * Use marketsActions to fetch real-time data from Polymarket API
  */
 export const marketsQueries = {
   /** List active markets with sorting */
   active: (options?: {
     limit?: number;
-    category?: string;
-    sortBy?: 'volume' | 'recent' | 'ending_soon';
+    eventSlug?: string;
+    sortBy?: 'recent' | 'analyzed';
   }) =>
     convexQuery(api.markets.listActiveMarkets, {
       limit: options?.limit ?? 20,
-      category: options?.category,
+      eventSlug: options?.eventSlug,
       sortBy: options?.sortBy,
     }),
 

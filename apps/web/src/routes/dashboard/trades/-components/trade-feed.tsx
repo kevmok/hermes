@@ -20,6 +20,7 @@ interface Trade {
   conditionId: string;
   slug: string;
   eventSlug: string;
+  title: string;
   side: 'BUY' | 'SELL';
   size: number;
   price: number;
@@ -117,7 +118,7 @@ function TradeRow({ trade, index, onClick }: TradeRowProps) {
       <div className='flex-1 min-w-0'>
         <div className='flex items-center gap-2 mb-1'>
           <span className='font-medium text-white truncate'>
-            {trade.slug.replace(/-/g, ' ').slice(0, 50)}
+            {trade.title}
           </span>
           {trade.signalId && (
             <Badge className='text-[9px] bg-cyan-500/20 text-cyan-300 border-cyan-500/30 border'>

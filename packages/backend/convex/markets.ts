@@ -6,9 +6,6 @@ import { internal } from './_generated/api';
 // These are public mutations for the collector service to call via ConvexHttpClient.
 // In production, consider adding authentication via Convex Auth or deploy keys.
 
-// Analysis throttling: only trigger analysis once per hour per market
-const ONE_HOUR_MS = 60 * 60 * 1000;
-
 // Trade context validator for signal creation
 const tradeContextValidator = v.object({
   size: v.number(),
@@ -22,17 +19,11 @@ export const upsertMarket = mutation({
   args: {
     polymarketId: v.string(),
     conditionId: v.optional(v.string()),
+    slug: v.string(),
     eventSlug: v.string(),
     title: v.string(),
-    description: v.optional(v.string()),
-    category: v.optional(v.string()),
     imageUrl: v.optional(v.string()),
-    currentYesPrice: v.number(),
-    currentNoPrice: v.number(),
-    volume24h: v.number(),
-    totalVolume: v.number(),
     isActive: v.boolean(),
-    endDate: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
     const existing = await ctx.db
@@ -50,19 +41,6 @@ export const upsertMarket = mutation({
         updatedAt: now,
         lastTradeAt: now,
       });
-
-      // Throttle analysis: only trigger if not analyzed in the last hour
-      const shouldAnalyze =
-        !existing.lastAnalyzedAt || now - existing.lastAnalyzedAt > ONE_HOUR_MS;
-
-      if (shouldAnalyze) {
-        await ctx.scheduler.runAfter(
-          0,
-          internal.analysis.analyzeMarketWithSwarm,
-          { marketId: existing._id },
-        );
-      }
-
       return existing._id;
     }
 
@@ -71,11 +49,6 @@ export const upsertMarket = mutation({
       createdAt: now,
       updatedAt: now,
       lastTradeAt: now,
-    });
-
-    // Always analyze new markets
-    await ctx.scheduler.runAfter(0, internal.analysis.analyzeMarketWithSwarm, {
-      marketId,
     });
 
     return marketId;
@@ -88,17 +61,11 @@ export const upsertMarketWithTrade = mutation({
   args: {
     polymarketId: v.string(),
     conditionId: v.optional(v.string()),
+    slug: v.string(),
     eventSlug: v.string(),
     title: v.string(),
-    description: v.optional(v.string()),
-    category: v.optional(v.string()),
     imageUrl: v.optional(v.string()),
-    currentYesPrice: v.number(),
-    currentNoPrice: v.number(),
-    volume24h: v.number(),
-    totalVolume: v.number(),
     isActive: v.boolean(),
-    endDate: v.optional(v.number()),
     // Trade context for signal creation
     tradeContext: tradeContextValidator,
   },
@@ -148,12 +115,10 @@ export const upsertMarketsBatch = mutation({
       v.object({
         polymarketId: v.string(),
         conditionId: v.optional(v.string()),
+        slug: v.string(),
         eventSlug: v.string(),
         title: v.string(),
-        currentYesPrice: v.number(),
-        currentNoPrice: v.number(),
-        volume24h: v.number(),
-        totalVolume: v.number(),
+        imageUrl: v.optional(v.string()),
         isActive: v.boolean(),
       }),
     ),
@@ -238,9 +203,9 @@ export const getMarketsNeedingAnalysis = query({
       )
       .take(args.limit * 2); // Get extra to sort
 
-    // Sort by volume and return top N
+    // Sort by lastTradeAt (most recently traded) and return top N
     return markets
-      .sort((a, b) => b.volume24h - a.volume24h)
+      .sort((a, b) => b.lastTradeAt - a.lastTradeAt)
       .slice(0, args.limit);
   },
 });
@@ -257,23 +222,20 @@ export const getMarketById = internalQuery({
 export const listActiveMarkets = query({
   args: {
     limit: v.optional(v.number()),
-    category: v.optional(v.string()),
+    eventSlug: v.optional(v.string()),
     sortBy: v.optional(
-      v.union(
-        v.literal('volume'),
-        v.literal('recent'),
-        v.literal('ending_soon'),
-      ),
+      v.union(v.literal('recent'), v.literal('analyzed')),
     ),
   },
   handler: async (ctx, args) => {
     const limit = args.limit ?? 20;
 
     let markets;
-    if (args.category) {
+    const eventSlug = args.eventSlug;
+    if (eventSlug) {
       markets = await ctx.db
         .query('markets')
-        .withIndex('by_category', (q) => q.eq('category', args.category))
+        .withIndex('by_event_slug', (q) => q.eq('eventSlug', eventSlug))
         .filter((q) => q.eq(q.field('isActive'), true))
         .take(limit * 2);
     } else {
@@ -284,16 +246,11 @@ export const listActiveMarkets = query({
     }
 
     // Sort based on preference
-    if (args.sortBy === 'volume') {
-      markets.sort((a, b) => b.volume24h - a.volume24h);
-    } else if (args.sortBy === 'recent') {
+    if (args.sortBy === 'analyzed') {
+      markets.sort((a, b) => (b.lastAnalyzedAt ?? 0) - (a.lastAnalyzedAt ?? 0));
+    } else {
+      // Default: recent (by lastTradeAt)
       markets.sort((a, b) => b.lastTradeAt - a.lastTradeAt);
-    } else if (args.sortBy === 'ending_soon') {
-      markets.sort(
-        (a, b) =>
-          (a.endDate ?? Number.POSITIVE_INFINITY) -
-          (b.endDate ?? Number.POSITIVE_INFINITY),
-      );
     }
 
     return markets.slice(0, limit);
@@ -379,14 +336,12 @@ export const updateMarketOutcome = internalMutation({
       v.literal('INVALID'),
       v.null(),
     ),
-    resolutionSource: v.optional(v.string()),
   },
   returns: v.null(),
   handler: async (ctx, args): Promise<null> => {
     await ctx.db.patch(args.marketId, {
       outcome: args.outcome,
       resolvedAt: Date.now(),
-      resolutionSource: args.resolutionSource,
       isActive: false,
       updatedAt: Date.now(),
     });
