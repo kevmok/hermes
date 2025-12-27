@@ -1,4 +1,4 @@
-import { v } from 'convex/values';
+import { ConvexError, v } from 'convex/values';
 import { internalMutation, query } from './_generated/server';
 import type { Doc, Id } from './_generated/dataModel';
 import type { QueryCtx } from './_generated/server';
@@ -89,7 +89,7 @@ export const aggregateTradeToSignal = internalMutation({
   handler: async (ctx, args): Promise<null> => {
     const signal = await ctx.db.get(args.signalId);
     if (!signal) {
-      throw new Error(`Signal ${args.signalId} not found`);
+      throw new ConvexError(`Signal ${args.signalId} not found`);
     }
 
     // Convert single trade to array if needed, then add new trade
@@ -274,7 +274,12 @@ export const getSignalsWithPagination = query({
         nextCursor: hasMore && lastItem ? lastItem._id : undefined,
       };
     } catch (error) {
-      console.error('getSignalsWithPagination failed:', error);
+      console.error('getSignalsWithPagination failed:', {
+        error,
+        limit: args.limit,
+        onlyHighConfidence: args.onlyHighConfidence,
+        decision: args.decision,
+      });
       // Return empty result instead of throwing
       return {
         items: [],
@@ -291,25 +296,6 @@ export const getRecentSignalForMarket = query({
   args: {
     marketId: v.id('markets'),
     withinMs: v.number(), // e.g., 60000 for 1 minute
-  },
-  handler: async (ctx, args) => {
-    const cutoff = Date.now() - args.withinMs;
-
-    return await ctx.db
-      .query('signals')
-      .withIndex('by_market_time', (q) =>
-        q.eq('marketId', args.marketId).gte('signalTimestamp', cutoff),
-      )
-      .order('desc')
-      .first();
-  },
-});
-
-// Internal version for use in actions/mutations
-export const getRecentSignalForMarketInternal = query({
-  args: {
-    marketId: v.id('markets'),
-    withinMs: v.number(),
   },
   handler: async (ctx, args) => {
     const cutoff = Date.now() - args.withinMs;
@@ -373,23 +359,24 @@ export const getSignalWithPredictions = query({
     const market = await ctx.db.get(signal.marketId);
 
     // Fetch linked model predictions created around the same time as the signal
-    // Signals are created from AI swarm analysis, so predictions should be within a small window
+    // Note: Predictions are only saved for on-demand analysis, not whale-trade triggered signals
+    // For whale-trade signals, this will return an empty array
     const predictionWindow = 60 * 1000; // 1 minute
     const predictions = await ctx.db
       .query('modelPredictions')
       .withIndex('by_market', (q) => q.eq('marketId', signal.marketId))
-      // .filter((q) =>
-      //   q.and(
-      //     q.gte(
-      //       q.field('timestamp'),
-      //       signal.signalTimestamp - predictionWindow,
-      //     ),
-      //     q.lte(
-      //       q.field('timestamp'),
-      //       signal.signalTimestamp + predictionWindow,
-      //     ),
-      //   ),
-      // )
+      .filter((q) =>
+        q.and(
+          q.gte(
+            q.field('timestamp'),
+            signal.signalTimestamp - predictionWindow,
+          ),
+          q.lte(
+            q.field('timestamp'),
+            signal.signalTimestamp + predictionWindow,
+          ),
+        ),
+      )
       .collect();
 
     // Get the first trade for detail display (handle union type)
@@ -429,7 +416,7 @@ export const getSignalsSince = query({
       .order('desc')
       .take(args.limit ?? 20);
 
-    return Promise.all(
+    const results = await Promise.allSettled(
       signals.map(async (signal) => {
         const market = await ctx.db.get(signal.marketId);
         return {
@@ -438,6 +425,18 @@ export const getSignalsSince = query({
         };
       }),
     );
+
+    return results
+      .filter(
+        (
+          r,
+        ): r is PromiseFulfilledResult<
+          Doc<'signals'> & {
+            market: { _id: Id<'markets'>; title: string } | null;
+          }
+        > => r.status === 'fulfilled',
+      )
+      .map((r) => r.value);
   },
 });
 
@@ -447,19 +446,20 @@ async function enrichSignalsWithMarkets(
   ctx: QueryCtx,
   signals: Doc<'signals'>[],
 ): Promise<(Doc<'signals'> & { market: Doc<'markets'> | null })[]> {
-  return Promise.all(
+  const results = await Promise.allSettled(
     signals.map(async (signal) => {
-      try {
-        const market = await ctx.db.get(signal.marketId);
-        return { ...signal, market };
-      } catch (error) {
-        // If market lookup fails, return signal with null market
-        console.error(
-          `Failed to get market ${signal.marketId} for signal ${signal._id}:`,
-          error,
-        );
-        return { ...signal, market: null };
-      }
+      const market = await ctx.db.get(signal.marketId);
+      return { ...signal, market };
     }),
   );
+
+  return results
+    .filter(
+      (
+        r,
+      ): r is PromiseFulfilledResult<
+        Doc<'signals'> & { market: Doc<'markets'> | null }
+      > => r.status === 'fulfilled',
+    )
+    .map((r) => r.value);
 }

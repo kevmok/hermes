@@ -1,3 +1,4 @@
+import { ConvexError } from 'convex/values';
 import { mutation, query } from './_generated/server';
 
 // ============ USER QUERIES ============
@@ -24,14 +25,14 @@ export const updateLastSeenSignals = mutation({
   args: {},
   handler: async (ctx) => {
     const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new Error('Not authenticated');
+    if (!identity) throw new ConvexError('Not authenticated');
 
     const user = await ctx.db
       .query('user')
       .withIndex('userId', (q) => q.eq('userId', identity.subject))
       .first();
 
-    if (!user) throw new Error('User not found');
+    if (!user) throw new ConvexError('User not found');
 
     await ctx.db.patch(user._id, {
       lastSeenSignalsAt: Date.now(),

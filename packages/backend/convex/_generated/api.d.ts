@@ -17,6 +17,7 @@ import type * as events from "../events.js";
 import type * as globalFilters from "../globalFilters.js";
 import type * as http from "../http.js";
 import type * as insights from "../insights.js";
+import type * as lib_errors from "../lib/errors.js";
 import type * as markets from "../markets.js";
 import type * as performanceMetrics from "../performanceMetrics.js";
 import type * as polymarket_cache from "../polymarket/cache.js";
@@ -49,6 +50,7 @@ declare const fullApi: ApiFromModules<{
   globalFilters: typeof globalFilters;
   http: typeof http;
   insights: typeof insights;
+  "lib/errors": typeof lib_errors;
   markets: typeof markets;
   performanceMetrics: typeof performanceMetrics;
   "polymarket/cache": typeof polymarket_cache;

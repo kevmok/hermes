@@ -233,7 +233,7 @@ export const getEventsWithSignalCounts = query({
       .order('desc')
       .take(args.limit ?? 50);
 
-    return Promise.all(
+    const results = await Promise.allSettled(
       events.map(async (event) => {
         // Get markets for this event
         const markets = await ctx.db
@@ -241,15 +241,17 @@ export const getEventsWithSignalCounts = query({
           .withIndex('by_event_slug', (q) => q.eq('eventSlug', event.eventSlug))
           .collect();
 
-        // Count signals across all markets for this event
-        let signalCount = 0;
-        for (const market of markets) {
-          const signals = await ctx.db
-            .query('signals')
-            .withIndex('by_market', (q) => q.eq('marketId', market._id))
-            .collect();
-          signalCount += signals.length;
-        }
+        // Count signals across all markets in parallel (avoid N+1)
+        const signalCounts = await Promise.all(
+          markets.map(async (market) => {
+            const signals = await ctx.db
+              .query('signals')
+              .withIndex('by_market', (q) => q.eq('marketId', market._id))
+              .collect();
+            return signals.length;
+          }),
+        );
+        const signalCount = signalCounts.reduce((sum, count) => sum + count, 0);
 
         return {
           ...event,
@@ -258,6 +260,16 @@ export const getEventsWithSignalCounts = query({
         };
       }),
     );
+
+    return results
+      .filter(
+        (
+          r,
+        ): r is PromiseFulfilledResult<
+          Doc<'events'> & { marketCount: number; signalCount: number }
+        > => r.status === 'fulfilled',
+      )
+      .map((r) => r.value);
   },
 });
 

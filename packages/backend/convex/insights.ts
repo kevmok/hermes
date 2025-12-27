@@ -162,12 +162,22 @@ export const getPendingAnalysisRequests = query({
       .order('desc')
       .take(args.limit ?? 50);
 
-    return Promise.all(
+    const results = await Promise.allSettled(
       requests.map(async (request) => {
         const market = await ctx.db.get(request.marketId);
         return { ...request, market };
       }),
     );
+
+    return results
+      .filter(
+        (
+          r,
+        ): r is PromiseFulfilledResult<
+          (typeof requests)[0] & { market: Doc<'markets'> | null }
+        > => r.status === 'fulfilled',
+      )
+      .map((r) => r.value);
   },
 });
 
@@ -176,10 +186,20 @@ async function enrichInsightsWithMarkets(
   ctx: QueryCtx,
   insights: Doc<'insights'>[],
 ): Promise<(Doc<'insights'> & { market: Doc<'markets'> | null })[]> {
-  return Promise.all(
+  const results = await Promise.allSettled(
     insights.map(async (insight) => {
       const market = await ctx.db.get(insight.marketId);
       return { ...insight, market };
     }),
   );
+
+  return results
+    .filter(
+      (
+        r,
+      ): r is PromiseFulfilledResult<
+        Doc<'insights'> & { market: Doc<'markets'> | null }
+      > => r.status === 'fulfilled',
+    )
+    .map((r) => r.value);
 }

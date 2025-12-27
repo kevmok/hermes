@@ -105,10 +105,15 @@ export const upsertMarketWithTrade = mutation({
 
     // Always trigger signal analysis for qualifying trades
     // The action will handle deduplication and consensus thresholds
-    await ctx.scheduler.runAfter(0, internal.analysis.analyzeTradeForSignal, {
-      marketId,
-      tradeContext,
-    });
+    try {
+      await ctx.scheduler.runAfter(0, internal.analysis.analyzeTradeForSignal, {
+        marketId,
+        tradeContext,
+      });
+    } catch (error) {
+      // Log but don't fail - market upsert succeeded
+      console.error('Failed to schedule signal analysis:', { marketId, error });
+    }
 
     return marketId;
   },
@@ -187,33 +192,6 @@ export const markMarketAnalyzed = mutation({
 });
 
 // ============ INTERNAL QUERIES ============
-
-export const getMarketsNeedingAnalysis = query({
-  args: {
-    limit: v.number(),
-    minHoursSinceLastAnalysis: v.number(),
-  },
-  handler: async (ctx, args) => {
-    const cutoff = Date.now() - args.minHoursSinceLastAnalysis * 60 * 60 * 1000;
-
-    // Get active markets that haven't been analyzed recently
-    const markets = await ctx.db
-      .query('markets')
-      .withIndex('by_active', (q) => q.eq('isActive', true))
-      .filter((q) =>
-        q.or(
-          q.eq(q.field('lastAnalyzedAt'), undefined),
-          q.lt(q.field('lastAnalyzedAt'), cutoff),
-        ),
-      )
-      .take(args.limit * 2); // Get extra to sort
-
-    // Sort by lastTradeAt (most recently traded) and return top N
-    return markets
-      .sort((a, b) => b.lastTradeAt - a.lastTradeAt)
-      .slice(0, args.limit);
-  },
-});
 
 export const getMarketById = internalQuery({
   args: { marketId: v.id('markets') },
@@ -401,19 +379,19 @@ export const getUnresolvedMarketsWithSignals = query({
       .filter((q) => q.eq(q.field('outcome'), undefined))
       .take(args.limit ?? 100);
 
-    // Filter to only markets that have signals
-    const marketsWithSignals = [];
-    for (const market of activeMarkets) {
-      const hasSignal = await ctx.db
-        .query('signals')
-        .withIndex('by_market', (q) => q.eq('marketId', market._id))
-        .first();
+    // Check signals in parallel (avoid N+1)
+    const marketsWithSignalStatus = await Promise.all(
+      activeMarkets.map(async (market) => {
+        const hasSignal = await ctx.db
+          .query('signals')
+          .withIndex('by_market', (q) => q.eq('marketId', market._id))
+          .first();
+        return { market, hasSignal: !!hasSignal };
+      }),
+    );
 
-      if (hasSignal) {
-        marketsWithSignals.push(market);
-      }
-    }
-
-    return marketsWithSignals;
+    return marketsWithSignalStatus
+      .filter(({ hasSignal }) => hasSignal)
+      .map(({ market }) => market);
   },
 });

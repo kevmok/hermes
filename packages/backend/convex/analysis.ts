@@ -1,4 +1,4 @@
-import { v } from 'convex/values';
+import { ConvexError, v } from 'convex/values';
 import {
   internalAction,
   internalMutation,
@@ -246,14 +246,32 @@ export const requestMarketAnalysis = mutation({
     });
 
     // Schedule the analysis (action will fetch prices from Polymarket API)
-    await ctx.scheduler.runAfter(
-      0,
-      internal.analysis.executeMarketAnalysisOnDemand,
-      {
-        requestId,
+    try {
+      await ctx.scheduler.runAfter(
+        0,
+        internal.analysis.executeMarketAnalysisOnDemand,
+        {
+          requestId,
+          marketId: args.marketId,
+        },
+      );
+    } catch (error) {
+      // If scheduling fails, mark request as failed
+      console.error('Failed to schedule market analysis:', {
         marketId: args.marketId,
-      },
-    );
+        error,
+      });
+      await ctx.db.patch(requestId, {
+        status: 'failed',
+        errorMessage: 'Failed to schedule analysis',
+        completedAt: Date.now(),
+      });
+      return {
+        status: 'failed' as const,
+        requestId,
+        cached: false,
+      };
+    }
 
     return {
       status: 'pending' as const,
@@ -388,7 +406,7 @@ export const executeMarketAnalysis = internalAction({
         marketId: args.marketId,
       });
 
-      if (!market) throw new Error('Market not found');
+      if (!market) throw new ConvexError('Market not found');
 
       // Build prompts and query swarm
       const { systemPrompt, userPrompt } = buildPrompt(market, {
@@ -400,7 +418,7 @@ export const executeMarketAnalysis = internalAction({
       );
 
       if (swarmResponse.totalModels === 0) {
-        throw new Error('No AI models configured');
+        throw new ConvexError('No AI models configured');
       }
 
       // Save individual predictions for tracking (with structured data)

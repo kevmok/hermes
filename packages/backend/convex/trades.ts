@@ -72,12 +72,20 @@ export const insertTrade = internalMutation({
     });
 
     // Upsert event to track this eventSlug
-    await ctx.scheduler.runAfter(0, internal.events.upsertEvent, {
-      eventSlug: args.eventSlug,
-      title,
-      tradeSize: args.size,
-      tradeTimestamp: args.timestamp,
-    });
+    try {
+      await ctx.scheduler.runAfter(0, internal.events.upsertEvent, {
+        eventSlug: args.eventSlug,
+        title,
+        tradeSize: args.size,
+        tradeTimestamp: args.timestamp,
+      });
+    } catch (error) {
+      // Log but don't fail - trade insert succeeded
+      console.error('Failed to schedule event upsert:', {
+        eventSlug: args.eventSlug,
+        error,
+      });
+    }
 
     return tradeId;
   },
@@ -112,12 +120,20 @@ export const insertTradeWithSignal = internalMutation({
     });
 
     // Upsert event to track this eventSlug
-    await ctx.scheduler.runAfter(0, internal.events.upsertEvent, {
-      eventSlug: args.eventSlug,
-      title,
-      tradeSize: args.size,
-      tradeTimestamp: args.timestamp,
-    });
+    try {
+      await ctx.scheduler.runAfter(0, internal.events.upsertEvent, {
+        eventSlug: args.eventSlug,
+        title,
+        tradeSize: args.size,
+        tradeTimestamp: args.timestamp,
+      });
+    } catch (error) {
+      // Log but don't fail - trade insert succeeded
+      console.error('Failed to schedule event upsert:', {
+        eventSlug: args.eventSlug,
+        error,
+      });
+    }
 
     return tradeId;
   },
@@ -162,12 +178,20 @@ export const recordTrade = mutation({
     });
 
     // Upsert event to track this eventSlug
-    await ctx.scheduler.runAfter(0, internal.events.upsertEvent, {
-      eventSlug: args.eventSlug,
-      title: title || deriveEventTitle(args.slug, args.eventSlug),
-      tradeSize: args.size,
-      tradeTimestamp: args.timestamp,
-    });
+    try {
+      await ctx.scheduler.runAfter(0, internal.events.upsertEvent, {
+        eventSlug: args.eventSlug,
+        title: title || deriveEventTitle(args.slug, args.eventSlug),
+        tradeSize: args.size,
+        tradeTimestamp: args.timestamp,
+      });
+    } catch (error) {
+      // Log but don't fail - trade insert succeeded
+      console.error('Failed to schedule event upsert:', {
+        eventSlug: args.eventSlug,
+        error,
+      });
+    }
 
     return tradeId;
   },
@@ -238,13 +262,26 @@ export const listTrades = query({
   }),
   handler: async (ctx, args) => {
     const limit = args.limit ?? 50;
-    const trades = await ctx.db
-      .query('trades')
-      .withIndex('by_timestamp')
-      .order('desc')
-      .take(limit);
+    const cursorTimestamp = args.cursor ? parseInt(args.cursor, 10) : undefined;
 
-    return { trades, nextCursor: null };
+    let tradesQuery = ctx.db.query('trades').withIndex('by_timestamp');
+
+    if (cursorTimestamp !== undefined) {
+      tradesQuery = tradesQuery.filter((q) =>
+        q.lt(q.field('timestamp'), cursorTimestamp),
+      );
+    }
+
+    const trades = await tradesQuery.order('desc').take(limit + 1);
+
+    const hasMore = trades.length > limit;
+    const returnTrades = hasMore ? trades.slice(0, limit) : trades;
+    const nextCursor =
+      hasMore && returnTrades.length > 0
+        ? String(returnTrades[returnTrades.length - 1].timestamp)
+        : null;
+
+    return { trades: returnTrades, nextCursor };
   },
 });
 
@@ -259,13 +296,29 @@ export const listWhaleTrades = query({
   }),
   handler: async (ctx, args) => {
     const limit = args.limit ?? 50;
-    const trades = await ctx.db
-      .query('trades')
-      .withIndex('by_whale', (q) => q.eq('isWhale', true))
-      .order('desc')
-      .take(limit);
+    const cursorTimestamp = args.cursor ? parseInt(args.cursor, 10) : undefined;
 
-    return { trades, nextCursor: null };
+    // by_whale index is (isWhale, timestamp) so we can filter on timestamp within whale trades
+    let tradesQuery = ctx.db
+      .query('trades')
+      .withIndex('by_whale', (q) => q.eq('isWhale', true));
+
+    if (cursorTimestamp !== undefined) {
+      tradesQuery = tradesQuery.filter((q) =>
+        q.lt(q.field('timestamp'), cursorTimestamp),
+      );
+    }
+
+    const trades = await tradesQuery.order('desc').take(limit + 1);
+
+    const hasMore = trades.length > limit;
+    const returnTrades = hasMore ? trades.slice(0, limit) : trades;
+    const nextCursor =
+      hasMore && returnTrades.length > 0
+        ? String(returnTrades[returnTrades.length - 1].timestamp)
+        : null;
+
+    return { trades: returnTrades, nextCursor };
   },
 });
 

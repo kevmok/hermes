@@ -1,4 +1,4 @@
-import { v } from 'convex/values';
+import { ConvexError, v } from 'convex/values';
 import { mutation, query } from './_generated/server';
 
 export const listWatchlists = query({
@@ -111,11 +111,11 @@ export const addToWatchlist = mutation({
   handler: async (ctx, args) => {
     // Check if market exists
     const market = await ctx.db.get(args.marketId);
-    if (!market) throw new Error('Market not found');
+    if (!market) throw new ConvexError('Market not found');
 
     // Check if watchlist exists
     const watchlist = await ctx.db.get(args.watchlistId);
-    if (!watchlist) throw new Error('Watchlist not found');
+    if (!watchlist) throw new ConvexError('Watchlist not found');
 
     // Check if already in watchlist
     const existing = await ctx.db
@@ -126,7 +126,7 @@ export const addToWatchlist = mutation({
       .first();
 
     if (existing) {
-      throw new Error('Market already in watchlist');
+      throw new ConvexError('Market already in watchlist');
     }
 
     return await ctx.db.insert('watchlistItems', {
@@ -160,10 +160,10 @@ export const deleteWatchlist = mutation({
   args: { watchlistId: v.id('watchlists') },
   handler: async (ctx, args) => {
     const watchlist = await ctx.db.get(args.watchlistId);
-    if (!watchlist) throw new Error('Watchlist not found');
+    if (!watchlist) throw new ConvexError('Watchlist not found');
 
     if (watchlist.isDefault) {
-      throw new Error('Cannot delete default watchlist');
+      throw new ConvexError('Cannot delete default watchlist');
     }
 
     // Delete all items
@@ -187,7 +187,7 @@ export const renameWatchlist = mutation({
   },
   handler: async (ctx, args) => {
     const watchlist = await ctx.db.get(args.watchlistId);
-    if (!watchlist) throw new Error('Watchlist not found');
+    if (!watchlist) throw new ConvexError('Watchlist not found');
 
     await ctx.db.patch(args.watchlistId, { name: args.name });
   },
@@ -197,7 +197,7 @@ export const setDefaultWatchlist = mutation({
   args: { watchlistId: v.id('watchlists') },
   handler: async (ctx, args) => {
     const watchlist = await ctx.db.get(args.watchlistId);
-    if (!watchlist) throw new Error('Watchlist not found');
+    if (!watchlist) throw new ConvexError('Watchlist not found');
 
     // Unset existing defaults
     const existingDefaults = await ctx.db

@@ -1,32 +1,5 @@
 import { v } from 'convex/values';
-import { internalAction, internalMutation } from './_generated/server';
-
-// Scheduled analysis is deprecated - analysis now happens on trade events
-// Markets no longer store volatile price data, so scheduled analysis cannot
-// determine prices without fetching from API. Trade-triggered analysis uses
-// the price from the trade context.
-export const runAutomaticAnalysis = internalAction({
-  args: {},
-  returns: v.object({
-    analyzed: v.number(),
-    total: v.optional(v.number()),
-    errors: v.optional(v.number()),
-    skipped: v.optional(v.boolean()),
-  }),
-  handler: async (): Promise<{
-    analyzed: number;
-    total?: number;
-    errors?: number;
-    skipped?: boolean;
-  }> => {
-    // Scheduled analysis is deprecated - prices are no longer stored in DB
-    // Analysis now triggers automatically when whale trades come in
-    console.log(
-      'Scheduled analysis skipped - analysis now happens on trade events',
-    );
-    return { analyzed: 0, skipped: true };
-  },
-});
+import { internalMutation } from './_generated/server';
 
 export const cleanupOldData = internalMutation({
   args: {},
