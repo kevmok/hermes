@@ -5,6 +5,7 @@ import { DataService } from '../data';
 import {
   ConvexDataService,
   type MarketDataWithTrade,
+  type RawTradeData,
 } from '../data/ConvexDataService';
 import {
   buildMarketRow,
@@ -143,11 +144,41 @@ const processTradeMessage = (
       },
     };
 
-    yield* convex.upsertMarketWithTrade(marketDataWithTrade).pipe(
-      Effect.catchAll((error) => {
-        console.error('Convex upsert failed:', error);
-        return Effect.succeed(undefined); // Don't crash on Convex failures
-      }),
+    // 4. Build raw trade data for the trades table
+    const rawTrade: RawTradeData = {
+      conditionId: t.conditionId,
+      slug: t.slug ?? '',
+      eventSlug: t.eventSlug ?? '',
+      side: (t.side?.toUpperCase() === 'BUY' ? 'BUY' : 'SELL') as 'BUY' | 'SELL',
+      size: sizeUsd,
+      price: t.price,
+      timestamp: t.timestamp ?? Math.floor(Date.now() / 1000),
+      proxyWallet: t.proxyWallet ?? '',
+      outcome: t.outcome,
+      outcomeIndex: t.outcomeIndex ?? 0,
+      transactionHash: t.transactionHash,
+      isWhale: true, // Passed shouldIncludeTrade filter, so it's a whale trade
+      traderName: t.name,
+      traderPseudonym: t.pseudonym,
+    };
+
+    // 5. Send to Convex in parallel: market upsert + raw trade storage
+    yield* Effect.all(
+      [
+        convex.upsertMarketWithTrade(marketDataWithTrade).pipe(
+          Effect.catchAll((error) => {
+            console.error('Convex market upsert failed:', error);
+            return Effect.succeed(undefined);
+          }),
+        ),
+        convex.recordTrade(rawTrade).pipe(
+          Effect.catchAll((error) => {
+            console.error('Convex trade record failed:', error);
+            return Effect.succeed(undefined);
+          }),
+        ),
+      ],
+      { concurrency: 2 },
     );
 
     console.log(

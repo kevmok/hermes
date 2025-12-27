@@ -213,13 +213,15 @@ export const getLatestSignals = query({
 
 export const getSignalsByMarket = query({
   args: {
-    marketId: v.id("markets"),
+    marketId: v.union(v.id("markets"), v.null()),
     limit: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
+    const { marketId } = args;
+    if (!marketId) return [];
     return await ctx.db
       .query("signals")
-      .withIndex("by_market", (q) => q.eq("marketId", args.marketId))
+      .withIndex("by_market", (q) => q.eq("marketId", marketId))
       .order("desc")
       .take(args.limit ?? 50);
   },

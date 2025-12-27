@@ -73,6 +73,23 @@ export interface MarketForAnalysis {
   volume24h: number;
 }
 
+export interface RawTradeData {
+  conditionId: string;
+  slug: string;
+  eventSlug: string;
+  side: 'BUY' | 'SELL';
+  size: number;
+  price: number;
+  timestamp: number;
+  proxyWallet: string;
+  outcome: string;
+  outcomeIndex: number;
+  transactionHash?: string;
+  isWhale: boolean;
+  traderName?: string;
+  traderPseudonym?: string;
+}
+
 export class ConvexDataService extends Context.Tag('ConvexDataService')<
   ConvexDataService,
   {
@@ -91,6 +108,9 @@ export class ConvexDataService extends Context.Tag('ConvexDataService')<
       noPrice: number,
       volume: number,
     ) => Effect.Effect<Id<'marketSnapshots'>, Error>;
+    readonly recordTrade: (
+      trade: RawTradeData,
+    ) => Effect.Effect<Id<'trades'>, Error>;
     readonly getMarketsForAnalysis: (
       limit: number,
     ) => Effect.Effect<MarketForAnalysis[], Error>;
@@ -154,6 +174,12 @@ const make = Effect.sync(() => {
       catch: (e) => new Error(`Failed to record snapshot: ${e}`),
     }).pipe(Effect.retry(retrySchedule));
 
+  const recordTrade = (trade: RawTradeData) =>
+    Effect.tryPromise({
+      try: () => client.mutation(api.trades.recordTrade, trade),
+      catch: (e) => new Error(`Failed to record trade: ${e}`),
+    }).pipe(Effect.retry(retrySchedule));
+
   const getMarketsForAnalysis = (limit: number) =>
     Effect.tryPromise({
       try: () =>
@@ -213,6 +239,7 @@ const make = Effect.sync(() => {
     upsertMarketWithTrade,
     upsertMarketsBatch,
     recordSnapshot,
+    recordTrade,
     getMarketsForAnalysis,
     createAnalysisRun,
     updateAnalysisRun,

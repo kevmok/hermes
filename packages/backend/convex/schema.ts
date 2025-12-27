@@ -121,6 +121,43 @@ export default defineSchema({
     .index("by_market_time", ["marketId", "timestamp"])
     .index("by_timestamp", ["timestamp"]),
 
+  // ============ TRADES (Raw WebSocket data) ============
+
+  trades: defineTable({
+    // Market identification (for API lookups - no stale data)
+    conditionId: v.string(),
+    slug: v.string(),
+    eventSlug: v.string(),
+
+    // Trade data
+    side: v.union(v.literal("BUY"), v.literal("SELL")),
+    size: v.number(), // Trade size in USD
+    price: v.number(), // Trade price (0-1)
+    timestamp: v.number(), // Unix timestamp in seconds
+    proxyWallet: v.string(), // Trader wallet address
+    outcome: v.string(), // Outcome name (Yes/No/Up/Down)
+    outcomeIndex: v.number(), // Outcome index (0 or 1)
+    transactionHash: v.optional(v.string()), // On-chain tx hash
+
+    // Whale tracking
+    isWhale: v.boolean(), // True if size >= threshold
+
+    // Optional signal reference (if trade triggered a signal)
+    signalId: v.optional(v.id("signals")),
+
+    // Optional trader info (may not always be available)
+    traderName: v.optional(v.string()),
+    traderPseudonym: v.optional(v.string()),
+  })
+    .index("by_condition_id", ["conditionId"])
+    .index("by_slug", ["slug"])
+    .index("by_event_slug", ["eventSlug"])
+    .index("by_timestamp", ["timestamp"])
+    .index("by_whale", ["isWhale", "timestamp"])
+    .index("by_wallet", ["proxyWallet", "timestamp"])
+    .index("by_signal", ["signalId"])
+    .index("by_condition_time", ["conditionId", "timestamp"]),
+
   // ============ ANALYSIS & INSIGHTS ============
 
   analysisRuns: defineTable({

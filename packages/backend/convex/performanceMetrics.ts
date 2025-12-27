@@ -289,7 +289,8 @@ export const getDailySignalStats = query({
     >();
 
     for (const signal of signals) {
-      const date = new Date(signal.signalTimestamp).toISOString().split("T")[0];
+      const dateParts = new Date(signal.signalTimestamp).toISOString().split("T");
+      const date = dateParts[0] ?? "unknown";
 
       if (!dailyStats.has(date)) {
         dailyStats.set(date, {

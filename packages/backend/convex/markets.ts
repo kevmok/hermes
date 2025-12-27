@@ -301,8 +301,9 @@ export const listActiveMarkets = query({
 });
 
 export const getMarket = query({
-  args: { marketId: v.id('markets') },
+  args: { marketId: v.union(v.id('markets'), v.null()) },
   handler: async (ctx, args) => {
+    if (!args.marketId) return null;
     return await ctx.db.get(args.marketId);
   },
 });
