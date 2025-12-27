@@ -1,14 +1,14 @@
-import { v } from "convex/values";
-import { internalMutation, query } from "./_generated/server";
-import type { Doc, Id } from "./_generated/dataModel";
-import type { QueryCtx } from "./_generated/server";
+import { v } from 'convex/values';
+import { internalMutation, query } from './_generated/server';
+import type { Doc, Id } from './_generated/dataModel';
+import type { QueryCtx } from './_generated/server';
 
 // ============ TYPE DEFINITIONS ============
 
 const tradeObjectValidator = v.object({
   size: v.number(),
   price: v.number(),
-  side: v.union(v.literal("YES"), v.literal("NO")),
+  side: v.union(v.literal('YES'), v.literal('NO')),
   taker: v.optional(v.string()),
   timestamp: v.number(),
 });
@@ -17,12 +17,12 @@ const tradeObjectValidator = v.object({
 
 export const createSignal = internalMutation({
   args: {
-    marketId: v.id("markets"),
+    marketId: v.id('markets'),
     triggerTrade: tradeObjectValidator,
     consensusDecision: v.union(
-      v.literal("YES"),
-      v.literal("NO"),
-      v.literal("NO_TRADE"),
+      v.literal('YES'),
+      v.literal('NO'),
+      v.literal('NO_TRADE'),
     ),
     consensusPercentage: v.number(),
     totalModels: v.number(),
@@ -47,17 +47,17 @@ export const createSignal = internalMutation({
     aggregatedKeyFactors: v.optional(v.array(v.string())),
     aggregatedRisks: v.optional(v.array(v.string())),
   },
-  returns: v.id("signals"),
-  handler: async (ctx, args): Promise<Id<"signals">> => {
+  returns: v.id('signals'),
+  handler: async (ctx, args): Promise<Id<'signals'>> => {
     // Per design decision: 80%+ = high, 60-79% = medium, <60% = low
     const confidenceLevel =
       args.consensusPercentage >= 80
-        ? ("high" as const)
+        ? ('high' as const)
         : args.consensusPercentage >= 60
-          ? ("medium" as const)
-          : ("low" as const);
+          ? ('medium' as const)
+          : ('low' as const);
 
-    return await ctx.db.insert("signals", {
+    return await ctx.db.insert('signals', {
       marketId: args.marketId,
       triggerTrade: args.triggerTrade,
       consensusDecision: args.consensusDecision,
@@ -75,14 +75,14 @@ export const createSignal = internalMutation({
       confidenceRange: args.confidenceRange,
       aggregatedKeyFactors: args.aggregatedKeyFactors,
       aggregatedRisks: args.aggregatedRisks,
-      schemaVersion: args.voteDistribution ? "2.0.0" : undefined, // Mark as v2 if structured
+      schemaVersion: args.voteDistribution ? '2.0.0' : undefined, // Mark as v2 if structured
     });
   },
 });
 
 export const aggregateTradeToSignal = internalMutation({
   args: {
-    signalId: v.id("signals"),
+    signalId: v.id('signals'),
     newTrade: tradeObjectValidator,
   },
   returns: v.null(),
@@ -109,23 +109,23 @@ export const aggregateTradeToSignal = internalMutation({
 
 // Common signal object validator for query returns
 const signalObjectValidator = v.object({
-  _id: v.id("signals"),
+  _id: v.id('signals'),
   _creationTime: v.number(),
-  marketId: v.id("markets"),
+  marketId: v.id('markets'),
   triggerTrade: v.union(tradeObjectValidator, v.array(tradeObjectValidator)),
   consensusDecision: v.union(
-    v.literal("YES"),
-    v.literal("NO"),
-    v.literal("NO_TRADE"),
+    v.literal('YES'),
+    v.literal('NO'),
+    v.literal('NO_TRADE'),
   ),
   consensusPercentage: v.number(),
   totalModels: v.number(),
   agreeingModels: v.number(),
   aggregatedReasoning: v.string(),
   confidenceLevel: v.union(
-    v.literal("high"),
-    v.literal("medium"),
-    v.literal("low"),
+    v.literal('high'),
+    v.literal('medium'),
+    v.literal('low'),
   ),
   isHighConfidence: v.boolean(),
   priceAtTrigger: v.number(),
@@ -151,7 +151,7 @@ const signalObjectValidator = v.object({
 });
 
 const marketObjectValidator = v.object({
-  _id: v.id("markets"),
+  _id: v.id('markets'),
   _creationTime: v.number(),
   polymarketId: v.string(),
   conditionId: v.optional(v.string()),
@@ -171,7 +171,7 @@ const marketObjectValidator = v.object({
   lastTradeAt: v.number(),
   lastAnalyzedAt: v.optional(v.number()),
   outcome: v.optional(
-    v.union(v.literal("YES"), v.literal("NO"), v.literal("INVALID"), v.null()),
+    v.union(v.literal('YES'), v.literal('NO'), v.literal('INVALID'), v.null()),
   ),
   resolvedAt: v.optional(v.number()),
   resolutionSource: v.optional(v.string()),
@@ -191,19 +191,19 @@ export const getLatestSignals = query({
   handler: async (ctx, args) => {
     const limit = args.limit ?? 20;
 
-    let signals: Doc<"signals">[];
+    let signals: Doc<'signals'>[];
 
     if (args.onlyHighConfidence) {
       signals = await ctx.db
-        .query("signals")
-        .withIndex("by_high_confidence", (q) => q.eq("isHighConfidence", true))
-        .order("desc")
+        .query('signals')
+        .withIndex('by_high_confidence', (q) => q.eq('isHighConfidence', true))
+        .order('desc')
         .take(limit);
     } else {
       signals = await ctx.db
-        .query("signals")
-        .withIndex("by_timestamp")
-        .order("desc")
+        .query('signals')
+        .withIndex('by_timestamp')
+        .order('desc')
         .take(limit);
     }
 
@@ -213,16 +213,16 @@ export const getLatestSignals = query({
 
 export const getSignalsByMarket = query({
   args: {
-    marketId: v.union(v.id("markets"), v.null()),
+    marketId: v.union(v.id('markets'), v.null()),
     limit: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
     const { marketId } = args;
     if (!marketId) return [];
     return await ctx.db
-      .query("signals")
-      .withIndex("by_market", (q) => q.eq("marketId", marketId))
-      .order("desc")
+      .query('signals')
+      .withIndex('by_market', (q) => q.eq('marketId', marketId))
+      .order('desc')
       .take(args.limit ?? 50);
   },
 });
@@ -232,31 +232,41 @@ export const getSignalsWithPagination = query({
     limit: v.optional(v.number()),
     onlyHighConfidence: v.optional(v.boolean()),
     decision: v.optional(
-      v.union(v.literal("YES"), v.literal("NO"), v.literal("NO_TRADE")),
+      v.union(v.literal('YES'), v.literal('NO'), v.literal('NO_TRADE')),
     ),
-    cursor: v.optional(v.id("signals")),
+    cursor: v.optional(v.id('signals')),
   },
+  returns: v.object({
+    items: v.array(v.any()),
+    hasMore: v.boolean(),
+    nextCursor: v.optional(v.id('signals')),
+  }),
   handler: async (ctx, args) => {
     const limit = args.limit ?? 20;
 
-    let baseQuery;
+    let signals: Doc<'signals'>[];
 
     if (args.onlyHighConfidence) {
-      baseQuery = ctx.db
-        .query("signals")
-        .withIndex("by_high_confidence", (q) => q.eq("isHighConfidence", true))
-        .order("desc");
+      signals = await ctx.db
+        .query('signals')
+        .withIndex('by_high_confidence', (q) => q.eq('isHighConfidence', true))
+        .order('desc')
+        .take(limit + 1);
     } else if (args.decision !== undefined) {
       const decision = args.decision;
-      baseQuery = ctx.db
-        .query("signals")
-        .withIndex("by_decision", (q) => q.eq("consensusDecision", decision))
-        .order("desc");
+      signals = await ctx.db
+        .query('signals')
+        .withIndex('by_decision', (q) => q.eq('consensusDecision', decision))
+        .order('desc')
+        .take(limit + 1);
     } else {
-      baseQuery = ctx.db.query("signals").withIndex("by_timestamp").order("desc");
+      signals = await ctx.db
+        .query('signals')
+        .withIndex('by_timestamp')
+        .order('desc')
+        .take(limit + 1);
     }
 
-    const signals = await baseQuery.take(limit + 1);
     const hasMore = signals.length > limit;
     const items = hasMore ? signals.slice(0, -1) : signals;
 
@@ -273,18 +283,18 @@ export const getSignalsWithPagination = query({
 
 export const getRecentSignalForMarket = query({
   args: {
-    marketId: v.id("markets"),
+    marketId: v.id('markets'),
     withinMs: v.number(), // e.g., 60000 for 1 minute
   },
   handler: async (ctx, args) => {
     const cutoff = Date.now() - args.withinMs;
 
     return await ctx.db
-      .query("signals")
-      .withIndex("by_market_time", (q) =>
-        q.eq("marketId", args.marketId).gte("signalTimestamp", cutoff),
+      .query('signals')
+      .withIndex('by_market_time', (q) =>
+        q.eq('marketId', args.marketId).gte('signalTimestamp', cutoff),
       )
-      .order("desc")
+      .order('desc')
       .first();
   },
 });
@@ -292,18 +302,18 @@ export const getRecentSignalForMarket = query({
 // Internal version for use in actions/mutations
 export const getRecentSignalForMarketInternal = query({
   args: {
-    marketId: v.id("markets"),
+    marketId: v.id('markets'),
     withinMs: v.number(),
   },
   handler: async (ctx, args) => {
     const cutoff = Date.now() - args.withinMs;
 
     return await ctx.db
-      .query("signals")
-      .withIndex("by_market_time", (q) =>
-        q.eq("marketId", args.marketId).gte("signalTimestamp", cutoff),
+      .query('signals')
+      .withIndex('by_market_time', (q) =>
+        q.eq('marketId', args.marketId).gte('signalTimestamp', cutoff),
       )
-      .order("desc")
+      .order('desc')
       .first();
   },
 });
@@ -318,7 +328,7 @@ export const getSignalStats = query({
     const sevenDaysAgo = now - 7 * 24 * 60 * 60 * 1000;
 
     // Get all signals for counting (this is fine for smaller datasets)
-    const allSignals = await ctx.db.query("signals").collect();
+    const allSignals = await ctx.db.query('signals').collect();
 
     const signalsLast24h = allSignals.filter(
       (s) => s.signalTimestamp >= oneDayAgo,
@@ -348,7 +358,7 @@ export const getSignalStats = query({
 // ============ SIGNAL DETAIL WITH PREDICTIONS ============
 
 export const getSignalWithPredictions = query({
-  args: { signalId: v.id("signals") },
+  args: { signalId: v.id('signals') },
   handler: async (ctx, args) => {
     const signal = await ctx.db.get(args.signalId);
     if (!signal) return null;
@@ -359,12 +369,18 @@ export const getSignalWithPredictions = query({
     // Signals are created from AI swarm analysis, so predictions should be within a small window
     const predictionWindow = 60 * 1000; // 1 minute
     const predictions = await ctx.db
-      .query("modelPredictions")
-      .withIndex("by_market", (q) => q.eq("marketId", signal.marketId))
+      .query('modelPredictions')
+      .withIndex('by_market', (q) => q.eq('marketId', signal.marketId))
       .filter((q) =>
         q.and(
-          q.gte(q.field("timestamp"), signal.signalTimestamp - predictionWindow),
-          q.lte(q.field("timestamp"), signal.signalTimestamp + predictionWindow),
+          q.gte(
+            q.field('timestamp'),
+            signal.signalTimestamp - predictionWindow,
+          ),
+          q.lte(
+            q.field('timestamp'),
+            signal.signalTimestamp + predictionWindow,
+          ),
         ),
       )
       .collect();
@@ -400,10 +416,10 @@ export const getSignalsSince = query({
   },
   handler: async (ctx, args) => {
     const signals = await ctx.db
-      .query("signals")
-      .withIndex("by_timestamp")
-      .filter((q) => q.gt(q.field("signalTimestamp"), args.since))
-      .order("desc")
+      .query('signals')
+      .withIndex('by_timestamp')
+      .filter((q) => q.gt(q.field('signalTimestamp'), args.since))
+      .order('desc')
       .take(args.limit ?? 20);
 
     return Promise.all(
@@ -422,8 +438,8 @@ export const getSignalsSince = query({
 
 async function enrichSignalsWithMarkets(
   ctx: QueryCtx,
-  signals: Doc<"signals">[],
-): Promise<(Doc<"signals"> & { market: Doc<"markets"> | null })[]> {
+  signals: Doc<'signals'>[],
+): Promise<(Doc<'signals'> & { market: Doc<'markets'> | null })[]> {
   return Promise.all(
     signals.map(async (signal) => {
       const market = await ctx.db.get(signal.marketId);

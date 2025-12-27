@@ -9,16 +9,16 @@ import {
   mutation,
   internalMutation,
   internalQuery,
-} from "./_generated/server";
-import { v } from "convex/values";
-import type { Id } from "./_generated/dataModel";
+} from './_generated/server';
+import { v } from 'convex/values';
+import type { Id } from './_generated/dataModel';
 
 // Input type for creating a trade
 const TradeInput = {
   conditionId: v.string(),
   slug: v.string(),
   eventSlug: v.string(),
-  side: v.union(v.literal("BUY"), v.literal("SELL")),
+  side: v.union(v.literal('BUY'), v.literal('SELL')),
   size: v.number(),
   price: v.number(),
   timestamp: v.number(),
@@ -35,27 +35,27 @@ const TradeInput = {
 
 export const insertTrade = internalMutation({
   args: TradeInput,
-  returns: v.id("trades"),
-  handler: async (ctx, args): Promise<Id<"trades">> => {
-    return ctx.db.insert("trades", args);
+  returns: v.id('trades'),
+  handler: async (ctx, args): Promise<Id<'trades'>> => {
+    return ctx.db.insert('trades', args);
   },
 });
 
 export const insertTradeWithSignal = internalMutation({
   args: {
     ...TradeInput,
-    signalId: v.id("signals"),
+    signalId: v.id('signals'),
   },
-  returns: v.id("trades"),
-  handler: async (ctx, args): Promise<Id<"trades">> => {
-    return ctx.db.insert("trades", args);
+  returns: v.id('trades'),
+  handler: async (ctx, args): Promise<Id<'trades'>> => {
+    return ctx.db.insert('trades', args);
   },
 });
 
 export const linkTradeToSignal = internalMutation({
   args: {
-    tradeId: v.id("trades"),
-    signalId: v.id("signals"),
+    tradeId: v.id('trades'),
+    signalId: v.id('signals'),
   },
   returns: v.null(),
   handler: async (ctx, args): Promise<null> => {
@@ -68,9 +68,9 @@ export const linkTradeToSignal = internalMutation({
 
 export const recordTrade = mutation({
   args: TradeInput,
-  returns: v.id("trades"),
-  handler: async (ctx, args): Promise<Id<"trades">> => {
-    return ctx.db.insert("trades", args);
+  returns: v.id('trades'),
+  handler: async (ctx, args): Promise<Id<'trades'>> => {
+    return ctx.db.insert('trades', args);
   },
 });
 
@@ -88,21 +88,21 @@ export const getRecentTradesByCondition = internalQuery({
 
     if (sinceTs !== undefined) {
       const trades = await ctx.db
-        .query("trades")
-        .withIndex("by_condition_time", (q) =>
-          q.eq("conditionId", args.conditionId).gt("timestamp", sinceTs)
+        .query('trades')
+        .withIndex('by_condition_time', (q) =>
+          q.eq('conditionId', args.conditionId).gt('timestamp', sinceTs),
         )
-        .order("desc")
+        .order('desc')
         .take(args.limit ?? 50);
       return trades;
     }
 
     const trades = await ctx.db
-      .query("trades")
-      .withIndex("by_condition_time", (q) =>
-        q.eq("conditionId", args.conditionId)
+      .query('trades')
+      .withIndex('by_condition_time', (q) =>
+        q.eq('conditionId', args.conditionId),
       )
-      .order("desc")
+      .order('desc')
       .take(args.limit ?? 50);
     return trades;
   },
@@ -116,11 +116,11 @@ export const getWhaleTradesSince = internalQuery({
   returns: v.array(v.any()),
   handler: async (ctx, args) => {
     const trades = await ctx.db
-      .query("trades")
-      .withIndex("by_whale", (q) =>
-        q.eq("isWhale", true).gt("timestamp", args.sinceTimestamp)
+      .query('trades')
+      .withIndex('by_whale', (q) =>
+        q.eq('isWhale', true).gt('timestamp', args.sinceTimestamp),
       )
-      .order("desc")
+      .order('desc')
       .take(args.limit ?? 100);
     return trades;
   },
@@ -140,16 +140,16 @@ export const listTrades = query({
   handler: async (ctx, args) => {
     const limit = args.limit ?? 50;
 
-    // Use paginated query
-    const result = await ctx.db
-      .query("trades")
-      .withIndex("by_timestamp")
-      .order("desc")
-      .paginate({ numItems: limit, cursor: args.cursor ?? null });
+    // Simple query with ordering by timestamp index
+    const trades = await ctx.db
+      .query('trades')
+      .withIndex('by_timestamp')
+      .order('desc')
+      .take(limit);
 
     return {
-      trades: result.page,
-      nextCursor: result.continueCursor,
+      trades,
+      nextCursor: null, // Simplified - no pagination for now
     };
   },
 });
@@ -166,15 +166,16 @@ export const listWhaleTrades = query({
   handler: async (ctx, args) => {
     const limit = args.limit ?? 50;
 
-    const result = await ctx.db
-      .query("trades")
-      .withIndex("by_whale", (q) => q.eq("isWhale", true))
-      .order("desc")
-      .paginate({ numItems: limit, cursor: args.cursor ?? null });
+    // Query whale trades using the composite index
+    const trades = await ctx.db
+      .query('trades')
+      .withIndex('by_whale', (q) => q.eq('isWhale', true))
+      .order('desc')
+      .take(limit);
 
     return {
-      trades: result.page,
-      nextCursor: result.continueCursor,
+      trades,
+      nextCursor: null, // Simplified - no pagination for now
     };
   },
 });
@@ -187,9 +188,9 @@ export const getTradesByMarket = query({
   returns: v.array(v.any()),
   handler: async (ctx, args) => {
     const trades = await ctx.db
-      .query("trades")
-      .withIndex("by_slug", (q) => q.eq("slug", args.slug))
-      .order("desc")
+      .query('trades')
+      .withIndex('by_slug', (q) => q.eq('slug', args.slug))
+      .order('desc')
       .take(args.limit ?? 50);
     return trades;
   },
@@ -203,9 +204,9 @@ export const getTradesByWallet = query({
   returns: v.array(v.any()),
   handler: async (ctx, args) => {
     const trades = await ctx.db
-      .query("trades")
-      .withIndex("by_wallet", (q) => q.eq("proxyWallet", args.proxyWallet))
-      .order("desc")
+      .query('trades')
+      .withIndex('by_wallet', (q) => q.eq('proxyWallet', args.proxyWallet))
+      .order('desc')
       .take(args.limit ?? 50);
     return trades;
   },
@@ -213,13 +214,13 @@ export const getTradesByWallet = query({
 
 export const getTradesBySignal = query({
   args: {
-    signalId: v.id("signals"),
+    signalId: v.id('signals'),
   },
   returns: v.array(v.any()),
   handler: async (ctx, args) => {
     const trades = await ctx.db
-      .query("trades")
-      .withIndex("by_signal", (q) => q.eq("signalId", args.signalId))
+      .query('trades')
+      .withIndex('by_signal', (q) => q.eq('signalId', args.signalId))
       .collect();
     return trades;
   },
@@ -241,8 +242,8 @@ export const getTradeStats = query({
     const since = args.sinceTimestamp ?? Date.now() / 1000 - 24 * 60 * 60; // Default: last 24h
 
     const trades = await ctx.db
-      .query("trades")
-      .withIndex("by_timestamp", (q) => q.gt("timestamp", since))
+      .query('trades')
+      .withIndex('by_timestamp', (q) => q.gt('timestamp', since))
       .collect();
 
     let totalVolume = 0;
