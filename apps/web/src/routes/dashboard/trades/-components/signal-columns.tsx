@@ -90,16 +90,20 @@ export const signalColumns: ColumnDef<Signal>[] = [
     accessorKey: 'signalTimestamp',
     header: ({ column }) => (
       <Button
-        variant="ghost"
+        variant='ghost'
         onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-        className="px-0 hover:bg-transparent"
+        className='px-0 hover:bg-transparent'
       >
         Time
-        <HugeiconsIcon icon={ArrowUpDownIcon} size={14} className="ml-2 opacity-50" />
+        <HugeiconsIcon
+          icon={ArrowUpDownIcon}
+          size={14}
+          className='ml-2 opacity-50'
+        />
       </Button>
     ),
     cell: ({ getValue }) => (
-      <span className="text-muted-foreground text-sm">
+      <span className='text-muted-foreground text-sm'>
         {formatTimeAgo(getValue() as number)}
       </span>
     ),
@@ -110,9 +114,11 @@ export const signalColumns: ColumnDef<Signal>[] = [
     cell: ({ row }) => {
       const market = row.original.market;
       return (
-        <div className="max-w-[280px]">
-          <p className="font-medium truncate">{market?.title ?? 'Unknown Market'}</p>
-          <p className="text-xs text-muted-foreground mt-0.5 truncate">
+        <div className='max-w-[280px]'>
+          <p className='font-medium truncate'>
+            {market?.title ?? 'Unknown Market'}
+          </p>
+          <p className='text-xs text-muted-foreground mt-0.5 truncate'>
             {market?.eventSlug ?? '—'}
           </p>
         </div>
@@ -123,12 +129,16 @@ export const signalColumns: ColumnDef<Signal>[] = [
     accessorKey: 'consensusDecision',
     header: ({ column }) => (
       <Button
-        variant="ghost"
+        variant='ghost'
         onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-        className="px-0 hover:bg-transparent"
+        className='px-0 hover:bg-transparent'
       >
         Decision
-        <HugeiconsIcon icon={ArrowUpDownIcon} size={14} className="ml-2 opacity-50" />
+        <HugeiconsIcon
+          icon={ArrowUpDownIcon}
+          size={14}
+          className='ml-2 opacity-50'
+        />
       </Button>
     ),
     cell: ({ getValue, row }) => {
@@ -140,9 +150,9 @@ export const signalColumns: ColumnDef<Signal>[] = [
         isResolved && decision !== 'NO_TRADE' ? decision === outcome : null;
 
       return (
-        <div className="flex items-center gap-2">
+        <div className='flex items-center gap-2'>
           <Badge
-            variant="outline"
+            variant='outline'
             className={`${config.bgColor} ${config.color} ${config.borderColor} border gap-1`}
           >
             <HugeiconsIcon icon={config.icon} size={12} />
@@ -163,16 +173,20 @@ export const signalColumns: ColumnDef<Signal>[] = [
     accessorKey: 'consensusPercentage',
     header: ({ column }) => (
       <Button
-        variant="ghost"
+        variant='ghost'
         onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-        className="px-0 hover:bg-transparent"
+        className='px-0 hover:bg-transparent'
       >
         Consensus
-        <HugeiconsIcon icon={ArrowUpDownIcon} size={14} className="ml-2 opacity-50" />
+        <HugeiconsIcon
+          icon={ArrowUpDownIcon}
+          size={14}
+          className='ml-2 opacity-50'
+        />
       </Button>
     ),
     cell: ({ getValue }) => (
-      <span className="text-sm font-medium tabular-nums">
+      <span className='text-sm font-medium tabular-nums'>
         {(getValue() as number).toFixed(0)}%
       </span>
     ),
@@ -181,12 +195,16 @@ export const signalColumns: ColumnDef<Signal>[] = [
     accessorKey: 'confidenceLevel',
     header: ({ column }) => (
       <Button
-        variant="ghost"
+        variant='ghost'
         onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-        className="px-0 hover:bg-transparent"
+        className='px-0 hover:bg-transparent'
       >
         Confidence
-        <HugeiconsIcon icon={ArrowUpDownIcon} size={14} className="ml-2 opacity-50" />
+        <HugeiconsIcon
+          icon={ArrowUpDownIcon}
+          size={14}
+          className='ml-2 opacity-50'
+        />
       </Button>
     ),
     cell: ({ getValue }) => {
@@ -197,7 +215,10 @@ export const signalColumns: ColumnDef<Signal>[] = [
         low: 'bg-white/5 text-white/50 border-white/10',
       };
       return (
-        <Badge variant="outline" className={`${colors[level]} border uppercase text-[10px] tracking-wider`}>
+        <Badge
+          variant='outline'
+          className={`${colors[level]} border uppercase text-[10px] tracking-wider`}
+        >
           {level}
         </Badge>
       );
@@ -207,16 +228,20 @@ export const signalColumns: ColumnDef<Signal>[] = [
     accessorKey: 'priceAtTrigger',
     header: ({ column }) => (
       <Button
-        variant="ghost"
+        variant='ghost'
         onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-        className="px-0 hover:bg-transparent"
+        className='px-0 hover:bg-transparent'
       >
         Price @ Signal
-        <HugeiconsIcon icon={ArrowUpDownIcon} size={14} className="ml-2 opacity-50" />
+        <HugeiconsIcon
+          icon={ArrowUpDownIcon}
+          size={14}
+          className='ml-2 opacity-50'
+        />
       </Button>
     ),
     cell: ({ getValue }) => (
-      <span className="text-sm tabular-nums">
+      <span className='text-sm tabular-nums'>
         {((getValue() as number) * 100).toFixed(0)}%
       </span>
     ),
@@ -226,19 +251,25 @@ export const signalColumns: ColumnDef<Signal>[] = [
     accessorFn: (row) => getTotalTradeSize(row.triggerTrade),
     header: ({ column }) => (
       <Button
-        variant="ghost"
+        variant='ghost'
         onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-        className="px-0 hover:bg-transparent"
+        className='px-0 hover:bg-transparent'
       >
         Trigger Size
-        <HugeiconsIcon icon={ArrowUpDownIcon} size={14} className="ml-2 opacity-50" />
+        <HugeiconsIcon
+          icon={ArrowUpDownIcon}
+          size={14}
+          className='ml-2 opacity-50'
+        />
       </Button>
     ),
     cell: ({ getValue }) => {
       const size = getValue() as number;
       const isWhale = size >= 5000;
       return (
-        <span className={`text-sm tabular-nums ${isWhale ? 'text-amber-400 font-medium' : ''}`}>
+        <span
+          className={`text-sm tabular-nums ${isWhale ? 'text-amber-400 font-medium' : ''}`}
+        >
           {formatUSD(size)}
           {isWhale && ' 🐋'}
         </span>

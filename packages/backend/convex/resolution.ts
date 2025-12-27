@@ -1,13 +1,13 @@
-import { v } from "convex/values";
+import { v } from 'convex/values';
 import {
   internalAction,
   internalMutation,
   mutation,
   query,
-} from "./_generated/server";
-import { internal } from "./_generated/api";
-import type { Id } from "./_generated/dataModel";
-import { api as polymarketApi } from "./polymarket/client";
+} from './_generated/server';
+import { internal } from './_generated/api';
+import type { Id } from './_generated/dataModel';
+import { api as polymarketApi } from './polymarket/client';
 
 // ============ HELPER FUNCTIONS ============
 
@@ -18,7 +18,7 @@ import { api as polymarketApi } from "./polymarket/client";
  */
 function parseOutcomeFromPrices(
   outcomePrices: string | null | undefined,
-): "YES" | "NO" | null {
+): 'YES' | 'NO' | null {
   if (!outcomePrices) return null;
 
   try {
@@ -31,8 +31,8 @@ function parseOutcomeFromPrices(
     // Threshold for considering a price as "resolved" (won)
     const RESOLUTION_THRESHOLD = 0.95;
 
-    if (yesPrice >= RESOLUTION_THRESHOLD) return "YES";
-    if (noPrice >= RESOLUTION_THRESHOLD) return "NO";
+    if (yesPrice >= RESOLUTION_THRESHOLD) return 'YES';
+    if (noPrice >= RESOLUTION_THRESHOLD) return 'NO';
 
     return null; // Not clearly resolved yet
   } catch {
@@ -49,13 +49,13 @@ export const checkMarketResolutions = internalAction({
   returns: v.array(
     v.object({
       conditionId: v.string(),
-      outcome: v.union(v.literal("YES"), v.literal("NO"), v.null()),
+      outcome: v.union(v.literal('YES'), v.literal('NO'), v.null()),
     }),
   ),
   handler: async (
     ctx,
     args,
-  ): Promise<Array<{ conditionId: string; outcome: "YES" | "NO" | null }>> => {
+  ): Promise<Array<{ conditionId: string; outcome: 'YES' | 'NO' | null }>> => {
     // 1. Get unresolved markets from our DB
     const unresolvedMarkets = await ctx.runQuery(
       internal.markets.getUnresolvedMarkets,
@@ -63,7 +63,7 @@ export const checkMarketResolutions = internalAction({
     );
 
     if (unresolvedMarkets.length === 0) {
-      console.log("No unresolved markets to check");
+      console.log('No unresolved markets to check');
       return [];
     }
 
@@ -73,7 +73,7 @@ export const checkMarketResolutions = internalAction({
       .filter((id): id is string => !!id);
 
     if (conditionIds.length === 0) {
-      console.log("No markets with condition IDs to check");
+      console.log('No markets with condition IDs to check');
       return [];
     }
 
@@ -91,7 +91,10 @@ export const checkMarketResolutions = internalAction({
       );
 
       // 4. Find newly resolved markets (closed with clear outcome from prices)
-      const resolved: Array<{ conditionId: string; outcome: "YES" | "NO" | null }> = [];
+      const resolved: Array<{
+        conditionId: string;
+        outcome: 'YES' | 'NO' | null;
+      }> = [];
 
       for (const m of apiMarkets) {
         // Market must be closed to be resolved
@@ -112,7 +115,7 @@ export const checkMarketResolutions = internalAction({
       console.log(`Found ${resolved.length} newly resolved markets`);
       return resolved;
     } catch (error) {
-      console.error("Failed to check market resolutions:", error);
+      console.error('Failed to check market resolutions:', error);
       return [];
     }
   },
@@ -141,7 +144,7 @@ export const checkEventResolutions = internalAction({
     );
 
     if (unclosedEvents.length === 0) {
-      console.log("No unclosed events to check");
+      console.log('No unclosed events to check');
       return [];
     }
 
@@ -160,7 +163,7 @@ export const checkEventResolutions = internalAction({
       console.log(`Found ${closed.length} newly closed events`);
       return closed;
     } catch (error) {
-      console.error("Failed to check event resolutions:", error);
+      console.error('Failed to check event resolutions:', error);
       return [];
     }
   },
@@ -171,15 +174,15 @@ export const checkEventResolutions = internalAction({
 export const updateMarketResolution = internalMutation({
   args: {
     polymarketId: v.string(),
-    outcome: v.union(v.literal("YES"), v.literal("NO"), v.null()),
+    outcome: v.union(v.literal('YES'), v.literal('NO'), v.null()),
     resolutionSource: v.optional(v.string()),
   },
-  returns: v.union(v.id("markets"), v.null()),
-  handler: async (ctx, args): Promise<Id<"markets"> | null> => {
+  returns: v.union(v.id('markets'), v.null()),
+  handler: async (ctx, args): Promise<Id<'markets'> | null> => {
     const market = await ctx.db
-      .query("markets")
-      .withIndex("by_polymarket_id", (q) =>
-        q.eq("polymarketId", args.polymarketId),
+      .query('markets')
+      .withIndex('by_polymarket_id', (q) =>
+        q.eq('polymarketId', args.polymarketId),
       )
       .first();
 
@@ -212,11 +215,11 @@ export const updateEventResolution = internalMutation({
     eventSlug: v.string(),
     closed: v.boolean(),
   },
-  returns: v.union(v.id("events"), v.null()),
-  handler: async (ctx, args): Promise<Id<"events"> | null> => {
+  returns: v.union(v.id('events'), v.null()),
+  handler: async (ctx, args): Promise<Id<'events'> | null> => {
     const event = await ctx.db
-      .query("events")
-      .withIndex("by_event_slug", (q) => q.eq("eventSlug", args.eventSlug))
+      .query('events')
+      .withIndex('by_event_slug', (q) => q.eq('eventSlug', args.eventSlug))
       .first();
 
     if (!event) {
@@ -346,15 +349,15 @@ export const getResolutionStatus = query({
   args: {},
   handler: async (ctx) => {
     const resolvedMarkets = await ctx.db
-      .query("markets")
-      .withIndex("by_resolved")
-      .filter((q) => q.neq(q.field("outcome"), undefined))
+      .query('markets')
+      .withIndex('by_resolved')
+      .filter((q) => q.neq(q.field('outcome'), undefined))
       .take(1000);
 
     const unresolvedWithSignals = await ctx.db
-      .query("markets")
-      .withIndex("by_active", (q) => q.eq("isActive", true))
-      .filter((q) => q.eq(q.field("outcome"), undefined))
+      .query('markets')
+      .withIndex('by_active', (q) => q.eq('isActive', true))
+      .filter((q) => q.eq(q.field('outcome'), undefined))
       .take(1000);
 
     // Find the most recent resolution

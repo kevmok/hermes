@@ -9,6 +9,7 @@ This document captures key design decisions made during planning for the Lofn si
 **Decision:** Size is already in USD from Polymarket WebSocket.
 
 **Current code to update:**
+
 ```typescript
 // apps/lofn/src/services/polymarket/WebSocketService.ts:99
 // BEFORE: const sizeUsd = t.size * t.price;
@@ -24,6 +25,7 @@ This document captures key design decisions made during planning for the Lofn si
 **Decision:** Aggregate multiple trades into a single signal within the time window.
 
 **Implementation:**
+
 - If a trade arrives within 60 seconds of an existing signal on same market:
   - Update the signal's `triggerTrade` to be an **array of trades**
   - Add the new trade to the array
@@ -31,6 +33,7 @@ This document captures key design decisions made during planning for the Lofn si
 - This lets users see "3 whale trades totaling $200k" rather than separate signals
 
 **Schema change:**
+
 ```typescript
 triggerTrade: v.union(
   // Single trade (backwards compat)
@@ -57,10 +60,12 @@ triggerTrade: v.union(
 ### 3. Consensus Thresholds
 
 **Decision:**
+
 - **Minimum to create signal:** 60% consensus
 - **High confidence badge:** 80%+ consensus
 
 **Implementation:**
+
 ```typescript
 // Don't create signal if consensus < 60%
 if (swarmResponse.consensusPercentage < 60) {
@@ -85,6 +90,7 @@ isHighConfidence: consensusPercentage >= 80
 **Decision:** Store INVALID outcomes but mark them as non-applicable in metrics.
 
 **Schema update to markets:**
+
 ```typescript
 outcome: v.optional(v.union(
   v.literal("YES"),
@@ -95,6 +101,7 @@ outcome: v.optional(v.union(
 ```
 
 **Metrics calculation:**
+
 ```typescript
 // Only count YES/NO outcomes in win rate
 if (outcome === 'YES' || outcome === 'NO') {
@@ -113,6 +120,7 @@ if (outcome === 'YES' || outcome === 'NO') {
 **Decision:** Cache for 5 minutes.
 
 **Implementation:**
+
 - Add `performanceStats` singleton table
 - Background job recalculates every 5 minutes
 - Frontend queries cached stats (instant)
@@ -138,6 +146,7 @@ performanceStats: defineTable({
 **Decision:** Resume from current, accept potential data loss during downtime.
 
 **Rationale:**
+
 - Simplifies architecture
 - Historical API already fetches last 24h on startup
 - Missing a few trades during brief restart is acceptable
@@ -151,6 +160,7 @@ performanceStats: defineTable({
 **Decision:** Under 2 minutes from trade to frontend display.
 
 **Breakdown:**
+
 - Trade → Filter: ~10ms (existing)
 - Filter → Convex: ~100ms (existing)
 - Convex → AI Swarm: 30-90 seconds (3 models in parallel)
@@ -164,16 +174,16 @@ performanceStats: defineTable({
 
 ## Summary Table
 
-| Decision | Value | Impact |
-|----------|-------|--------|
-| Trade size | Already USD | Fix multiplication bug |
-| Deduplication | Aggregate trades | Schema change, richer signals |
-| Min consensus | 60% | Fewer but higher quality signals |
-| High confidence | 80% | Aligned with confidence level |
+| Decision         | Value            | Impact                           |
+| ---------------- | ---------------- | -------------------------------- |
+| Trade size       | Already USD      | Fix multiplication bug           |
+| Deduplication    | Aggregate trades | Schema change, richer signals    |
+| Min consensus    | 60%              | Fewer but higher quality signals |
+| High confidence  | 80%              | Aligned with confidence level    |
 | Invalid outcomes | Track separately | Clean metrics, historical record |
-| Metrics caching | 5 min TTL | Fast dashboard, slight staleness |
-| Restart behavior | Resume current | No backfill complexity |
-| Latency target | < 2 min | Current arch is sufficient |
+| Metrics caching  | 5 min TTL        | Fast dashboard, slight staleness |
+| Restart behavior | Resume current   | No backfill complexity           |
+| Latency target   | < 2 min          | Current arch is sufficient       |
 
 ---
 

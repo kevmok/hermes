@@ -3,12 +3,14 @@
 ## Overview
 
 Implement two backend systems that enable performance tracking:
+
 1. **Resolution Updater Cron** - Automatically fetch and store market outcomes from Polymarket
 2. **Performance Metrics Aggregation** - Calculate win rate, ROI, and other stats
 
 ## Problem Statement / Motivation
 
 To measure AI signal accuracy, we need to:
+
 - Know the actual outcome of markets (YES or NO)
 - Compare AI predictions against outcomes
 - Calculate aggregate performance metrics
@@ -21,6 +23,7 @@ Currently, markets are tracked while active but their final resolution is never 
 ### Component 1: Resolution Updater Cron
 
 A scheduled Convex function that:
+
 1. Runs hourly (or on-demand)
 2. Queries Polymarket's Gamma Markets API for resolved markets
 3. Updates the `markets` table with outcomes
@@ -29,6 +32,7 @@ A scheduled Convex function that:
 ### Component 2: Performance Metrics Aggregation
 
 A query system that:
+
 1. Joins signals with resolved markets
 2. Calculates accuracy per decision type
 3. Computes simulated ROI
@@ -65,12 +69,12 @@ A query system that:
 
 ### Files to Create/Modify
 
-| File | Purpose |
-|------|---------|
-| `packages/backend/convex/resolution.ts` | Resolution fetching and updating |
-| `packages/backend/convex/performanceMetrics.ts` | Stats calculation queries |
-| `packages/backend/convex/crons.ts` | Add resolution cron job |
-| `packages/backend/convex/scheduledJobs.ts` | Resolution job implementation |
+| File                                            | Purpose                          |
+| ----------------------------------------------- | -------------------------------- |
+| `packages/backend/convex/resolution.ts`         | Resolution fetching and updating |
+| `packages/backend/convex/performanceMetrics.ts` | Stats calculation queries        |
+| `packages/backend/convex/crons.ts`              | Add resolution cron job          |
+| `packages/backend/convex/scheduledJobs.ts`      | Resolution job implementation    |
 
 ### Resolution Module
 
@@ -671,12 +675,12 @@ export default crons;
 
 ## Risk Analysis
 
-| Risk | Likelihood | Impact | Mitigation |
-|------|------------|--------|------------|
-| Polymarket API changes | Low | High | Monitor for 4xx errors, add fallback |
-| API rate limiting | Medium | Low | Use hourly cron, not more frequent |
-| Outcome mapping errors | Low | Medium | Log unknown resolution strings |
-| Slow performance queries | Medium | Medium | Add caching layer if needed |
+| Risk                     | Likelihood | Impact | Mitigation                           |
+| ------------------------ | ---------- | ------ | ------------------------------------ |
+| Polymarket API changes   | Low        | High   | Monitor for 4xx errors, add fallback |
+| API rate limiting        | Medium     | Low    | Use hourly cron, not more frequent   |
+| Outcome mapping errors   | Low        | Medium | Log unknown resolution strings       |
+| Slow performance queries | Medium     | Medium | Add caching layer if needed          |
 
 ## Future Considerations
 
@@ -688,10 +692,12 @@ export default crons;
 ## References
 
 ### Internal References
+
 - Markets schema: `packages/backend/convex/schema.ts:71-96`
 - Crons pattern: `packages/backend/convex/crons.ts`
 - Insights queries: `packages/backend/convex/insights.ts`
 
 ### External References
+
 - Polymarket Gamma API: https://docs.polymarket.com
 - Convex cron jobs: https://docs.convex.dev/scheduling/cron-jobs

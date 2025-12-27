@@ -1,4 +1,4 @@
-import { Schema } from "effect";
+import { Schema } from 'effect';
 
 /**
  * Structured output schema for AI prediction responses.
@@ -7,9 +7,14 @@ import { Schema } from "effect";
  */
 
 // Decision enum for trading recommendations
-export const DecisionSchema = Schema.Literal("YES", "NO", "NO_TRADE").annotations({
-  identifier: "Decision",
-  description: "Trading decision: YES to buy YES shares, NO to buy NO shares, NO_TRADE to abstain",
+export const DecisionSchema = Schema.Literal(
+  'YES',
+  'NO',
+  'NO_TRADE',
+).annotations({
+  identifier: 'Decision',
+  description:
+    'Trading decision: YES to buy YES shares, NO to buy NO shares, NO_TRADE to abstain',
 });
 
 export type Decision = typeof DecisionSchema.Type;
@@ -17,18 +22,18 @@ export type Decision = typeof DecisionSchema.Type;
 // Structured reasoning with key factors and risks
 export const ReasoningSchema = Schema.Struct({
   summary: Schema.String.annotations({
-    description: "Brief summary of the reasoning (max 500 chars)",
+    description: 'Brief summary of the reasoning (max 500 chars)',
   }),
 
   keyFactors: Schema.Array(Schema.String).annotations({
-    description: "1-5 key factors influencing the decision",
+    description: '1-5 key factors influencing the decision',
   }),
 
   risks: Schema.Array(Schema.String).annotations({
-    description: "Up to 3 risk factors to consider",
+    description: 'Up to 3 risk factors to consider',
   }),
 }).annotations({
-  identifier: "Reasoning",
+  identifier: 'Reasoning',
 });
 
 export type Reasoning = typeof ReasoningSchema.Type;
@@ -36,18 +41,19 @@ export type Reasoning = typeof ReasoningSchema.Type;
 // Edge assessment comparing model estimate to market price
 export const EdgeAssessmentSchema = Schema.Struct({
   hasEdge: Schema.Boolean.annotations({
-    description: "Whether there is a significant edge to exploit",
+    description: 'Whether there is a significant edge to exploit',
   }),
 
   edgeSize: Schema.Number.annotations({
-    description: "Size of edge in percentage points (-100 to 100)",
+    description: 'Size of edge in percentage points (-100 to 100)',
   }),
 
-  direction: Schema.Literal("underpriced", "overpriced", "fair").annotations({
-    description: "Whether the market is underpriced, overpriced, or fairly priced",
+  direction: Schema.Literal('underpriced', 'overpriced', 'fair').annotations({
+    description:
+      'Whether the market is underpriced, overpriced, or fairly priced',
   }),
 }).annotations({
-  identifier: "EdgeAssessment",
+  identifier: 'EdgeAssessment',
 });
 
 export type EdgeAssessment = typeof EdgeAssessmentSchema.Type;
@@ -60,22 +66,23 @@ export const PredictionOutputSchema = Schema.Struct({
   decision: DecisionSchema,
 
   confidence: Schema.Number.annotations({
-    description: "Confidence level 0-100 in the decision",
+    description: 'Confidence level 0-100 in the decision',
   }),
 
   reasoning: ReasoningSchema,
 
   estimatedProbability: Schema.optional(Schema.Number).annotations({
-    description: "Estimated true probability of YES outcome (0-100)",
+    description: 'Estimated true probability of YES outcome (0-100)',
   }),
 
   edgeAssessment: Schema.optional(EdgeAssessmentSchema).annotations({
-    description: "Assessment of pricing edge vs market",
+    description: 'Assessment of pricing edge vs market',
   }),
 }).annotations({
-  identifier: "PredictionOutput",
-  title: "AI Prediction Output",
-  description: "Structured output from an AI model analyzing a prediction market",
+  identifier: 'PredictionOutput',
+  title: 'AI Prediction Output',
+  description:
+    'Structured output from an AI model analyzing a prediction market',
 });
 
 export type PredictionOutput = typeof PredictionOutputSchema.Type;

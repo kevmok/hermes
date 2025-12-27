@@ -26,11 +26,13 @@ The `apps/lofn` service already provides:
 ## What This Plan Adds
 
 The current flow sends trades to Convex which triggers AI analysis and stores insights. However:
+
 - **No whale trade context** - insights don't capture the triggering trade details
 - **No deduplication** - same market can be analyzed multiple times per minute
 - **Insights vs Signals** - insights are time-based, signals are trade-triggered
 
 This plan modifies the flow to:
+
 1. Store signal with trade context (size, side, price at trigger)
 2. Add deduplication (1 signal per market per minute)
 3. Create explicit `signals` table separate from `insights`
@@ -76,13 +78,13 @@ This plan modifies the flow to:
 
 ### Files to Modify
 
-| File | Changes |
-|------|---------|
-| `packages/backend/convex/markets.ts` | Add trade context to `upsertMarket`, trigger signal creation |
-| `packages/backend/convex/analysis.ts` | Modify `analyzeMarketWithSwarm` to return signal-ready data |
-| `packages/backend/convex/signals.ts` | Add `createSignalFromAnalysis` internal mutation |
-| `apps/lofn/src/services/polymarket/WebSocketService.ts` | Pass trade details to upsert (minor) |
-| `apps/lofn/src/services/data/ConvexDataService.ts` | Update `MarketData` type with trade context |
+| File                                                    | Changes                                                      |
+| ------------------------------------------------------- | ------------------------------------------------------------ |
+| `packages/backend/convex/markets.ts`                    | Add trade context to `upsertMarket`, trigger signal creation |
+| `packages/backend/convex/analysis.ts`                   | Modify `analyzeMarketWithSwarm` to return signal-ready data  |
+| `packages/backend/convex/signals.ts`                    | Add `createSignalFromAnalysis` internal mutation             |
+| `apps/lofn/src/services/polymarket/WebSocketService.ts` | Pass trade details to upsert (minor)                         |
+| `apps/lofn/src/services/data/ConvexDataService.ts`      | Update `MarketData` type with trade context                  |
 
 ### Global Filters Schema
 
@@ -678,21 +680,23 @@ export const runTradeProcessor = (convexUrl: string) =>
 
 ## Risk Analysis
 
-| Risk | Likelihood | Impact | Mitigation |
-|------|------------|--------|------------|
-| WebSocket rate limiting | Medium | High | Implement backoff, respect rate limits |
-| AI API costs on high volume | Medium | Medium | Deduplication, min trade size filter |
-| RTDS message format changes | Low | High | Flexible parsing, log unknown formats |
-| Convex action timeout | N/A | N/A | Using external service, not action |
+| Risk                        | Likelihood | Impact | Mitigation                             |
+| --------------------------- | ---------- | ------ | -------------------------------------- |
+| WebSocket rate limiting     | Medium     | High   | Implement backoff, respect rate limits |
+| AI API costs on high volume | Medium     | Medium | Deduplication, min trade size filter   |
+| RTDS message format changes | Low        | High   | Flexible parsing, log unknown formats  |
+| Convex action timeout       | N/A        | N/A    | Using external service, not action     |
 
 ## References
 
 ### Internal References
+
 - Existing Effect.ts patterns: `apps/lofn/src/services/`
 - AI swarm: `packages/backend/convex/ai/swarm.ts`
 - Convex client pattern: `apps/lofn/src/services/data/ConvexDataService.ts`
 
 ### External References
+
 - Polymarket RTDS: https://github.com/Polymarket/real-time-data-client
 - Effect.ts Stream: https://effect.website/docs/stream
 - Convex HTTP client: https://docs.convex.dev/client/javascript

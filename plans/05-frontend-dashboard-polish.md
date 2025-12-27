@@ -3,6 +3,7 @@
 ## Overview
 
 Complete the frontend experience with:
+
 1. **Performance Metrics Dashboard Header** - Real-time stats display
 2. **Signal Detail Modal** - Full breakdown with model predictions
 3. **Signal History Log** - Paginated history with outcome tracking
@@ -13,6 +14,7 @@ Complete the frontend experience with:
 ## Problem Statement / Motivation
 
 With signals flowing and basic display complete, users need:
+
 - At-a-glance performance metrics (win rate, ROI, etc.)
 - Detailed view of individual signals with all model predictions
 - History view to track past performance
@@ -51,16 +53,16 @@ With signals flowing and basic display complete, users need:
 
 ### Files to Create/Modify
 
-| File | Purpose |
-|------|---------|
-| `apps/web/src/routes/dashboard/-components/performance-header.tsx` | Stats header component |
-| `apps/web/src/routes/dashboard/signals/-components/signal-detail-modal.tsx` | Full signal view modal |
-| `apps/web/src/routes/dashboard/signals/history.tsx` | Signal history page |
-| `apps/web/src/routes/dashboard/-components/notifications-bell.tsx` | Notification dropdown |
-| `apps/web/src/routes/dashboard/-components/filter-presets.tsx` | Global filter controls |
-| `apps/web/src/routes/dashboard/route.tsx` | Add header to layout |
-| `packages/backend/convex/schema.ts` | Add user lastSeenTimestamp |
-| `packages/backend/convex/users.ts` | User notification tracking |
+| File                                                                        | Purpose                    |
+| --------------------------------------------------------------------------- | -------------------------- |
+| `apps/web/src/routes/dashboard/-components/performance-header.tsx`          | Stats header component     |
+| `apps/web/src/routes/dashboard/signals/-components/signal-detail-modal.tsx` | Full signal view modal     |
+| `apps/web/src/routes/dashboard/signals/history.tsx`                         | Signal history page        |
+| `apps/web/src/routes/dashboard/-components/notifications-bell.tsx`          | Notification dropdown      |
+| `apps/web/src/routes/dashboard/-components/filter-presets.tsx`              | Global filter controls     |
+| `apps/web/src/routes/dashboard/route.tsx`                                   | Add header to layout       |
+| `packages/backend/convex/schema.ts`                                         | Add user lastSeenTimestamp |
+| `packages/backend/convex/users.ts`                                          | User notification tracking |
 
 ## Technical Approach
 
@@ -924,11 +926,11 @@ function SignalHistoryPage() {
 
 ## Risk Analysis
 
-| Risk | Likelihood | Impact | Mitigation |
-|------|------------|--------|------------|
-| Modal performance with many predictions | Low | Medium | Limit predictions shown |
-| Notification count accuracy | Low | Low | Use Convex real-time |
-| Layout complexity on mobile | Medium | Medium | Progressive disclosure |
+| Risk                                    | Likelihood | Impact | Mitigation              |
+| --------------------------------------- | ---------- | ------ | ----------------------- |
+| Modal performance with many predictions | Low        | Medium | Limit predictions shown |
+| Notification count accuracy             | Low        | Low    | Use Convex real-time    |
+| Layout complexity on mobile             | Medium     | Medium | Progressive disclosure  |
 
 ## Future Considerations
 
@@ -940,11 +942,13 @@ function SignalHistoryPage() {
 ## References
 
 ### Internal References
+
 - Existing dialog: `apps/web/src/components/ui/dialog.tsx`
 - Stats cards pattern: `apps/web/src/routes/dashboard/-components/stats-cards.tsx`
 - Insights page: `apps/web/src/routes/dashboard/insights/index.tsx`
 
 ### External References
+
 - shadcn/ui Dialog: https://ui.shadcn.com/docs/components/dialog
 - shadcn/ui Tabs: https://ui.shadcn.com/docs/components/tabs
 - Convex Auth: https://docs.convex.dev/auth

@@ -1,13 +1,13 @@
-import { LanguageModel } from "@effect/ai";
-import { Duration, Effect, Layer, Schedule } from "effect";
-import { PrimaryModelLayer, OpenAiLayer, GoogleLayer } from "./models";
+import { LanguageModel } from '@effect/ai';
+import { Duration, Effect, Layer, Schedule } from 'effect';
+import { PrimaryModelLayer, OpenAiLayer, GoogleLayer } from './models';
 import {
   PredictionOutputSchema,
   type PredictionOutput,
   type Decision,
   type SwarmResult,
   type SwarmResponse,
-} from "./schema";
+} from './schema';
 
 // Re-export types for external use
 export type { SwarmResult, SwarmResponse, PredictionOutput, Decision };
@@ -21,7 +21,7 @@ export type { SwarmResult, SwarmResponse, PredictionOutput, Decision };
 const calculateConsensus = (results: SwarmResult[]): SwarmResponse => {
   const successfulResults = results.filter(
     (r): r is SwarmResult & { prediction: PredictionOutput } =>
-      r.prediction !== null
+      r.prediction !== null,
   );
 
   // Initialize vote distribution
@@ -30,7 +30,7 @@ const calculateConsensus = (results: SwarmResult[]): SwarmResponse => {
   if (successfulResults.length === 0) {
     return {
       results,
-      consensusDecision: "NO_TRADE",
+      consensusDecision: 'NO_TRADE',
       consensusPercentage: 0,
       totalModels: results.length,
       successfulModels: 0,
@@ -39,7 +39,7 @@ const calculateConsensus = (results: SwarmResult[]): SwarmResponse => {
       confidenceRange: { min: 0, max: 0 },
       aggregatedKeyFactors: [],
       aggregatedRisks: [],
-      aggregatedReasoning: "",
+      aggregatedReasoning: '',
     };
   }
 
@@ -50,15 +50,17 @@ const calculateConsensus = (results: SwarmResult[]): SwarmResponse => {
 
   // Filter to only trading decisions (YES or NO) for consensus
   const tradingResults = successfulResults.filter(
-    (r) => r.prediction.decision !== "NO_TRADE"
+    (r) => r.prediction.decision !== 'NO_TRADE',
   );
 
   // Default to NO_TRADE if no trading votes
   if (tradingResults.length === 0) {
-    const allConfidences = successfulResults.map((r) => r.prediction.confidence);
+    const allConfidences = successfulResults.map(
+      (r) => r.prediction.confidence,
+    );
     return {
       results,
-      consensusDecision: "NO_TRADE",
+      consensusDecision: 'NO_TRADE',
       consensusPercentage: 100,
       totalModels: results.length,
       successfulModels: successfulResults.length,
@@ -81,9 +83,9 @@ const calculateConsensus = (results: SwarmResult[]): SwarmResponse => {
 
   for (const result of tradingResults) {
     const confidence = result.prediction.confidence;
-    if (result.prediction.decision === "YES") {
+    if (result.prediction.decision === 'YES') {
       yesWeightedScore += confidence;
-    } else if (result.prediction.decision === "NO") {
+    } else if (result.prediction.decision === 'NO') {
       noWeightedScore += confidence;
     }
   }
@@ -93,18 +95,18 @@ const calculateConsensus = (results: SwarmResult[]): SwarmResponse => {
   let agreeingResults: typeof successfulResults;
 
   if (yesWeightedScore > noWeightedScore) {
-    consensusDecision = "YES";
+    consensusDecision = 'YES';
     agreeingResults = successfulResults.filter(
-      (r) => r.prediction.decision === "YES"
+      (r) => r.prediction.decision === 'YES',
     );
   } else if (noWeightedScore > yesWeightedScore) {
-    consensusDecision = "NO";
+    consensusDecision = 'NO';
     agreeingResults = successfulResults.filter(
-      (r) => r.prediction.decision === "NO"
+      (r) => r.prediction.decision === 'NO',
     );
   } else {
     // Tie - default to NO_TRADE
-    consensusDecision = "NO_TRADE";
+    consensusDecision = 'NO_TRADE';
     agreeingResults = successfulResults;
   }
 
@@ -140,7 +142,7 @@ const calculateConsensus = (results: SwarmResult[]): SwarmResponse => {
  * Deduplicates and takes top 5.
  */
 const aggregateKeyFactors = (
-  results: Array<{ prediction: PredictionOutput }>
+  results: Array<{ prediction: PredictionOutput }>,
 ): string[] => {
   const allFactors = results.flatMap((r) => r.prediction.reasoning.keyFactors);
   // Deduplicate by lowercasing and comparing
@@ -161,7 +163,7 @@ const aggregateKeyFactors = (
  * Deduplicates and takes top 3.
  */
 const aggregateRisks = (
-  results: Array<{ prediction: PredictionOutput }>
+  results: Array<{ prediction: PredictionOutput }>,
 ): string[] => {
   const allRisks = results.flatMap((r) => r.prediction.reasoning.risks);
   const seen = new Set<string>();
@@ -180,11 +182,11 @@ const aggregateRisks = (
  * Aggregate reasoning summaries from agreeing models.
  */
 const aggregateReasoning = (
-  results: Array<{ prediction: PredictionOutput }>
+  results: Array<{ prediction: PredictionOutput }>,
 ): string => {
   return results
     .map((r) => r.prediction.reasoning.summary)
-    .join(" | ")
+    .join(' | ')
     .slice(0, 1000);
 };
 
@@ -196,7 +198,7 @@ const queryWithLayer = (
   // biome-ignore lint/suspicious/noExplicitAny: Effect Layer types are complex
   layer: Layer.Layer<LanguageModel.LanguageModel, any, any>,
   systemPrompt: string,
-  userPrompt: string
+  userPrompt: string,
 ) =>
   Effect.gen(function* () {
     const startTime = Date.now();
@@ -206,11 +208,11 @@ const queryWithLayer = (
       // Use message array format to include system prompt
       const response = yield* model.generateObject({
         prompt: [
-          { role: "system" as const, content: systemPrompt },
-          { role: "user" as const, content: userPrompt },
+          { role: 'system' as const, content: systemPrompt },
+          { role: 'user' as const, content: userPrompt },
         ],
         schema: PredictionOutputSchema,
-        objectName: "prediction",
+        objectName: 'prediction',
       });
       return response;
     }).pipe(
@@ -220,8 +222,8 @@ const queryWithLayer = (
         Effect.succeed({
           value: null as PredictionOutput | null,
           error: String(error),
-        })
-      )
+        }),
+      ),
     );
 
     const responseTimeMs = Date.now() - startTime;
@@ -297,30 +299,30 @@ export const querySwarm = (systemPrompt: string, userPrompt: string) =>
 
     if (process.env.ANTHROPIC_KEY) {
       models.push({
-        name: "claude-sonnet-4",
+        name: 'claude-sonnet-4',
         layer: PrimaryModelLayer,
       });
     }
 
     if (process.env.OPENAI_KEY) {
       models.push({
-        name: "gpt-4o",
+        name: 'gpt-4o',
         layer: OpenAiLayer,
       });
     }
 
     if (process.env.GEMINI_KEY) {
       models.push({
-        name: "gemini-1.5-pro",
+        name: 'gemini-1.5-pro',
         layer: GoogleLayer,
       });
     }
 
     if (models.length === 0) {
-      console.warn("No AI models configured - check API keys");
+      console.warn('No AI models configured - check API keys');
       return {
         results: [],
-        consensusDecision: "NO_TRADE" as const,
+        consensusDecision: 'NO_TRADE' as const,
         consensusPercentage: 0,
         totalModels: 0,
         successfulModels: 0,
@@ -329,7 +331,7 @@ export const querySwarm = (systemPrompt: string, userPrompt: string) =>
         confidenceRange: { min: 0, max: 0 },
         aggregatedKeyFactors: [],
         aggregatedRisks: [],
-        aggregatedReasoning: "",
+        aggregatedReasoning: '',
       };
     }
 
@@ -338,17 +340,17 @@ export const querySwarm = (systemPrompt: string, userPrompt: string) =>
 
     // Retry schedule: exponential backoff starting at 1s, max 3 retries
     const retrySchedule = Schedule.exponential(Duration.seconds(1)).pipe(
-      Schedule.intersect(Schedule.recurs(3))
+      Schedule.intersect(Schedule.recurs(3)),
     );
 
     // Query all models with limited concurrency and retry on transient failures
     const results = yield* Effect.all(
       models.map(({ name, layer }) =>
         queryWithLayer(name, layer, systemPrompt, userPrompt).pipe(
-          Effect.retry(retrySchedule)
-        )
+          Effect.retry(retrySchedule),
+        ),
       ),
-      { concurrency: 3 }
+      { concurrency: 3 },
     );
 
     const totalTime = Date.now() - startTime;
@@ -358,11 +360,11 @@ export const querySwarm = (systemPrompt: string, userPrompt: string) =>
     for (const result of results) {
       if (result.error) {
         console.log(
-          `  ${result.modelName}: ERROR: ${result.error.slice(0, 50)} (${result.responseTimeMs}ms)`
+          `  ${result.modelName}: ERROR: ${result.error.slice(0, 50)} (${result.responseTimeMs}ms)`,
         );
       } else if (result.prediction) {
         console.log(
-          `  ${result.modelName}: ${result.prediction.decision} (${result.prediction.confidence}% confidence, ${result.responseTimeMs}ms)`
+          `  ${result.modelName}: ${result.prediction.decision} (${result.prediction.confidence}% confidence, ${result.responseTimeMs}ms)`,
         );
       }
     }

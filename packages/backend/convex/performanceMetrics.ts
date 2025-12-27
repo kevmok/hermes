@@ -1,5 +1,5 @@
-import { v } from "convex/values";
-import { query } from "./_generated/server";
+import { v } from 'convex/values';
+import { query } from './_generated/server';
 
 // ============ CORE METRICS QUERY ============
 
@@ -14,25 +14,26 @@ export const getPerformanceStats = query({
 
     // Get all signals (optionally filtered by time)
     let signalsQuery = ctx.db
-      .query("signals")
-      .withIndex("by_timestamp")
-      .order("desc");
+      .query('signals')
+      .withIndex('by_timestamp')
+      .order('desc');
 
-    const allSignals = sinceMs > 0
-      ? await signalsQuery.filter((q) =>
-          q.gte(q.field("signalTimestamp"), sinceMs),
-        ).collect()
-      : await signalsQuery.collect();
+    const allSignals =
+      sinceMs > 0
+        ? await signalsQuery
+            .filter((q) => q.gte(q.field('signalTimestamp'), sinceMs))
+            .collect()
+        : await signalsQuery.collect();
 
     // Get all resolved markets
     const resolvedMarkets = await ctx.db
-      .query("markets")
-      .withIndex("by_resolved")
-      .filter((q) => q.neq(q.field("outcome"), undefined))
+      .query('markets')
+      .withIndex('by_resolved')
+      .filter((q) => q.neq(q.field('outcome'), undefined))
       .collect();
 
     // Create lookup map for resolved markets
-    const resolvedMap = new Map<string, "YES" | "NO" | "INVALID" | null>();
+    const resolvedMap = new Map<string, 'YES' | 'NO' | 'INVALID' | null>();
     for (const market of resolvedMarkets) {
       resolvedMap.set(market._id, market.outcome ?? null);
     }
@@ -59,8 +60,8 @@ export const getPerformanceStats = query({
 
     for (const signal of allSignals) {
       // Count by decision type
-      if (signal.consensusDecision === "YES") yesSignals++;
-      else if (signal.consensusDecision === "NO") noSignals++;
+      if (signal.consensusDecision === 'YES') yesSignals++;
+      else if (signal.consensusDecision === 'NO') noSignals++;
       else noTradeSignals++;
 
       // High confidence tracking
@@ -74,11 +75,11 @@ export const getPerformanceStats = query({
 
       // Check against resolved outcome
       const outcome = resolvedMap.get(signal.marketId);
-      if (outcome !== undefined && outcome !== null && outcome !== "INVALID") {
+      if (outcome !== undefined && outcome !== null && outcome !== 'INVALID') {
         signalsOnResolved++;
 
         // Skip NO_TRADE for accuracy calculation
-        if (signal.consensusDecision === "NO_TRADE") continue;
+        if (signal.consensusDecision === 'NO_TRADE') continue;
 
         const isCorrect = signal.consensusDecision === outcome;
 
@@ -155,18 +156,18 @@ export const getSignalAccuracyByDecision = query({
   handler: async (ctx) => {
     // Get all signals
     const signals = await ctx.db
-      .query("signals")
-      .withIndex("by_timestamp")
+      .query('signals')
+      .withIndex('by_timestamp')
       .collect();
 
     // Get resolved markets
     const resolvedMarkets = await ctx.db
-      .query("markets")
-      .withIndex("by_resolved")
-      .filter((q) => q.neq(q.field("outcome"), undefined))
+      .query('markets')
+      .withIndex('by_resolved')
+      .filter((q) => q.neq(q.field('outcome'), undefined))
       .collect();
 
-    const resolvedMap = new Map<string, "YES" | "NO" | "INVALID" | null>();
+    const resolvedMap = new Map<string, 'YES' | 'NO' | 'INVALID' | null>();
     for (const market of resolvedMarkets) {
       resolvedMap.set(market._id, market.outcome ?? null);
     }
@@ -183,7 +184,7 @@ export const getSignalAccuracyByDecision = query({
 
       const outcome = resolvedMap.get(signal.marketId);
       // Only evaluate against YES/NO outcomes (skip INVALID)
-      if (outcome === "YES" || outcome === "NO") {
+      if (outcome === 'YES' || outcome === 'NO') {
         breakdown[decision].evaluated++;
         if (decision === outcome) {
           breakdown[decision].correct++;
@@ -192,7 +193,7 @@ export const getSignalAccuracyByDecision = query({
     }
 
     // Calculate win rates
-    for (const key of ["YES", "NO"] as const) {
+    for (const key of ['YES', 'NO'] as const) {
       breakdown[key].winRate =
         breakdown[key].evaluated > 0
           ? Math.round(
@@ -216,9 +217,9 @@ export const getSignalsWithOutcomes = query({
     const limit = args.limit ?? 50;
 
     const signals = await ctx.db
-      .query("signals")
-      .withIndex("by_timestamp")
-      .order("desc")
+      .query('signals')
+      .withIndex('by_timestamp')
+      .order('desc')
       .take(limit * 2); // Fetch extra to filter
 
     const results = await Promise.all(
@@ -228,8 +229,8 @@ export const getSignalsWithOutcomes = query({
         const outcome = market?.outcome ?? null;
         // Only mark as correct/incorrect for YES/NO outcomes
         const isCorrect =
-          outcome === "YES" || outcome === "NO"
-            ? signal.consensusDecision !== "NO_TRADE"
+          outcome === 'YES' || outcome === 'NO'
+            ? signal.consensusDecision !== 'NO_TRADE'
               ? signal.consensusDecision === outcome
               : null
             : null;
@@ -271,9 +272,9 @@ export const getDailySignalStats = query({
     const startMs = now - days * 24 * 60 * 60 * 1000;
 
     const signals = await ctx.db
-      .query("signals")
-      .withIndex("by_timestamp")
-      .filter((q) => q.gte(q.field("signalTimestamp"), startMs))
+      .query('signals')
+      .withIndex('by_timestamp')
+      .filter((q) => q.gte(q.field('signalTimestamp'), startMs))
       .collect();
 
     // Group by day
@@ -288,8 +289,10 @@ export const getDailySignalStats = query({
     >();
 
     for (const signal of signals) {
-      const dateParts = new Date(signal.signalTimestamp).toISOString().split("T");
-      const date = dateParts[0] ?? "unknown";
+      const dateParts = new Date(signal.signalTimestamp)
+        .toISOString()
+        .split('T');
+      const date = dateParts[0] ?? 'unknown';
 
       if (!dailyStats.has(date)) {
         dailyStats.set(date, {
@@ -303,8 +306,8 @@ export const getDailySignalStats = query({
       const stats = dailyStats.get(date)!;
       stats.count++;
       if (signal.isHighConfidence) stats.highConfidence++;
-      if (signal.consensusDecision === "YES") stats.yesDecisions++;
-      if (signal.consensusDecision === "NO") stats.noDecisions++;
+      if (signal.consensusDecision === 'YES') stats.yesDecisions++;
+      if (signal.consensusDecision === 'NO') stats.noDecisions++;
     }
 
     // Convert to sorted array
@@ -319,36 +322,36 @@ export const getDailySignalStats = query({
 export const getConfidenceCalibration = query({
   args: {},
   handler: async (ctx) => {
-    const signals = await ctx.db.query("signals").collect();
+    const signals = await ctx.db.query('signals').collect();
 
     // Get resolved markets
     const resolvedMarkets = await ctx.db
-      .query("markets")
-      .withIndex("by_resolved")
-      .filter((q) => q.neq(q.field("outcome"), undefined))
+      .query('markets')
+      .withIndex('by_resolved')
+      .filter((q) => q.neq(q.field('outcome'), undefined))
       .collect();
 
-    const resolvedMap = new Map<string, "YES" | "NO" | "INVALID" | null>();
+    const resolvedMap = new Map<string, 'YES' | 'NO' | 'INVALID' | null>();
     for (const market of resolvedMarkets) {
       resolvedMap.set(market._id, market.outcome ?? null);
     }
 
     // Group signals by confidence bracket
     const brackets = [
-      { min: 90, max: 100, label: "90-100%", correct: 0, total: 0 },
-      { min: 80, max: 89, label: "80-89%", correct: 0, total: 0 },
-      { min: 70, max: 79, label: "70-79%", correct: 0, total: 0 },
-      { min: 60, max: 69, label: "60-69%", correct: 0, total: 0 },
-      { min: 50, max: 59, label: "50-59%", correct: 0, total: 0 },
+      { min: 90, max: 100, label: '90-100%', correct: 0, total: 0 },
+      { min: 80, max: 89, label: '80-89%', correct: 0, total: 0 },
+      { min: 70, max: 79, label: '70-79%', correct: 0, total: 0 },
+      { min: 60, max: 69, label: '60-69%', correct: 0, total: 0 },
+      { min: 50, max: 59, label: '50-59%', correct: 0, total: 0 },
     ];
 
     for (const signal of signals) {
       // Skip NO_TRADE signals
-      if (signal.consensusDecision === "NO_TRADE") continue;
+      if (signal.consensusDecision === 'NO_TRADE') continue;
 
       const outcome = resolvedMap.get(signal.marketId);
       // Only count YES/NO outcomes
-      if (outcome !== "YES" && outcome !== "NO") continue;
+      if (outcome !== 'YES' && outcome !== 'NO') continue;
 
       const bracket = brackets.find(
         (b) =>

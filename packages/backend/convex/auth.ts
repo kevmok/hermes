@@ -1,17 +1,17 @@
-import { betterAuth, type BetterAuthOptions } from "better-auth";
-import { convex } from "@convex-dev/better-auth/plugins";
-import { admin } from "better-auth/plugins"; // Optional plugins
+import { betterAuth, type BetterAuthOptions } from 'better-auth';
+import { convex } from '@convex-dev/better-auth/plugins';
+import { admin } from 'better-auth/plugins'; // Optional plugins
 import {
   type AuthFunctions,
   createClient,
   createApi,
-} from "better-auth-convex";
-import { internal } from "./_generated/api";
-import type { MutationCtx, QueryCtx } from "./_generated/server";
-import type { DataModel } from "./_generated/dataModel";
-import schema from "./schema";
-import authConfig from "./auth.config";
-import { autumn } from "autumn-js/better-auth";
+} from 'better-auth-convex';
+import { internal } from './_generated/api';
+import type { MutationCtx, QueryCtx } from './_generated/server';
+import type { DataModel } from './_generated/dataModel';
+import schema from './schema';
+import authConfig from './auth.config';
+import { autumn } from 'autumn-js/better-auth';
 
 // 1. Internal API functions for auth operations
 const authFunctions: AuthFunctions = internal.auth;
@@ -30,14 +30,14 @@ export const createAuthOptions = (ctx: QueryCtx) =>
   ({
     baseURL: siteUrl,
     trustedOrigins: [
-      "*",
+      '*',
       siteUrl,
-      "http://localhost:3000",
-      "http://127.0.0.1:3000",
+      'http://localhost:3000',
+      'http://127.0.0.1:3000',
     ],
     advanced: {
       //   // Use unique cookie prefix to avoid conflicts with other Better Auth apps
-      cookiePrefix: "herm",
+      cookiePrefix: 'herm',
       // crossSubDomainCookies: {
       //   enabled: false,
       // },

@@ -19,6 +19,7 @@ Convert the AI generation system from text-based responses to structured schema-
 ## Proposed Solution
 
 Use Effect.ts `LanguageModel.generateObject` with Effect Schema to:
+
 1. Define strict schema for AI prediction outputs
 2. Get validated, type-safe responses from all AI providers
 3. Store structured data in database with proper fields
@@ -275,6 +276,7 @@ signals: defineTable({
 1. **`packages/backend/convex/analysis.ts`** (lines 467-600)
 
 Update `analyzeTradeForSignal` to:
+
 - Use structured outputs from swarm
 - Calculate weighted consensus with confidence
 - Aggregate structured reasoning fields
@@ -501,37 +503,42 @@ Add detailed view of individual model predictions with structured data.
 ## Migration Strategy
 
 ### Phase 1: Parallel Systems
+
 1. Add `schemaVersion` field to all tables
 2. Implement structured outputs behind feature flag
 3. Old signals continue to work (schemaVersion: "1.0.0")
 4. New signals use structured format (schemaVersion: "2.0.0")
 
 ### Phase 2: Gradual Rollout
+
 1. Enable for 10% of signals (canary)
 2. Monitor for errors, latency, cost
 3. Increase to 50%, then 100%
 
 ### Phase 3: Cleanup
+
 1. Remove text-parsing code path
 2. Migrate display logic to assume structured data
 3. Optionally backfill old signals (re-analyze)
 
 ## Risk Analysis & Mitigation
 
-| Risk | Impact | Mitigation |
-|------|--------|------------|
-| Effect.ts API doesn't support structured outputs | High | Verify API exists before starting; fall back to provider-specific APIs |
-| AI models don't comply with schema | Medium | Implement retry logic; log failures for prompt tuning |
-| Increased latency | Medium | Set acceptable threshold; optimize prompts if needed |
-| Breaking existing signals | High | Schema versioning; backwards-compatible display |
-| Higher API costs | Low | Monitor token usage; structured may be similar or less |
+| Risk                                             | Impact | Mitigation                                                             |
+| ------------------------------------------------ | ------ | ---------------------------------------------------------------------- |
+| Effect.ts API doesn't support structured outputs | High   | Verify API exists before starting; fall back to provider-specific APIs |
+| AI models don't comply with schema               | Medium | Implement retry logic; log failures for prompt tuning                  |
+| Increased latency                                | Medium | Set acceptable threshold; optimize prompts if needed                   |
+| Breaking existing signals                        | High   | Schema versioning; backwards-compatible display                        |
+| Higher API costs                                 | Low    | Monitor token usage; structured may be similar or less                 |
 
 ## Files to Create/Modify
 
 ### New Files
+
 - `packages/backend/convex/ai/schema.ts` - Effect Schema definitions
 
 ### Modified Files
+
 - `packages/backend/convex/ai/swarm.ts` - Use generateObject instead of generateText
 - `packages/backend/convex/ai/models.ts` - Verify structured output support
 - `packages/backend/convex/schema.ts` - Add new fields to tables
@@ -543,14 +550,17 @@ Add detailed view of individual model predictions with structured data.
 ## References
 
 ### Internal References
+
 - Current swarm implementation: `packages/backend/convex/ai/swarm.ts:155-228`
 - Database schema: `packages/backend/convex/schema.ts:149-245`
 - Signal card display: `apps/web/src/routes/dashboard/signals/-components/signal-card.tsx`
 
 ### External References
+
 - Effect.ts LanguageModel API: https://effect-ts.github.io/effect/ai/ai/LanguageModel.ts.html
 - Effect Schema docs: https://effect.website/docs/schema/introduction/
 - OpenAI Structured Outputs: https://platform.openai.com/docs/guides/structured-outputs
 
 ### Related Work
+
 - Dashboard consolidation: `plans/dashboard-consolidation-and-detail-views.md`

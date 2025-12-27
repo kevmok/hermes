@@ -1,7 +1,11 @@
 import { Link } from '@tanstack/react-router';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
+import {
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+} from '@/components/ui/sheet';
 import { HugeiconsIcon } from '@hugeicons/react';
 import {
   ArrowUp01Icon,
@@ -101,30 +105,34 @@ export function SignalDetailContent({ signal }: SignalDetailContentProps) {
     : null;
 
   return (
-    <div className="flex flex-col h-full">
+    <div className='flex flex-col h-full'>
       {/* Header with accent line */}
       <div className={`h-1 bg-gradient-to-r ${config.accentLine}`} />
 
-      <SheetHeader className="p-6 pb-4">
-        <div className="flex items-start gap-4">
+      <SheetHeader className='p-6 pb-4'>
+        <div className='flex items-start gap-4'>
           <div
             className={`flex h-14 w-14 items-center justify-center rounded-xl ${config.bgColor} ${config.borderColor} border shrink-0`}
           >
-            <HugeiconsIcon icon={config.icon} size={28} className={config.color} />
+            <HugeiconsIcon
+              icon={config.icon}
+              size={28}
+              className={config.color}
+            />
           </div>
-          <div className="flex-1 min-w-0">
-            <SheetTitle className="text-lg leading-tight mb-2">
+          <div className='flex-1 min-w-0'>
+            <SheetTitle className='text-lg leading-tight mb-2'>
               {signal.market?.title ?? 'Unknown Market'}
             </SheetTitle>
-            <div className="flex flex-wrap items-center gap-2">
+            <div className='flex flex-wrap items-center gap-2'>
               <Badge
-                variant="outline"
+                variant='outline'
                 className={`${config.bgColor} ${config.color} ${config.borderColor} border`}
               >
                 {config.label}
               </Badge>
               <Badge
-                variant="outline"
+                variant='outline'
                 className={`${
                   signal.confidenceLevel === 'high'
                     ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/30'
@@ -137,7 +145,7 @@ export function SignalDetailContent({ signal }: SignalDetailContentProps) {
               </Badge>
               {isCorrect !== null && (
                 <Badge
-                  variant="outline"
+                  variant='outline'
                   className={`${
                     isCorrect
                       ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
@@ -147,7 +155,7 @@ export function SignalDetailContent({ signal }: SignalDetailContentProps) {
                   <HugeiconsIcon
                     icon={isCorrect ? CheckmarkCircle01Icon : CancelCircleIcon}
                     size={12}
-                    className="mr-1"
+                    className='mr-1'
                   />
                   {isCorrect ? 'CORRECT' : 'INCORRECT'}
                 </Badge>
@@ -155,51 +163,55 @@ export function SignalDetailContent({ signal }: SignalDetailContentProps) {
             </div>
           </div>
         </div>
-        <SheetDescription className="text-xs text-muted-foreground mt-2">
+        <SheetDescription className='text-xs text-muted-foreground mt-2'>
           Signal generated {formatRelativeTime(signal.signalTimestamp)}
         </SheetDescription>
       </SheetHeader>
 
-      <div className="flex-1 overflow-y-auto px-6 pb-6 space-y-6">
+      <div className='flex-1 overflow-y-auto px-6 pb-6 space-y-6'>
         {/* AI Consensus Section */}
         <section>
-          <h3 className="text-sm font-semibold mb-3 text-muted-foreground uppercase tracking-wider">
+          <h3 className='text-sm font-semibold mb-3 text-muted-foreground uppercase tracking-wider'>
             AI Consensus
           </h3>
-          <div className="p-4 rounded-lg bg-white/[0.02] border border-white/[0.06] space-y-4">
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">Model Agreement</span>
-              <span className="text-lg font-bold tabular-nums">
+          <div className='p-4 rounded-lg bg-white/[0.02] border border-white/[0.06] space-y-4'>
+            <div className='flex items-center justify-between'>
+              <span className='text-sm text-muted-foreground'>
+                Model Agreement
+              </span>
+              <span className='text-lg font-bold tabular-nums'>
                 {signal.consensusPercentage.toFixed(0)}%
               </span>
             </div>
-            <div className="relative h-2 rounded-full bg-white/[0.06] overflow-hidden">
+            <div className='relative h-2 rounded-full bg-white/[0.06] overflow-hidden'>
               <div
                 className={`absolute inset-y-0 left-0 rounded-full bg-gradient-to-r ${config.accentLine}`}
-                style={{ width: `${Math.min(100, signal.consensusPercentage)}%` }}
+                style={{
+                  width: `${Math.min(100, signal.consensusPercentage)}%`,
+                }}
               />
             </div>
-            <p className="text-sm text-muted-foreground">
+            <p className='text-sm text-muted-foreground'>
               {signal.agreeingModels} of {signal.totalModels} models agreed
             </p>
 
             {signal.voteDistribution && (
-              <div className="flex items-center gap-4 pt-2 border-t border-white/[0.06]">
-                <div className="flex items-center gap-1.5">
-                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
-                  <span className="text-xs text-muted-foreground">
+              <div className='flex items-center gap-4 pt-2 border-t border-white/[0.06]'>
+                <div className='flex items-center gap-1.5'>
+                  <span className='w-2.5 h-2.5 rounded-full bg-emerald-500' />
+                  <span className='text-xs text-muted-foreground'>
                     YES: {signal.voteDistribution.YES}
                   </span>
                 </div>
-                <div className="flex items-center gap-1.5">
-                  <span className="w-2.5 h-2.5 rounded-full bg-red-500" />
-                  <span className="text-xs text-muted-foreground">
+                <div className='flex items-center gap-1.5'>
+                  <span className='w-2.5 h-2.5 rounded-full bg-red-500' />
+                  <span className='text-xs text-muted-foreground'>
                     NO: {signal.voteDistribution.NO}
                   </span>
                 </div>
-                <div className="flex items-center gap-1.5">
-                  <span className="w-2.5 h-2.5 rounded-full bg-amber-500" />
-                  <span className="text-xs text-muted-foreground">
+                <div className='flex items-center gap-1.5'>
+                  <span className='w-2.5 h-2.5 rounded-full bg-amber-500' />
+                  <span className='text-xs text-muted-foreground'>
                     HOLD: {signal.voteDistribution.NO_TRADE}
                   </span>
                 </div>
@@ -208,49 +220,56 @@ export function SignalDetailContent({ signal }: SignalDetailContentProps) {
           </div>
         </section>
 
-        <Separator className="bg-white/[0.06]" />
+        <Separator className='bg-white/[0.06]' />
 
         {/* Trigger Trade Details */}
         <section>
-          <h3 className="text-sm font-semibold mb-3 text-muted-foreground uppercase tracking-wider">
+          <h3 className='text-sm font-semibold mb-3 text-muted-foreground uppercase tracking-wider'>
             Trigger Trade
           </h3>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="p-3 rounded-lg bg-white/[0.02] border border-white/[0.06]">
-              <div className="flex items-center gap-2 text-muted-foreground mb-1">
+          <div className='grid grid-cols-2 gap-3'>
+            <div className='p-3 rounded-lg bg-white/[0.02] border border-white/[0.06]'>
+              <div className='flex items-center gap-2 text-muted-foreground mb-1'>
                 <HugeiconsIcon icon={Dollar01Icon} size={14} />
-                <span className="text-xs">Size</span>
+                <span className='text-xs'>Size</span>
               </div>
-              <span className="text-lg font-bold tabular-nums">
+              <span className='text-lg font-bold tabular-nums'>
                 ${signal.triggerTrade.size.toLocaleString()}
               </span>
             </div>
-            <div className="p-3 rounded-lg bg-white/[0.02] border border-white/[0.06]">
-              <div className="flex items-center gap-2 text-muted-foreground mb-1">
+            <div className='p-3 rounded-lg bg-white/[0.02] border border-white/[0.06]'>
+              <div className='flex items-center gap-2 text-muted-foreground mb-1'>
                 <HugeiconsIcon
-                  icon={signal.triggerTrade.side === 'YES' ? ArrowUp01Icon : ArrowDown01Icon}
+                  icon={
+                    signal.triggerTrade.side === 'YES'
+                      ? ArrowUp01Icon
+                      : ArrowDown01Icon
+                  }
                   size={14}
                 />
-                <span className="text-xs">Side @ Price</span>
+                <span className='text-xs'>Side @ Price</span>
               </div>
-              <span className={`text-lg font-bold tabular-nums ${signal.triggerTrade.side === 'YES' ? 'text-emerald-400' : 'text-red-400'}`}>
-                {signal.triggerTrade.side} @ {(signal.triggerTrade.price * 100).toFixed(1)}%
+              <span
+                className={`text-lg font-bold tabular-nums ${signal.triggerTrade.side === 'YES' ? 'text-emerald-400' : 'text-red-400'}`}
+              >
+                {signal.triggerTrade.side} @{' '}
+                {(signal.triggerTrade.price * 100).toFixed(1)}%
               </span>
             </div>
-            <div className="p-3 rounded-lg bg-white/[0.02] border border-white/[0.06]">
-              <div className="flex items-center gap-2 text-muted-foreground mb-1">
+            <div className='p-3 rounded-lg bg-white/[0.02] border border-white/[0.06]'>
+              <div className='flex items-center gap-2 text-muted-foreground mb-1'>
                 <HugeiconsIcon icon={Clock01Icon} size={14} />
-                <span className="text-xs">Trade Time</span>
+                <span className='text-xs'>Trade Time</span>
               </div>
-              <span className="text-sm">
+              <span className='text-sm'>
                 {new Date(signal.triggerTrade.timestamp).toLocaleString()}
               </span>
             </div>
-            <div className="p-3 rounded-lg bg-white/[0.02] border border-white/[0.06]">
-              <div className="flex items-center gap-2 text-muted-foreground mb-1">
-                <span className="text-xs">Price @ Trigger</span>
+            <div className='p-3 rounded-lg bg-white/[0.02] border border-white/[0.06]'>
+              <div className='flex items-center gap-2 text-muted-foreground mb-1'>
+                <span className='text-xs'>Price @ Trigger</span>
               </div>
-              <span className="text-lg font-bold tabular-nums">
+              <span className='text-lg font-bold tabular-nums'>
                 {(signal.priceAtTrigger * 100).toFixed(1)}%
               </span>
             </div>
@@ -260,16 +279,18 @@ export function SignalDetailContent({ signal }: SignalDetailContentProps) {
         {/* Market Outcome (if resolved) */}
         {isResolved && (
           <>
-            <Separator className="bg-white/[0.06]" />
+            <Separator className='bg-white/[0.06]' />
             <section>
-              <h3 className="text-sm font-semibold mb-3 text-muted-foreground uppercase tracking-wider">
+              <h3 className='text-sm font-semibold mb-3 text-muted-foreground uppercase tracking-wider'>
                 Market Outcome
               </h3>
-              <div className="p-4 rounded-lg bg-white/[0.02] border border-white/[0.06]">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">Resolved</span>
+              <div className='p-4 rounded-lg bg-white/[0.02] border border-white/[0.06]'>
+                <div className='flex items-center justify-between'>
+                  <span className='text-sm text-muted-foreground'>
+                    Resolved
+                  </span>
                   <Badge
-                    variant="outline"
+                    variant='outline'
                     className={`${
                       outcome === 'YES'
                         ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
@@ -287,12 +308,12 @@ export function SignalDetailContent({ signal }: SignalDetailContentProps) {
         {/* Model Predictions */}
         {signal.predictions && signal.predictions.length > 0 && (
           <>
-            <Separator className="bg-white/[0.06]" />
+            <Separator className='bg-white/[0.06]' />
             <section>
-              <h3 className="text-sm font-semibold mb-3 text-muted-foreground uppercase tracking-wider">
+              <h3 className='text-sm font-semibold mb-3 text-muted-foreground uppercase tracking-wider'>
                 Model Predictions
               </h3>
-              <div className="space-y-3">
+              <div className='space-y-3'>
                 {signal.predictions.map((prediction) => {
                   const predConfig = decisionConfig[prediction.decision];
                   return (
@@ -300,9 +321,11 @@ export function SignalDetailContent({ signal }: SignalDetailContentProps) {
                       key={prediction._id}
                       className={`p-4 rounded-lg ${predConfig.bgColor} border ${predConfig.borderColor}`}
                     >
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="font-medium">{prediction.modelName}</span>
-                        <div className="flex items-center gap-2">
+                      <div className='flex items-center justify-between mb-2'>
+                        <span className='font-medium'>
+                          {prediction.modelName}
+                        </span>
+                        <div className='flex items-center gap-2'>
                           <HugeiconsIcon
                             icon={predConfig.icon}
                             size={16}
@@ -313,10 +336,10 @@ export function SignalDetailContent({ signal }: SignalDetailContentProps) {
                           </span>
                         </div>
                       </div>
-                      <p className="text-sm text-muted-foreground line-clamp-3">
+                      <p className='text-sm text-muted-foreground line-clamp-3'>
                         {prediction.reasoning}
                       </p>
-                      <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
+                      <div className='flex items-center gap-4 mt-2 text-xs text-muted-foreground'>
                         <span>{prediction.responseTimeMs}ms</span>
                         {prediction.confidence != null && (
                           <span>{prediction.confidence}% confidence</span>
@@ -330,47 +353,49 @@ export function SignalDetailContent({ signal }: SignalDetailContentProps) {
           </>
         )}
 
-        <Separator className="bg-white/[0.06]" />
+        <Separator className='bg-white/[0.06]' />
 
         {/* Aggregated Reasoning */}
         <section>
-          <h3 className="text-sm font-semibold mb-3 text-muted-foreground uppercase tracking-wider">
+          <h3 className='text-sm font-semibold mb-3 text-muted-foreground uppercase tracking-wider'>
             Aggregated Reasoning
           </h3>
-          <p className="text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed">
+          <p className='text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed'>
             {signal.aggregatedReasoning}
           </p>
         </section>
 
         {/* Key Factors & Risks */}
-        {(signal.aggregatedKeyFactors?.length || signal.aggregatedRisks?.length) && (
+        {(signal.aggregatedKeyFactors?.length ||
+          signal.aggregatedRisks?.length) && (
           <>
-            <Separator className="bg-white/[0.06]" />
-            <section className="grid grid-cols-2 gap-4">
-              {signal.aggregatedKeyFactors && signal.aggregatedKeyFactors.length > 0 && (
-                <div>
-                  <h4 className="text-xs font-semibold mb-2 text-emerald-400 uppercase tracking-wider">
-                    Key Factors
-                  </h4>
-                  <ul className="space-y-1 text-sm text-muted-foreground">
-                    {signal.aggregatedKeyFactors.map((factor, i) => (
-                      <li key={i} className="flex gap-2">
-                        <span className="text-emerald-400">•</span>
-                        {factor}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
+            <Separator className='bg-white/[0.06]' />
+            <section className='grid grid-cols-2 gap-4'>
+              {signal.aggregatedKeyFactors &&
+                signal.aggregatedKeyFactors.length > 0 && (
+                  <div>
+                    <h4 className='text-xs font-semibold mb-2 text-emerald-400 uppercase tracking-wider'>
+                      Key Factors
+                    </h4>
+                    <ul className='space-y-1 text-sm text-muted-foreground'>
+                      {signal.aggregatedKeyFactors.map((factor, i) => (
+                        <li key={i} className='flex gap-2'>
+                          <span className='text-emerald-400'>•</span>
+                          {factor}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
               {signal.aggregatedRisks && signal.aggregatedRisks.length > 0 && (
                 <div>
-                  <h4 className="text-xs font-semibold mb-2 text-red-400 uppercase tracking-wider">
+                  <h4 className='text-xs font-semibold mb-2 text-red-400 uppercase tracking-wider'>
                     Risks
                   </h4>
-                  <ul className="space-y-1 text-sm text-muted-foreground">
+                  <ul className='space-y-1 text-sm text-muted-foreground'>
                     {signal.aggregatedRisks.map((risk, i) => (
-                      <li key={i} className="flex gap-2">
-                        <span className="text-red-400">•</span>
+                      <li key={i} className='flex gap-2'>
+                        <span className='text-red-400'>•</span>
                         {risk}
                       </li>
                     ))}
@@ -381,33 +406,41 @@ export function SignalDetailContent({ signal }: SignalDetailContentProps) {
           </>
         )}
 
-        <Separator className="bg-white/[0.06]" />
+        <Separator className='bg-white/[0.06]' />
 
         {/* Related Links */}
         <section>
-          <h3 className="text-sm font-semibold mb-3 text-muted-foreground uppercase tracking-wider">
+          <h3 className='text-sm font-semibold mb-3 text-muted-foreground uppercase tracking-wider'>
             Related
           </h3>
-          <div className="space-y-2">
+          <div className='space-y-2'>
             {signal.market?.eventSlug && (
               <Link
-                to="/dashboard/events/$eventId"
+                to='/dashboard/events/$eventId'
                 params={{ eventId: signal.market.eventSlug }}
-                className="flex items-center gap-2 p-3 rounded-lg bg-white/[0.02] border border-white/[0.06] hover:bg-white/[0.04] hover:border-white/[0.1] transition-colors"
+                className='flex items-center gap-2 p-3 rounded-lg bg-white/[0.02] border border-white/[0.06] hover:bg-white/[0.04] hover:border-white/[0.1] transition-colors'
               >
-                <HugeiconsIcon icon={Calendar03Icon} size={16} className="text-amber-400" />
-                <span className="text-sm">View Event Details</span>
+                <HugeiconsIcon
+                  icon={Calendar03Icon}
+                  size={16}
+                  className='text-amber-400'
+                />
+                <span className='text-sm'>View Event Details</span>
               </Link>
             )}
             {polymarketUrl && (
               <a
                 href={polymarketUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-2 p-3 rounded-lg bg-white/[0.02] border border-white/[0.06] hover:bg-white/[0.04] hover:border-white/[0.1] transition-colors"
+                target='_blank'
+                rel='noopener noreferrer'
+                className='flex items-center gap-2 p-3 rounded-lg bg-white/[0.02] border border-white/[0.06] hover:bg-white/[0.04] hover:border-white/[0.1] transition-colors'
               >
-                <HugeiconsIcon icon={LinkSquare01Icon} size={16} className="text-cyan-400" />
-                <span className="text-sm">Trade on Polymarket</span>
+                <HugeiconsIcon
+                  icon={LinkSquare01Icon}
+                  size={16}
+                  className='text-cyan-400'
+                />
+                <span className='text-sm'>Trade on Polymarket</span>
               </a>
             )}
           </div>

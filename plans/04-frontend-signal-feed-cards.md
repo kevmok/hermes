@@ -7,6 +7,7 @@ Build the core frontend experience: a real-time feed of AI signals displayed as 
 ## Problem Statement / Motivation
 
 Users need a way to:
+
 - See AI signals in real-time as whale trades trigger analysis
 - Understand each signal at a glance (decision, confidence, trade details)
 - Quickly navigate to trade on Polymarket
@@ -17,6 +18,7 @@ The existing Insights page shows scheduled analysis results but lacks the whale-
 ## Proposed Solution
 
 Create a new "Signals" section in the dashboard with:
+
 1. **SignalCard component** - Rich card displaying signal details
 2. **SignalFeed component** - Real-time updating list with Convex subscription
 3. **Signals page** - Main route with feed and filters
@@ -54,13 +56,13 @@ Create a new "Signals" section in the dashboard with:
 
 ### Files to Create
 
-| File | Purpose |
-|------|---------|
-| `apps/web/src/routes/dashboard/signals/index.tsx` | Signals page route |
-| `apps/web/src/routes/dashboard/signals/-components/signal-card.tsx` | Signal card component |
-| `apps/web/src/routes/dashboard/signals/-components/signal-feed.tsx` | Real-time feed container |
-| `apps/web/src/routes/dashboard/signals/-components/signal-filters.tsx` | Filter controls |
-| `apps/web/src/routes/dashboard/-components/app-sidebar.tsx` | Add Signals nav item |
+| File                                                                   | Purpose                  |
+| ---------------------------------------------------------------------- | ------------------------ |
+| `apps/web/src/routes/dashboard/signals/index.tsx`                      | Signals page route       |
+| `apps/web/src/routes/dashboard/signals/-components/signal-card.tsx`    | Signal card component    |
+| `apps/web/src/routes/dashboard/signals/-components/signal-feed.tsx`    | Real-time feed container |
+| `apps/web/src/routes/dashboard/signals/-components/signal-filters.tsx` | Filter controls          |
+| `apps/web/src/routes/dashboard/-components/app-sidebar.tsx`            | Add Signals nav item     |
 
 ### Signal Card Component
 
@@ -848,20 +850,22 @@ const navItems = [
 
 ## Risk Analysis
 
-| Risk | Likelihood | Impact | Mitigation |
-|------|------------|--------|------------|
-| UI jank with many signals | Medium | Medium | Virtual list for 100+ signals |
-| Convex subscription lag | Low | Low | Show "live" status indicator |
-| Mobile layout issues | Medium | Low | Test on multiple screen sizes |
+| Risk                      | Likelihood | Impact | Mitigation                    |
+| ------------------------- | ---------- | ------ | ----------------------------- |
+| UI jank with many signals | Medium     | Medium | Virtual list for 100+ signals |
+| Convex subscription lag   | Low        | Low    | Show "live" status indicator  |
+| Mobile layout issues      | Medium     | Low    | Test on multiple screen sizes |
 
 ## References
 
 ### Internal References
+
 - Existing InsightCard: `apps/web/src/routes/dashboard/insights/index.tsx:107-189`
 - StatsCards pattern: `apps/web/src/routes/dashboard/-components/stats-cards.tsx`
 - DataTable pattern: `apps/web/src/routes/dashboard/-components/data-table.tsx`
 
 ### External References
+
 - shadcn/ui Card: https://ui.shadcn.com/docs/components/card
 - Convex React Query: https://docs.convex.dev/client/react-query
 - TanStack Router: https://tanstack.com/router/latest

@@ -482,6 +482,7 @@ export const LeaderboardSchema = Schema.Struct({
 #### cache.ts - Using @convex-dev/action-cache Component
 
 **Note:** Instead of a custom cache table, we use the official `@convex-dev/action-cache` component which:
+
 - Handles TTL-based expiration automatically
 - Provides daily cron cleanup of expired entries
 - Manages cache keys based on action name + arguments
@@ -561,6 +562,7 @@ export const leaderboardCache = new ActionCache(components.actionCache, {
 ```
 
 **Benefits over custom implementation:**
+
 - No custom `apiCache` table needed
 - Automatic cleanup via daily cron (no manual cleanup mutations)
 - Version management via cache name (change name to invalidate all old entries)
@@ -1162,13 +1164,13 @@ bun add @convex-dev/action-cache
 
 ## Risk Analysis & Mitigation
 
-| Risk | Impact | Likelihood | Mitigation |
-|------|--------|------------|------------|
-| Polymarket API rate limits | High | Medium | Implement caching with appropriate TTLs, add rate limiting |
-| Schema migration data loss | High | Low | Run migration during low-traffic, backup data first |
-| WebSocket disconnections | Medium | Medium | Implement reconnection with backfill from historical API |
-| Cache invalidation issues | Medium | Low | Use short TTLs, add manual cache invalidation action |
-| Effect.ts learning curve | Low | Medium | Start with simple actions, iterate on patterns |
+| Risk                       | Impact | Likelihood | Mitigation                                                 |
+| -------------------------- | ------ | ---------- | ---------------------------------------------------------- |
+| Polymarket API rate limits | High   | Medium     | Implement caching with appropriate TTLs, add rate limiting |
+| Schema migration data loss | High   | Low        | Run migration during low-traffic, backup data first        |
+| WebSocket disconnections   | Medium | Medium     | Implement reconnection with backfill from historical API   |
+| Cache invalidation issues  | Medium | Low        | Use short TTLs, add manual cache invalidation action       |
+| Effect.ts learning curve   | Low    | Medium     | Start with simple actions, iterate on patterns             |
 
 ## Future Considerations
 
@@ -1180,12 +1182,14 @@ bun add @convex-dev/action-cache
 ## References
 
 ### Internal References
+
 - Current schema: `packages/backend/convex/schema.ts`
 - WebSocket service: `apps/lofn/src/services/polymarket/WebSocketService.ts`
 - ConvexDataService: `apps/lofn/src/services/data/ConvexDataService.ts`
 - Analysis flow: `packages/backend/convex/analysis.ts`
 
 ### External References
+
 - [Convex Actions Tutorial](https://docs.convex.dev/tutorial/actions)
 - [Convex Action Cache](https://www.convex.dev/components/action-cache)
 - [Effect.ts HttpClient](https://effect-ts.github.io/effect/platform/HttpClient.ts.html)
@@ -1193,11 +1197,12 @@ bun add @convex-dev/action-cache
 - [Polymarket Data API](https://docs.polymarket.com/api-reference/core)
 
 ### Related Work
+
 - Polymarket official TypeScript client: [clob-client](https://github.com/Polymarket/clob-client)
 - Community kit: [polymarket-kit](https://github.com/HuakunShen/polymarket-kit)
 
 ---
 
-*Plan created: 2025-12-26*
+_Plan created: 2025-12-26_
 
-*Generated with Claude Code*
+_Generated with Claude Code_

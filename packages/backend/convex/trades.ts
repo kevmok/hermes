@@ -239,9 +239,9 @@ export const listTrades = query({
   handler: async (ctx, args) => {
     const limit = args.limit ?? 50;
     const trades = await ctx.db
-      .query("trades")
-      .withIndex("by_timestamp")
-      .order("desc")
+      .query('trades')
+      .withIndex('by_timestamp')
+      .order('desc')
       .take(limit);
 
     return { trades, nextCursor: null };
@@ -260,9 +260,9 @@ export const listWhaleTrades = query({
   handler: async (ctx, args) => {
     const limit = args.limit ?? 50;
     const trades = await ctx.db
-      .query("trades")
-      .withIndex("by_whale", (q) => q.eq("isWhale", true))
-      .order("desc")
+      .query('trades')
+      .withIndex('by_whale', (q) => q.eq('isWhale', true))
+      .order('desc')
       .take(limit);
 
     return { trades, nextCursor: null };
@@ -346,8 +346,8 @@ export const getTradeStats = query({
   handler: async (ctx, args) => {
     const since = args.sinceTimestamp ?? Date.now() / 1000 - 24 * 60 * 60;
     const trades = await ctx.db
-      .query("trades")
-      .withIndex("by_timestamp", (q) => q.gt("timestamp", since))
+      .query('trades')
+      .withIndex('by_timestamp', (q) => q.gt('timestamp', since))
       .collect();
 
     let totalVolume = 0;
@@ -362,6 +362,11 @@ export const getTradeStats = query({
       }
     }
 
-    return { totalTrades: trades.length, totalVolume, whaleTrades, whaleVolume };
+    return {
+      totalTrades: trades.length,
+      totalVolume,
+      whaleTrades,
+      whaleVolume,
+    };
   },
 });

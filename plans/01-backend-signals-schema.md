@@ -3,12 +3,14 @@
 ## Overview
 
 Add two foundational backend components that enable whale trade signal tracking and performance measurement:
+
 1. **Signals table** - Store whale trade-triggered AI consensus events
 2. **Market outcome tracking** - Extend markets table to track resolution outcomes
 
 ## Problem Statement / Motivation
 
 Currently, the system runs AI analysis on a time-based schedule (every 30 minutes) or on-demand. There's no mechanism to:
+
 - Capture signals triggered by specific whale trades
 - Track the triggering trade details alongside AI consensus
 - Measure AI prediction accuracy against resolved market outcomes
@@ -56,10 +58,10 @@ Extend the `markets` table with resolution fields to enable performance tracking
 
 ### Files to Modify
 
-| File | Changes |
-|------|---------|
-| `packages/backend/convex/schema.ts` | Add `signals` table, extend `markets` with outcome fields |
-| `packages/backend/convex/signals.ts` | New file: CRUD operations for signals |
+| File                                 | Changes                                                   |
+| ------------------------------------ | --------------------------------------------------------- |
+| `packages/backend/convex/schema.ts`  | Add `signals` table, extend `markets` with outcome fields |
+| `packages/backend/convex/signals.ts` | New file: CRUD operations for signals                     |
 
 ### Schema Changes
 
@@ -393,19 +395,21 @@ export const getUnresolvedMarkets = query({
 
 ## Risk Analysis
 
-| Risk | Likelihood | Impact | Mitigation |
-|------|------------|--------|------------|
-| Schema migration breaks existing data | Low | High | All new fields are optional |
-| Index overhead on high-volume writes | Medium | Medium | Signals table designed for append-only writes |
-| Foreign key consistency | Low | Medium | Convex handles this via v.id() validators |
+| Risk                                  | Likelihood | Impact | Mitigation                                    |
+| ------------------------------------- | ---------- | ------ | --------------------------------------------- |
+| Schema migration breaks existing data | Low        | High   | All new fields are optional                   |
+| Index overhead on high-volume writes  | Medium     | Medium | Signals table designed for append-only writes |
+| Foreign key consistency               | Low        | Medium | Convex handles this via v.id() validators     |
 
 ## References
 
 ### Internal References
+
 - Existing schema: `packages/backend/convex/schema.ts`
 - Insights pattern: `packages/backend/convex/insights.ts`
 - Analysis structure: `packages/backend/convex/analysis.ts`
 
 ### External References
+
 - Convex schema docs: https://docs.convex.dev/database/schemas
 - Convex indexes: https://docs.convex.dev/database/indexes

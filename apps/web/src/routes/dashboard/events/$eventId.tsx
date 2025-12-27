@@ -19,28 +19,30 @@ export const Route = createFileRoute('/dashboard/events/$eventId')({
 function EventDetailRoute() {
   const { eventId } = Route.useParams();
 
-  const { data: event, isLoading, error } = useQuery(
-    eventsQueries.withMarkets(eventId),
-  );
+  const {
+    data: event,
+    isLoading,
+    error,
+  } = useQuery(eventsQueries.withMarkets(eventId));
 
   if (isLoading) {
     return (
-      <div className="p-6 space-y-6">
-        <Skeleton className="h-8 w-3/4" />
-        <Skeleton className="h-24 w-full" />
-        <Skeleton className="h-32 w-full" />
-        <Skeleton className="h-48 w-full" />
+      <div className='p-6 space-y-6'>
+        <Skeleton className='h-8 w-3/4' />
+        <Skeleton className='h-24 w-full' />
+        <Skeleton className='h-32 w-full' />
+        <Skeleton className='h-48 w-full' />
       </div>
     );
   }
 
   if (error || !event) {
     return (
-      <div className="p-6 flex flex-col items-center justify-center h-full">
-        <p className="text-muted-foreground mb-4">Event not found</p>
+      <div className='p-6 flex flex-col items-center justify-center h-full'>
+        <p className='text-muted-foreground mb-4'>Event not found</p>
         <Link
-          to="/dashboard/events"
-          className="text-amber-400 hover:text-amber-300 text-sm"
+          to='/dashboard/events'
+          className='text-amber-400 hover:text-amber-300 text-sm'
         >
           Back to events
         </Link>

@@ -9,6 +9,7 @@ Create a production-ready dashboard for the Hermes AI-powered prediction market 
 ## Problem Statement / Motivation
 
 Users need a central dashboard to:
+
 1. Monitor active prediction markets in real-time
 2. View AI model consensus on market outcomes
 3. Track their watchlisted markets
@@ -19,22 +20,26 @@ Currently, there's only a landing page - no authenticated user experience exists
 ## Technical Context
 
 **Existing Stack:**
+
 - Frontend: TanStack Start (React 19.2.0) with TanStack Router (file-based)
 - Backend: Convex (real-time serverless database)
 - UI: shadcn/ui components (17 installed) + Tailwind CSS v4
 - Auth: Better Auth (already integrated)
 
 **Existing Convex Queries:**
+
 - `api.markets.listActiveMarkets` - Active markets sorted by volume/recent/ending_soon
 - `api.insights.getLatestInsights` - AI consensus with market data
 - `api.markets.getMarketSnapshots` - Price history for charts
 
 **Existing Components:**
+
 - `Sidebar` - Full shadcn sidebar with provider
 - `Card`, `Badge`, `Button` - Basic UI components
 - Auth flow at `/auth` route
 
 **Missing Components (need to install):**
+
 - `Table` / `DataTable` (TanStack Table integration)
 - `Dialog` (for market detail modal)
 - `Tabs` (for view switching)
@@ -89,6 +94,7 @@ graph TD
 **Files to create:**
 
 #### `apps/web/src/routes/dashboard/route.tsx`
+
 ```tsx
 // Dashboard layout with SidebarProvider
 import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
@@ -117,6 +123,7 @@ function DashboardLayout() {
 ```
 
 #### `apps/web/src/routes/dashboard/-components/app-sidebar.tsx`
+
 ```tsx
 // Navigation sidebar with Markets, Insights, Watchlists sections
 // Use existing Sidebar components from @/components/ui/sidebar
@@ -125,6 +132,7 @@ function DashboardLayout() {
 ```
 
 #### `apps/web/src/routes/dashboard/index.tsx`
+
 ```tsx
 // Redirect to /dashboard/markets
 import { createFileRoute, redirect } from "@tanstack/react-router";
@@ -137,6 +145,7 @@ export const Route = createFileRoute("/dashboard/")({
 ```
 
 **Success Criteria:**
+
 - [ ] User can navigate to `/dashboard` and see sidebar
 - [ ] Sidebar has Markets, Insights, Watchlists navigation items
 - [ ] Unauthenticated users redirect to `/auth`
@@ -149,6 +158,7 @@ export const Route = createFileRoute("/dashboard/")({
 **Goal:** Real-time market table with sorting, filtering, and Convex integration
 
 **Dependencies to install:**
+
 ```bash
 bun add @tanstack/react-table
 bunx shadcn@latest add table dialog
@@ -157,6 +167,7 @@ bunx shadcn@latest add table dialog
 **Files to create:**
 
 #### `apps/web/src/routes/dashboard/markets/index.tsx`
+
 ```tsx
 // Markets page with real-time data table
 import { useQuery } from "convex/react";
@@ -186,6 +197,7 @@ function MarketsPage() {
 ```
 
 #### `apps/web/src/routes/dashboard/-components/market-table.tsx`
+
 ```tsx
 // TanStack Table with real-time Convex data
 // Features: sorting (volume, price, recent), search filter, row click for detail
@@ -194,6 +206,7 @@ function MarketsPage() {
 ```
 
 #### `apps/web/src/routes/dashboard/-components/market-columns.tsx`
+
 ```tsx
 // Column definitions for TanStack Table
 // - title: Market question/title
@@ -204,6 +217,7 @@ function MarketsPage() {
 ```
 
 #### `apps/web/src/routes/dashboard/-components/stats-cards.tsx`
+
 ```tsx
 // KPI summary cards at top of dashboard
 // - Total Active Markets count
@@ -213,6 +227,7 @@ function MarketsPage() {
 ```
 
 **Success Criteria:**
+
 - [ ] Markets table shows real-time data from Convex
 - [ ] Table updates automatically when Convex data changes
 - [ ] User can sort by volume, price, or recent
@@ -229,6 +244,7 @@ function MarketsPage() {
 **Files to create:**
 
 #### `apps/web/src/routes/dashboard/-components/market-detail-dialog.tsx`
+
 ```tsx
 // Modal showing full market details
 // - Market title and description
@@ -239,6 +255,7 @@ function MarketsPage() {
 ```
 
 #### `apps/web/src/routes/dashboard/insights/index.tsx`
+
 ```tsx
 // Dedicated insights feed page
 // Shows latest AI analysis runs
@@ -247,6 +264,7 @@ function MarketsPage() {
 ```
 
 #### `apps/web/src/routes/dashboard/-components/insight-card.tsx`
+
 ```tsx
 // Card displaying single insight
 // - Market title
@@ -257,6 +275,7 @@ function MarketsPage() {
 ```
 
 **Success Criteria:**
+
 - [ ] Clicking market row opens detail dialog
 - [ ] Detail shows AI reasoning and model predictions
 - [ ] Insights page shows latest analysis
@@ -272,6 +291,7 @@ function MarketsPage() {
 **Files to create:**
 
 #### `apps/web/src/routes/dashboard/watchlists/index.tsx`
+
 ```tsx
 // Watchlist management page
 // Shows user's watchlisted markets
@@ -280,6 +300,7 @@ function MarketsPage() {
 ```
 
 **Enhancements:**
+
 - [ ] Add row highlight animation for real-time price changes
 - [ ] Implement mobile card view for tables (<768px)
 - [ ] Add toast notifications for watchlist actions
@@ -287,6 +308,7 @@ function MarketsPage() {
 - [ ] Add `prefers-reduced-motion` support
 
 **Success Criteria:**
+
 - [ ] User can add/remove markets from watchlist
 - [ ] Watchlist persists across sessions
 - [ ] Mobile layout uses card view
@@ -331,6 +353,7 @@ function MarketsPage() {
 ```
 
 **Key Patterns:**
+
 - Use `convexQuery()` wrapper for TanStack Query integration
 - Use `useSuspenseQuery()` for cleanest SSR experience
 - Prefetch in route `loader` for instant server render
@@ -340,6 +363,7 @@ function MarketsPage() {
 ### Import Path for Backend API
 
 The lofn app shows the correct import pattern:
+
 ```typescript
 // Correct: Import from backend package
 import { api } from "backend/convex/_generated/api";
@@ -349,12 +373,14 @@ import type { Id, Doc } from "backend/convex/_generated/dataModel";
 ### DataTable Component Setup (shadcn pattern)
 
 Install dependencies and add shadcn table component:
+
 ```bash
 bun add @tanstack/react-table
 bunx shadcn@latest add table
 ```
 
 **DataTable Component Structure:**
+
 ```typescript
 // apps/web/src/routes/dashboard/-components/data-table.tsx
 "use client"
@@ -653,51 +679,58 @@ export type ConfidenceLevel = "high" | "medium" | "low";
 ## Dependencies & Prerequisites
 
 **Required before starting:**
+
 1. Convex backend running with seeded market data
 2. Better Auth configured and working
 3. User authenticated session available in route context
 
 **Packages to install:**
+
 ```bash
 bun add @tanstack/react-table
 bunx shadcn@latest add table dialog tabs tooltip
 ```
 
 **Environment variables:**
+
 - `VITE_CONVEX_URL` - Convex deployment URL (already configured)
 
 ---
 
 ## Risk Analysis & Mitigation
 
-| Risk | Likelihood | Impact | Mitigation |
-|------|------------|--------|------------|
-| Convex connection drops | Medium | High | Implement reconnection banner, auto-retry |
-| Too many real-time updates | Low | Medium | Debounce updates, batch animations |
-| Table performance with 1000+ rows | Low | Medium | Implement virtualization with TanStack Virtual |
-| Mobile UX complexity | Medium | Medium | Start with mobile-first design |
+| Risk                              | Likelihood | Impact | Mitigation                                     |
+| --------------------------------- | ---------- | ------ | ---------------------------------------------- |
+| Convex connection drops           | Medium     | High   | Implement reconnection banner, auto-retry      |
+| Too many real-time updates        | Low        | Medium | Debounce updates, batch animations             |
+| Table performance with 1000+ rows | Low        | Medium | Implement virtualization with TanStack Virtual |
+| Mobile UX complexity              | Medium     | Medium | Start with mobile-first design                 |
 
 ---
 
 ## File Checklist
 
 ### Phase 1 - Foundation
+
 - [ ] `apps/web/src/routes/dashboard/route.tsx` - Dashboard layout
 - [ ] `apps/web/src/routes/dashboard/index.tsx` - Redirect to markets
 - [ ] `apps/web/src/routes/dashboard/-components/app-sidebar.tsx` - Navigation
 
 ### Phase 2 - Data Table
+
 - [ ] `apps/web/src/routes/dashboard/markets/index.tsx` - Markets page
 - [ ] `apps/web/src/routes/dashboard/-components/market-table.tsx` - Table component
 - [ ] `apps/web/src/routes/dashboard/-components/market-columns.tsx` - Column defs
 - [ ] `apps/web/src/routes/dashboard/-components/stats-cards.tsx` - KPI cards
 
 ### Phase 3 - Insights
+
 - [ ] `apps/web/src/routes/dashboard/-components/market-detail-dialog.tsx` - Detail modal
 - [ ] `apps/web/src/routes/dashboard/insights/index.tsx` - Insights page
 - [ ] `apps/web/src/routes/dashboard/-components/insight-card.tsx` - Insight card
 
 ### Phase 4 - Watchlist & Polish
+
 - [ ] `apps/web/src/routes/dashboard/watchlists/index.tsx` - Watchlist page
 - [ ] Mobile responsive enhancements
 - [ ] Animation polish
@@ -707,6 +740,7 @@ bunx shadcn@latest add table dialog tabs tooltip
 ## References
 
 ### Internal References
+
 - `apps/web/src/components/ui/sidebar.tsx` - Existing sidebar component
 - `apps/web/src/routes/(auth)/` - Auth flow patterns
 - `apps/web/src/lib/providers/query.tsx` - Convex + TanStack Query setup
@@ -715,6 +749,7 @@ bunx shadcn@latest add table dialog tabs tooltip
 - `packages/backend/convex/insights.ts` - Insight queries
 
 ### External References
+
 - [Convex React Hooks](https://docs.convex.dev/client/react)
 - [shadcn/ui Sidebar](https://ui.shadcn.com/docs/components/sidebar)
 - [TanStack Table](https://tanstack.com/table/latest)
@@ -728,4 +763,3 @@ bunx shadcn@latest add table dialog tabs tooltip
 - Match glassmorphism style from auth page for cards
 - Real-time updates via Convex WebSocket - no polling needed
 - Consider adding sparkline charts for price trends in Phase 3+
-

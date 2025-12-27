@@ -8,8 +8,8 @@
  * after adding the action-cache component to convex.config.ts.
  * Run `convex dev` to generate the types.
  */
-import { ActionCache } from "@convex-dev/action-cache";
-import { components, internal } from "../_generated/api";
+import { ActionCache } from '@convex-dev/action-cache';
+import { components, internal } from '../_generated/api';
 
 // TTL values in milliseconds
 export const CACHE_TTL = {
@@ -30,66 +30,87 @@ type AnyCache = any;
 
 // ============ EVENT CACHES ============
 
-export const eventBySlugCache: AnyCache = new ActionCache(actionCacheComponent, {
-  action: internal.polymarket.events.fetchEventBySlug,
-  name: "polymarket-event-by-slug-v1",
-  ttl: CACHE_TTL.event,
-});
+export const eventBySlugCache: AnyCache = new ActionCache(
+  actionCacheComponent,
+  {
+    action: internal.polymarket.events.fetchEventBySlug,
+    name: 'polymarket-event-by-slug-v1',
+    ttl: CACHE_TTL.event,
+  },
+);
 
 export const eventByIdCache: AnyCache = new ActionCache(actionCacheComponent, {
   action: internal.polymarket.events.fetchEventById,
-  name: "polymarket-event-by-id-v1",
+  name: 'polymarket-event-by-id-v1',
   ttl: CACHE_TTL.event,
 });
 
 // ============ MARKET CACHES ============
 
-export const marketBySlugCache: AnyCache = new ActionCache(actionCacheComponent, {
-  action: internal.polymarket.markets.fetchMarketBySlug,
-  name: "polymarket-market-by-slug-v1",
-  ttl: CACHE_TTL.market,
-});
+export const marketBySlugCache: AnyCache = new ActionCache(
+  actionCacheComponent,
+  {
+    action: internal.polymarket.markets.fetchMarketBySlug,
+    name: 'polymarket-market-by-slug-v1',
+    ttl: CACHE_TTL.market,
+  },
+);
 
 export const marketByIdCache: AnyCache = new ActionCache(actionCacheComponent, {
   action: internal.polymarket.markets.fetchMarketById,
-  name: "polymarket-market-by-id-v1",
+  name: 'polymarket-market-by-id-v1',
   ttl: CACHE_TTL.market,
 });
 
 // ============ USER DATA CACHES ============
 
-export const userPositionsCache: AnyCache = new ActionCache(actionCacheComponent, {
-  action: internal.polymarket.users.fetchUserPositions,
-  name: "polymarket-positions-v1",
-  ttl: CACHE_TTL.positions,
-});
+export const userPositionsCache: AnyCache = new ActionCache(
+  actionCacheComponent,
+  {
+    action: internal.polymarket.users.fetchUserPositions,
+    name: 'polymarket-positions-v1',
+    ttl: CACHE_TTL.positions,
+  },
+);
 
 export const userTradesCache: AnyCache = new ActionCache(actionCacheComponent, {
   action: internal.polymarket.users.fetchUserTrades,
-  name: "polymarket-trades-v1",
+  name: 'polymarket-trades-v1',
   ttl: CACHE_TTL.trades,
 });
 
-export const userActivityCache: AnyCache = new ActionCache(actionCacheComponent, {
-  action: internal.polymarket.users.fetchUserActivity,
-  name: "polymarket-activity-v1",
-  ttl: CACHE_TTL.activity,
-});
+export const userActivityCache: AnyCache = new ActionCache(
+  actionCacheComponent,
+  {
+    action: internal.polymarket.users.fetchUserActivity,
+    name: 'polymarket-activity-v1',
+    ttl: CACHE_TTL.activity,
+  },
+);
 
-export const portfolioValueCache: AnyCache = new ActionCache(actionCacheComponent, {
-  action: internal.polymarket.users.fetchPortfolioValue,
-  name: "polymarket-portfolio-v1",
-  ttl: CACHE_TTL.positions,
-});
+export const portfolioValueCache: AnyCache = new ActionCache(
+  actionCacheComponent,
+  {
+    action: internal.polymarket.users.fetchPortfolioValue,
+    name: 'polymarket-portfolio-v1',
+    ttl: CACHE_TTL.positions,
+  },
+);
 
-export const closedPositionsCache: AnyCache = new ActionCache(actionCacheComponent, {
-  action: internal.polymarket.users.fetchClosedPositions,
-  name: "polymarket-closed-positions-v1",
-  ttl: CACHE_TTL.trades,
-});
+export const closedPositionsCache: AnyCache = new ActionCache(
+  actionCacheComponent,
+  {
+    action: internal.polymarket.users.fetchClosedPositions,
+    name: 'polymarket-closed-positions-v1',
+    ttl: CACHE_TTL.trades,
+  },
+);
 
-export const leaderboardCache: AnyCache = new ActionCache(actionCacheComponent, {
-  action: internal.polymarket.users.fetchLeaderboard,
-  name: "polymarket-leaderboard-v1",
-  ttl: CACHE_TTL.leaderboard,
-});
+export const leaderboardCache: AnyCache = new ActionCache(
+  actionCacheComponent,
+  {
+    action: internal.polymarket.users.fetchLeaderboard,
+    name: 'polymarket-leaderboard-v1',
+    ttl: CACHE_TTL.leaderboard,
+  },
+);

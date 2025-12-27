@@ -1,6 +1,6 @@
-import { convexBetterAuthReactStart } from "@convex-dev/better-auth/react-start";
-import { env } from "@/lib/env/server";
-import { ConvexError } from "convex/values";
+import { convexBetterAuthReactStart } from '@convex-dev/better-auth/react-start';
+import { env } from '@/lib/env/server';
+import { ConvexError } from 'convex/values';
 
 export const isAuthError = (error: unknown) => {
   // This broadly matches potentially auth related errors, can be rewritten to
@@ -8,7 +8,7 @@ export const isAuthError = (error: unknown) => {
   const message =
     (error instanceof ConvexError && error.data) ||
     (error instanceof Error && error.message) ||
-    "";
+    '';
   return /auth/i.test(message);
 };
 

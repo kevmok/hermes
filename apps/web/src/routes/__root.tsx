@@ -1,21 +1,21 @@
-import { TanStackDevtools } from "@tanstack/react-devtools";
-import { ReactQueryDevtoolsPanel } from "@tanstack/react-query-devtools";
+import { TanStackDevtools } from '@tanstack/react-devtools';
+import { ReactQueryDevtoolsPanel } from '@tanstack/react-query-devtools';
 import {
   HeadContent,
   Outlet,
   Scripts,
   createRootRouteWithContext,
   useRouteContext,
-} from "@tanstack/react-router";
-import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
+} from '@tanstack/react-router';
+import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools';
 
-import { authClient } from "@/lib/auth/client";
-import { getAuth } from "@/lib/auth/functions";
-import { ThemeProvider } from "@/lib/theme";
-import { ConvexBetterAuthProvider } from "@convex-dev/better-auth/react";
-import { ConvexQueryClient } from "@convex-dev/react-query";
-import { QueryClient } from "@tanstack/react-query";
-import appCss from "../styles.css?url";
+import { authClient } from '@/lib/auth/client';
+import { getAuth } from '@/lib/auth/functions';
+import { ThemeProvider } from '@/lib/theme';
+import { ConvexBetterAuthProvider } from '@convex-dev/better-auth/react';
+import { ConvexQueryClient } from '@convex-dev/react-query';
+import { QueryClient } from '@tanstack/react-query';
+import appCss from '../styles.css?url';
 
 export const Route = createRootRouteWithContext<{
   queryClient: QueryClient;
@@ -24,37 +24,37 @@ export const Route = createRootRouteWithContext<{
   head: () => ({
     meta: [
       {
-        charSet: "utf-8",
+        charSet: 'utf-8',
       },
       {
-        name: "viewport",
-        content: "width=device-width, initial-scale=1",
+        name: 'viewport',
+        content: 'width=device-width, initial-scale=1',
       },
       {
-        title: "Hermes — Prediction Market Intelligence",
+        title: 'Hermes — Prediction Market Intelligence',
       },
       {
-        name: "description",
+        name: 'description',
         content:
-          "Get the sharpest prediction market recommendations. Real-time signals and risk-adjusted trade ideas powered by advanced machine learning.",
+          'Get the sharpest prediction market recommendations. Real-time signals and risk-adjusted trade ideas powered by advanced machine learning.',
       },
     ],
     links: [
       {
-        rel: "preconnect",
-        href: "https://fonts.googleapis.com",
+        rel: 'preconnect',
+        href: 'https://fonts.googleapis.com',
       },
       {
-        rel: "preconnect",
-        href: "https://fonts.gstatic.com",
-        crossOrigin: "anonymous",
+        rel: 'preconnect',
+        href: 'https://fonts.gstatic.com',
+        crossOrigin: 'anonymous',
       },
       {
-        rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap",
+        rel: 'stylesheet',
+        href: 'https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap',
       },
       {
-        rel: "stylesheet",
+        rel: 'stylesheet',
         href: appCss,
       },
     ],
@@ -64,7 +64,7 @@ export const Route = createRootRouteWithContext<{
   component: RootComponent,
   beforeLoad: async (ctx) => {
     const token = await ctx.context.queryClient.ensureQueryData({
-      queryKey: ["token"],
+      queryKey: ['token'],
       queryFn: getAuth,
       revalidateIfStale: true,
     });
@@ -87,7 +87,7 @@ export const Route = createRootRouteWithContext<{
 function RootComponent() {
   const context = useRouteContext({ from: Route.id });
   return (
-    <ThemeProvider defaultTheme="system">
+    <ThemeProvider defaultTheme='system'>
       <ConvexBetterAuthProvider
         client={context.convexQueryClient.convexClient}
         authClient={authClient}
@@ -103,7 +103,7 @@ function RootComponent() {
 
 function RootDocument({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang='en' suppressHydrationWarning>
       <head>
         <HeadContent />
       </head>
@@ -111,15 +111,15 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         {children}
         <TanStackDevtools
           config={{
-            position: "bottom-right",
+            position: 'bottom-right',
           }}
           plugins={[
             {
-              name: "TanStack Query",
+              name: 'TanStack Query',
               render: <ReactQueryDevtoolsPanel />,
             },
             {
-              name: "Tanstack Router",
+              name: 'Tanstack Router',
               render: <TanStackRouterDevtoolsPanel />,
             },
           ]}

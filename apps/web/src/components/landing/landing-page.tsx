@@ -1,71 +1,71 @@
-import { motion, AnimatePresence, useInView } from "motion/react";
-import { useRef, useState, useEffect } from "react";
+import { motion, AnimatePresence, useInView } from 'motion/react';
+import { useRef, useState, useEffect } from 'react';
 
 // ============================================================================
 // DESIGN SYSTEM
 // ============================================================================
 
 const colors = {
-  bg: "#030712",
-  bgSecondary: "#0a0f1a",
-  surface: "#111827",
-  surfaceLight: "#1f2937",
-  border: "rgba(34, 211, 238, 0.15)",
-  borderBright: "rgba(34, 211, 238, 0.4)",
-  text: "#f8fafc",
-  textMuted: "#94a3b8",
-  textDim: "#64748b",
-  cyan: "#22d3ee",
-  cyanGlow: "rgba(34, 211, 238, 0.4)",
-  cyanDim: "rgba(34, 211, 238, 0.1)",
-  emerald: "#10b981",
-  emeraldGlow: "rgba(16, 185, 129, 0.4)",
-  red: "#ef4444",
-  redGlow: "rgba(239, 68, 68, 0.4)",
-  purple: "#a855f7",
-  purpleGlow: "rgba(168, 85, 247, 0.3)",
+  bg: '#030712',
+  bgSecondary: '#0a0f1a',
+  surface: '#111827',
+  surfaceLight: '#1f2937',
+  border: 'rgba(34, 211, 238, 0.15)',
+  borderBright: 'rgba(34, 211, 238, 0.4)',
+  text: '#f8fafc',
+  textMuted: '#94a3b8',
+  textDim: '#64748b',
+  cyan: '#22d3ee',
+  cyanGlow: 'rgba(34, 211, 238, 0.4)',
+  cyanDim: 'rgba(34, 211, 238, 0.1)',
+  emerald: '#10b981',
+  emeraldGlow: 'rgba(16, 185, 129, 0.4)',
+  red: '#ef4444',
+  redGlow: 'rgba(239, 68, 68, 0.4)',
+  purple: '#a855f7',
+  purpleGlow: 'rgba(168, 85, 247, 0.3)',
 };
 
 // Sample trades that cycle through the hero animation
 const SAMPLE_TRADES = [
   {
-    question: "Will the Fed lower rates in 2026?",
-    consensus: "YES",
+    question: 'Will the Fed lower rates in 2026?',
+    consensus: 'YES',
     confidence: 87,
     price: 0.62,
   },
   {
-    question: "Will Bitcoin hit $150k by March?",
-    consensus: "NO",
+    question: 'Will Bitcoin hit $150k by March?',
+    consensus: 'NO',
     confidence: 73,
     price: 0.28,
   },
   {
-    question: "Will SpaceX launch Starship successfully?",
-    consensus: "YES",
+    question: 'Will SpaceX launch Starship successfully?',
+    consensus: 'YES',
     confidence: 91,
     price: 0.78,
   },
   {
-    question: "Will US inflation drop below 2%?",
-    consensus: "NO",
+    question: 'Will US inflation drop below 2%?',
+    consensus: 'NO',
     confidence: 68,
     price: 0.34,
   },
   {
-    question: "Will Apple release AR glasses in 2025?",
-    consensus: "YES",
+    question: 'Will Apple release AR glasses in 2025?',
+    consensus: 'YES',
     confidence: 82,
     price: 0.55,
   },
 ];
 
 const AI_MODELS = [
-  { name: "Claude", color: "#d97706", icon: "C" },
-  { name: "GPT-4", color: "#10b981", icon: "O" },
-  { name: "Gemini", color: "#3b82f6", icon: "G" },
-  { name: "Grok", color: "#ffffff", icon: "Gk" },
-  { name: "Qwen", color: "#6551E9", icon: "Q" },
+  { name: 'Claude', color: '#d97706', icon: 'C' },
+  { name: 'GPT-4', color: '#10b981', icon: 'O' },
+  { name: 'Gemini', color: '#3b82f6', icon: 'G' },
+  { name: 'Grok', color: '#ffffff', icon: 'Gk' },
+  { name: 'Qwen', color: '#6551E9', icon: 'Q' },
 ];
 
 // ============================================================================
@@ -74,49 +74,49 @@ const AI_MODELS = [
 
 function CircuitGrid() {
   return (
-    <div className="absolute inset-0 overflow-hidden pointer-events-none">
+    <div className='absolute inset-0 overflow-hidden pointer-events-none'>
       {/* Animated grid lines */}
-      <svg className="absolute inset-0 w-full h-full opacity-20">
+      <svg className='absolute inset-0 w-full h-full opacity-20'>
         <defs>
           <pattern
-            id="circuit-grid"
-            width="60"
-            height="60"
-            patternUnits="userSpaceOnUse"
+            id='circuit-grid'
+            width='60'
+            height='60'
+            patternUnits='userSpaceOnUse'
           >
             <path
-              d="M 60 0 L 0 0 0 60"
-              fill="none"
+              d='M 60 0 L 0 0 0 60'
+              fill='none'
               stroke={colors.cyan}
-              strokeWidth="0.5"
-              opacity="0.3"
+              strokeWidth='0.5'
+              opacity='0.3'
             />
           </pattern>
-          <linearGradient id="scan-gradient" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor={colors.cyan} stopOpacity="0" />
-            <stop offset="50%" stopColor={colors.cyan} stopOpacity="0.8" />
-            <stop offset="100%" stopColor={colors.cyan} stopOpacity="0" />
+          <linearGradient id='scan-gradient' x1='0%' y1='0%' x2='0%' y2='100%'>
+            <stop offset='0%' stopColor={colors.cyan} stopOpacity='0' />
+            <stop offset='50%' stopColor={colors.cyan} stopOpacity='0.8' />
+            <stop offset='100%' stopColor={colors.cyan} stopOpacity='0' />
           </linearGradient>
         </defs>
-        <rect width="100%" height="100%" fill="url(#circuit-grid)" />
+        <rect width='100%' height='100%' fill='url(#circuit-grid)' />
       </svg>
 
       {/* Scanning line */}
       <motion.div
-        className="absolute left-0 right-0 h-0.5 pointer-events-none"
+        className='absolute left-0 right-0 h-0.5 pointer-events-none'
         style={{
           background: `linear-gradient(90deg, transparent, ${colors.cyan}, transparent)`,
           boxShadow: `0 0 20px ${colors.cyanGlow}, 0 0 40px ${colors.cyanGlow}`,
         }}
-        animate={{ y: ["-10vh", "110vh"] }}
-        transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
+        animate={{ y: ['-10vh', '110vh'] }}
+        transition={{ duration: 8, repeat: Infinity, ease: 'linear' }}
       />
 
       {/* Floating particles */}
       {[...Array(20)].map((_, i) => (
         <motion.div
           key={i}
-          className="absolute w-1 h-1 rounded-full"
+          className='absolute w-1 h-1 rounded-full'
           style={{
             background: colors.cyan,
             boxShadow: `0 0 6px ${colors.cyan}`,
@@ -156,19 +156,19 @@ function CircuitTrace({
       {/* Static trace line (always visible, dim) */}
       <path
         d={path}
-        fill="none"
+        fill='none'
         stroke={color}
-        strokeWidth="1"
-        opacity="0.15"
+        strokeWidth='1'
+        opacity='0.15'
       />
 
       {/* Animated data pulse traveling along the trace */}
       <motion.path
         d={path}
-        fill="none"
+        fill='none'
         stroke={color}
-        strokeWidth="2"
-        strokeLinecap="round"
+        strokeWidth='2'
+        strokeLinecap='round'
         style={{
           filter: `drop-shadow(0 0 6px ${color})`,
         }}
@@ -181,7 +181,7 @@ function CircuitTrace({
           duration: duration,
           repeat: Infinity,
           delay: delay,
-          ease: "linear",
+          ease: 'linear',
           times: [0, 0.05, 0.95, 1],
         }}
       />
@@ -189,10 +189,10 @@ function CircuitTrace({
       {/* Brighter core of the pulse */}
       <motion.path
         d={path}
-        fill="none"
-        stroke="#ffffff"
-        strokeWidth="1"
-        strokeLinecap="round"
+        fill='none'
+        stroke='#ffffff'
+        strokeWidth='1'
+        strokeLinecap='round'
         initial={{ pathLength: 0, pathOffset: 0 }}
         animate={{
           pathLength: [0, 0.08, 0.08, 0],
@@ -202,7 +202,7 @@ function CircuitTrace({
           duration: duration,
           repeat: Infinity,
           delay: delay,
-          ease: "linear",
+          ease: 'linear',
           times: [0, 0.05, 0.95, 1],
         }}
       />
@@ -231,13 +231,13 @@ function CircuitNode({
         cx={x}
         cy={y}
         r={size + 2}
-        fill="none"
+        fill='none'
         stroke={color}
-        strokeWidth="1"
-        opacity="0.3"
+        strokeWidth='1'
+        opacity='0.3'
       />
       {/* Inner dot */}
-      <circle cx={x} cy={y} r={size / 2} fill={color} opacity="0.5" />
+      <circle cx={x} cy={y} r={size / 2} fill={color} opacity='0.5' />
       {/* Pulse effect */}
       <motion.circle
         cx={x}
@@ -253,7 +253,7 @@ function CircuitNode({
           duration: 3,
           repeat: Infinity,
           delay: delay,
-          ease: "easeInOut",
+          ease: 'easeInOut',
         }}
         style={{ filter: `drop-shadow(0 0 4px ${color})` }}
       />
@@ -266,19 +266,19 @@ function CircuitBoard() {
   const circuits = [
     // Left side circuits
     {
-      path: "M 0 120 L 80 120 L 80 200 L 160 200 L 160 320 L 100 320",
+      path: 'M 0 120 L 80 120 L 80 200 L 160 200 L 160 320 L 100 320',
       delay: 0,
       duration: 4,
       color: colors.cyan,
     },
     {
-      path: "M 0 280 L 120 280 L 120 180 L 200 180",
+      path: 'M 0 280 L 120 280 L 120 180 L 200 180',
       delay: 1.5,
       duration: 3,
       color: colors.cyan,
     },
     {
-      path: "M 60 0 L 60 80 L 180 80 L 180 160",
+      path: 'M 60 0 L 60 80 L 180 80 L 180 160',
       delay: 0.8,
       duration: 3.5,
       color: colors.emerald,
@@ -286,19 +286,19 @@ function CircuitBoard() {
 
     // Right side circuits
     {
-      path: "M 1440 100 L 1320 100 L 1320 180 L 1240 180 L 1240 280",
+      path: 'M 1440 100 L 1320 100 L 1320 180 L 1240 180 L 1240 280',
       delay: 0.5,
       duration: 4,
       color: colors.cyan,
     },
     {
-      path: "M 1440 240 L 1360 240 L 1360 160 L 1280 160",
+      path: 'M 1440 240 L 1360 240 L 1360 160 L 1280 160',
       delay: 2,
       duration: 3,
       color: colors.cyan,
     },
     {
-      path: "M 1380 0 L 1380 100 L 1280 100 L 1280 200",
+      path: 'M 1380 0 L 1380 100 L 1280 100 L 1280 200',
       delay: 1.2,
       duration: 3.5,
       color: colors.emerald,
@@ -306,13 +306,13 @@ function CircuitBoard() {
 
     // Top decorative circuits
     {
-      path: "M 400 0 L 400 60 L 500 60 L 500 120",
+      path: 'M 400 0 L 400 60 L 500 60 L 500 120',
       delay: 0.3,
       duration: 3,
       color: colors.cyan,
     },
     {
-      path: "M 900 0 L 900 80 L 1000 80",
+      path: 'M 900 0 L 900 80 L 1000 80',
       delay: 1.8,
       duration: 2.5,
       color: colors.cyan,
@@ -320,13 +320,13 @@ function CircuitBoard() {
 
     // Bottom area circuits
     {
-      path: "M 0 500 L 100 500 L 100 420 L 200 420",
+      path: 'M 0 500 L 100 500 L 100 420 L 200 420',
       delay: 2.5,
       duration: 3,
       color: colors.emerald,
     },
     {
-      path: "M 1440 480 L 1300 480 L 1300 400",
+      path: 'M 1440 480 L 1300 480 L 1300 400',
       delay: 3,
       duration: 2.8,
       color: colors.emerald,
@@ -359,9 +359,9 @@ function CircuitBoard() {
 
   return (
     <svg
-      className="absolute inset-0 w-full h-full pointer-events-none"
-      style={{ overflow: "visible" }}
-      preserveAspectRatio="none"
+      className='absolute inset-0 w-full h-full pointer-events-none'
+      style={{ overflow: 'visible' }}
+      preserveAspectRatio='none'
     >
       {/* Render circuit traces */}
       {circuits.map((circuit, i) => (
@@ -391,13 +391,13 @@ function AIModelNode({
 }) {
   return (
     <motion.div
-      className="flex flex-col items-center gap-2"
+      className='flex flex-col items-center gap-2'
       initial={{ scale: 0.8, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
       transition={{ delay }}
     >
       <motion.div
-        className="relative w-14 h-14 rounded-xl flex items-center justify-center font-bold text-lg"
+        className='relative w-14 h-14 rounded-xl flex items-center justify-center font-bold text-lg'
         style={{
           background: `linear-gradient(135deg, ${model.color}22, ${model.color}44)`,
           border: `1px solid ${model.color}66`,
@@ -419,7 +419,7 @@ function AIModelNode({
         {model.icon}
         {isAnalyzing && (
           <motion.div
-            className="absolute inset-0 rounded-xl border-2"
+            className='absolute inset-0 rounded-xl border-2'
             style={{ borderColor: model.color }}
             animate={{ scale: [1, 1.3], opacity: [0.8, 0] }}
             transition={{ duration: 1, repeat: Infinity }}
@@ -427,7 +427,7 @@ function AIModelNode({
         )}
       </motion.div>
       <span
-        className="text-xs text-(--text-muted)"
+        className='text-xs text-(--text-muted)'
         style={{ color: colors.textMuted }}
       >
         {model.name}
@@ -439,17 +439,17 @@ function AIModelNode({
 function TradeAnalysisWheel() {
   const [currentTradeIndex, setCurrentTradeIndex] = useState(0);
   const [phase, setPhase] = useState<
-    "entering" | "analyzing" | "verdict" | "exiting"
-  >("entering");
+    'entering' | 'analyzing' | 'verdict' | 'exiting'
+  >('entering');
 
   const currentTrade = SAMPLE_TRADES[currentTradeIndex];
 
   useEffect(() => {
     const phases = [
-      { name: "entering" as const, duration: 800 },
-      { name: "analyzing" as const, duration: 2500 },
-      { name: "verdict" as const, duration: 2000 },
-      { name: "exiting" as const, duration: 500 },
+      { name: 'entering' as const, duration: 800 },
+      { name: 'analyzing' as const, duration: 2500 },
+      { name: 'verdict' as const, duration: 2000 },
+      { name: 'exiting' as const, duration: 500 },
     ];
 
     let totalDelay = 0;
@@ -458,10 +458,10 @@ function TradeAnalysisWheel() {
     phases.forEach((p) => {
       const timeout = setTimeout(() => {
         setPhase(p.name);
-        if (p.name === "exiting") {
+        if (p.name === 'exiting') {
           setTimeout(() => {
             setCurrentTradeIndex((prev) => (prev + 1) % SAMPLE_TRADES.length);
-            setPhase("entering");
+            setPhase('entering');
           }, p.duration);
         }
       }, totalDelay);
@@ -472,14 +472,14 @@ function TradeAnalysisWheel() {
     return () => timeouts.forEach(clearTimeout);
   }, [currentTradeIndex]);
 
-  const isAnalyzing = phase === "analyzing";
-  const showVerdict = phase === "verdict" || phase === "exiting";
+  const isAnalyzing = phase === 'analyzing';
+  const showVerdict = phase === 'verdict' || phase === 'exiting';
 
   return (
-    <div className="relative w-full max-w-3xl mx-auto">
+    <div className='relative w-full max-w-3xl mx-auto'>
       {/* Main container with electric border */}
       <motion.div
-        className="relative rounded-2xl p-8 overflow-hidden"
+        className='relative rounded-2xl p-8 overflow-hidden'
         style={{
           background: `linear-gradient(135deg, ${colors.surface}ee, ${colors.bgSecondary}ee)`,
           border: `1px solid ${colors.border}`,
@@ -497,59 +497,59 @@ function TradeAnalysisWheel() {
       >
         {/* Corner accents */}
         <div
-          className="absolute top-0 left-0 w-16 h-16 border-t-2 border-l-2 rounded-tl-2xl"
+          className='absolute top-0 left-0 w-16 h-16 border-t-2 border-l-2 rounded-tl-2xl'
           style={{ borderColor: colors.cyan }}
         />
         <div
-          className="absolute top-0 right-0 w-16 h-16 border-t-2 border-r-2 rounded-tr-2xl"
+          className='absolute top-0 right-0 w-16 h-16 border-t-2 border-r-2 rounded-tr-2xl'
           style={{ borderColor: colors.cyan }}
         />
         <div
-          className="absolute bottom-0 left-0 w-16 h-16 border-b-2 border-l-2 rounded-bl-2xl"
+          className='absolute bottom-0 left-0 w-16 h-16 border-b-2 border-l-2 rounded-bl-2xl'
           style={{ borderColor: colors.cyan }}
         />
         <div
-          className="absolute bottom-0 right-0 w-16 h-16 border-b-2 border-r-2 rounded-br-2xl"
+          className='absolute bottom-0 right-0 w-16 h-16 border-b-2 border-r-2 rounded-br-2xl'
           style={{ borderColor: colors.cyan }}
         />
 
         {/* Status indicator */}
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-2">
+        <div className='flex items-center justify-between mb-6'>
+          <div className='flex items-center gap-2'>
             <motion.div
-              className="w-2 h-2 rounded-full"
+              className='w-2 h-2 rounded-full'
               style={{ background: colors.cyan }}
               animate={{ opacity: [1, 0.3, 1] }}
               transition={{ duration: 1, repeat: Infinity }}
             />
             <span
-              className="text-xs font-mono uppercase tracking-wider"
+              className='text-xs font-mono uppercase tracking-wider'
               style={{ color: colors.cyan }}
             >
               {isAnalyzing
-                ? "Analyzing..."
+                ? 'Analyzing...'
                 : showVerdict
-                  ? "Consensus Ready"
-                  : "Loading Market"}
+                  ? 'Consensus Ready'
+                  : 'Loading Market'}
             </span>
           </div>
-          <span className="text-xs font-mono" style={{ color: colors.textDim }}>
+          <span className='text-xs font-mono' style={{ color: colors.textDim }}>
             Trade #{currentTradeIndex + 1}/{SAMPLE_TRADES.length}
           </span>
         </div>
 
         {/* Trade Question */}
-        <AnimatePresence mode="wait">
+        <AnimatePresence mode='wait'>
           <motion.div
             key={currentTradeIndex}
-            initial={{ opacity: 0, y: 20, filter: "blur(10px)" }}
-            animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-            exit={{ opacity: 0, y: -20, filter: "blur(10px)" }}
+            initial={{ opacity: 0, y: 20, filter: 'blur(10px)' }}
+            animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+            exit={{ opacity: 0, y: -20, filter: 'blur(10px)' }}
             transition={{ duration: 0.5 }}
-            className="mb-8"
+            className='mb-8'
           >
             <h3
-              className="text-2xl md:text-3xl font-bold text-center leading-tight"
+              className='text-2xl md:text-3xl font-bold text-center leading-tight'
               style={{
                 color: colors.text,
                 fontFamily: "'DM Sans', sans-serif",
@@ -557,12 +557,12 @@ function TradeAnalysisWheel() {
             >
               "{currentTrade.question}"
             </h3>
-            <div className="flex items-center justify-center gap-4 mt-3">
+            <div className='flex items-center justify-center gap-4 mt-3'>
               <span
-                className="text-sm font-mono"
+                className='text-sm font-mono'
                 style={{ color: colors.textMuted }}
               >
-                Market Price:{" "}
+                Market Price:{' '}
                 <span style={{ color: colors.cyan }}>
                   {(currentTrade.price * 100).toFixed(0)}¢
                 </span>
@@ -572,7 +572,7 @@ function TradeAnalysisWheel() {
         </AnimatePresence>
 
         {/* AI Models Row */}
-        <div className="flex items-center justify-center gap-8 mb-8">
+        <div className='flex items-center justify-center gap-8 mb-8'>
           {AI_MODELS.map((model, i) => (
             <AIModelNode
               key={model.name}
@@ -584,48 +584,48 @@ function TradeAnalysisWheel() {
         </div>
 
         {/* Verdict/Analyzing Area - Fixed height to prevent layout shifts */}
-        <div className="h-40 flex items-center justify-center relative">
-          <AnimatePresence mode="wait">
+        <div className='h-40 flex items-center justify-center relative'>
+          <AnimatePresence mode='wait'>
             {showVerdict ? (
               <motion.div
-                key="verdict"
+                key='verdict'
                 initial={{ scale: 0, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0, opacity: 0 }}
-                transition={{ type: "spring", damping: 15, stiffness: 300 }}
-                className="flex flex-col items-center absolute inset-0 justify-center"
+                transition={{ type: 'spring', damping: 15, stiffness: 300 }}
+                className='flex flex-col items-center absolute inset-0 justify-center'
               >
                 <motion.div
-                  className="w-20 h-20 rounded-full flex items-center justify-center mb-3"
+                  className='w-20 h-20 rounded-full flex items-center justify-center mb-3'
                   style={{
                     background:
-                      currentTrade.consensus === "YES"
+                      currentTrade.consensus === 'YES'
                         ? `linear-gradient(135deg, ${colors.emerald}22, ${colors.emerald}44)`
                         : `linear-gradient(135deg, ${colors.red}22, ${colors.red}44)`,
-                    border: `2px solid ${currentTrade.consensus === "YES" ? colors.emerald : colors.red}`,
-                    boxShadow: `0 0 40px ${currentTrade.consensus === "YES" ? colors.emeraldGlow : colors.redGlow}`,
+                    border: `2px solid ${currentTrade.consensus === 'YES' ? colors.emerald : colors.red}`,
+                    boxShadow: `0 0 40px ${currentTrade.consensus === 'YES' ? colors.emeraldGlow : colors.redGlow}`,
                   }}
                   animate={{
                     boxShadow: [
-                      `0 0 20px ${currentTrade.consensus === "YES" ? colors.emeraldGlow : colors.redGlow}`,
-                      `0 0 50px ${currentTrade.consensus === "YES" ? colors.emeraldGlow : colors.redGlow}`,
-                      `0 0 20px ${currentTrade.consensus === "YES" ? colors.emeraldGlow : colors.redGlow}`,
+                      `0 0 20px ${currentTrade.consensus === 'YES' ? colors.emeraldGlow : colors.redGlow}`,
+                      `0 0 50px ${currentTrade.consensus === 'YES' ? colors.emeraldGlow : colors.redGlow}`,
+                      `0 0 20px ${currentTrade.consensus === 'YES' ? colors.emeraldGlow : colors.redGlow}`,
                     ],
                   }}
                   transition={{ duration: 2, repeat: Infinity }}
                 >
-                  {currentTrade.consensus === "YES" ? (
+                  {currentTrade.consensus === 'YES' ? (
                     <motion.svg
-                      className="w-10 h-10"
-                      viewBox="0 0 24 24"
-                      fill="none"
+                      className='w-10 h-10'
+                      viewBox='0 0 24 24'
+                      fill='none'
                       stroke={colors.emerald}
-                      strokeWidth="3"
+                      strokeWidth='3'
                     >
                       <motion.path
-                        d="M5 13l4 4L19 7"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
+                        d='M5 13l4 4L19 7'
+                        strokeLinecap='round'
+                        strokeLinejoin='round'
                         initial={{ pathLength: 0 }}
                         animate={{ pathLength: 1 }}
                         transition={{ duration: 0.5 }}
@@ -633,15 +633,15 @@ function TradeAnalysisWheel() {
                     </motion.svg>
                   ) : (
                     <motion.svg
-                      className="w-10 h-10"
-                      viewBox="0 0 24 24"
-                      fill="none"
+                      className='w-10 h-10'
+                      viewBox='0 0 24 24'
+                      fill='none'
                       stroke={colors.red}
-                      strokeWidth="3"
+                      strokeWidth='3'
                     >
                       <motion.path
-                        d="M6 6l12 12M6 18L18 6"
-                        strokeLinecap="round"
+                        d='M6 6l12 12M6 18L18 6'
+                        strokeLinecap='round'
                         initial={{ pathLength: 0 }}
                         animate={{ pathLength: 1 }}
                         transition={{ duration: 0.5 }}
@@ -654,13 +654,13 @@ function TradeAnalysisWheel() {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.2 }}
-                  className="text-center"
+                  className='text-center'
                 >
                   <div
-                    className="text-2xl font-bold"
+                    className='text-2xl font-bold'
                     style={{
                       color:
-                        currentTrade.consensus === "YES"
+                        currentTrade.consensus === 'YES'
                           ? colors.emerald
                           : colors.red,
                       fontFamily: "'DM Sans', sans-serif",
@@ -669,7 +669,7 @@ function TradeAnalysisWheel() {
                     {currentTrade.consensus}
                   </div>
                   <div
-                    className="text-sm font-mono"
+                    className='text-sm font-mono'
                     style={{ color: colors.textMuted }}
                   >
                     {currentTrade.confidence}% Consensus
@@ -678,17 +678,17 @@ function TradeAnalysisWheel() {
               </motion.div>
             ) : (
               <motion.div
-                key="analyzing"
+                key='analyzing'
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.3 }}
-                className="flex items-center gap-2 absolute"
+                className='flex items-center gap-2 absolute'
               >
                 {[0, 1, 2].map((i) => (
                   <motion.div
                     key={i}
-                    className="w-3 h-3 rounded-full"
+                    className='w-3 h-3 rounded-full'
                     style={{ background: colors.cyan }}
                     animate={
                       isAnalyzing
@@ -712,11 +712,11 @@ function TradeAnalysisWheel() {
       </motion.div>
 
       {/* Progress bar */}
-      <div className="mt-4 flex gap-2 justify-center">
+      <div className='mt-4 flex gap-2 justify-center'>
         {SAMPLE_TRADES.map((_, i) => (
           <motion.div
             key={i}
-            className="h-1 rounded-full transition-all duration-300"
+            className='h-1 rounded-full transition-all duration-300'
             style={{
               width: i === currentTradeIndex ? 32 : 8,
               background:
@@ -724,7 +724,7 @@ function TradeAnalysisWheel() {
               boxShadow:
                 i === currentTradeIndex
                   ? `0 0 10px ${colors.cyanGlow}`
-                  : "none",
+                  : 'none',
             }}
           />
         ))}
@@ -742,8 +742,8 @@ function Navigation() {
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 50);
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   return (
@@ -751,51 +751,51 @@ function Navigation() {
       initial={{ y: -100, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.6 }}
-      className="fixed top-0 left-0 right-0 z-50 transition-all duration-300"
+      className='fixed top-0 left-0 right-0 z-50 transition-all duration-300'
       style={{
-        background: scrolled ? `${colors.bg}ee` : "transparent",
-        backdropFilter: scrolled ? "blur(20px)" : "none",
+        background: scrolled ? `${colors.bg}ee` : 'transparent',
+        backdropFilter: scrolled ? 'blur(20px)' : 'none',
         borderBottom: scrolled
           ? `1px solid ${colors.border}`
-          : "1px solid transparent",
+          : '1px solid transparent',
       }}
     >
-      <nav className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
-        <a href="/" className="flex items-center gap-3 group">
+      <nav className='max-w-6xl mx-auto px-6 py-4 flex items-center justify-between'>
+        <a href='/' className='flex items-center gap-3 group'>
           <motion.div
-            className="relative w-10 h-10 rounded-lg flex items-center justify-center overflow-hidden"
+            className='relative w-10 h-10 rounded-lg flex items-center justify-center overflow-hidden'
             style={{
               background: `linear-gradient(135deg, ${colors.cyan}22, ${colors.purple}22)`,
               border: `1px solid ${colors.borderBright}`,
             }}
             whileHover={{ scale: 1.05 }}
           >
-            <span className="text-xl font-bold" style={{ color: colors.cyan }}>
+            <span className='text-xl font-bold' style={{ color: colors.cyan }}>
               H
             </span>
             <motion.div
-              className="absolute inset-0"
+              className='absolute inset-0'
               style={{
                 background: `linear-gradient(45deg, transparent, ${colors.cyan}33, transparent)`,
               }}
-              animate={{ x: ["-100%", "100%"] }}
+              animate={{ x: ['-100%', '100%'] }}
               transition={{ duration: 2, repeat: Infinity, repeatDelay: 1 }}
             />
           </motion.div>
           <span
-            className="text-xl font-bold"
+            className='text-xl font-bold'
             style={{ color: colors.text, fontFamily: "'DM Sans', sans-serif" }}
           >
             Hermes
           </span>
         </a>
 
-        <div className="hidden md:flex items-center gap-8">
-          {["Features", "How It Works", "Pricing"].map((item) => (
+        <div className='hidden md:flex items-center gap-8'>
+          {['Features', 'How It Works', 'Pricing'].map((item) => (
             <a
               key={item}
-              href={`#${item.toLowerCase().replace(/ /g, "-")}`}
-              className="text-sm transition-colors hover:text-(--cyan)"
+              href={`#${item.toLowerCase().replace(/ /g, '-')}`}
+              className='text-sm transition-colors hover:text-(--cyan)'
               style={{ color: colors.textMuted }}
             >
               {item}
@@ -803,22 +803,22 @@ function Navigation() {
           ))}
         </div>
 
-        <div className="flex items-center gap-4">
+        <div className='flex items-center gap-4'>
           <a
-            href="/auth"
-            className="hidden sm:inline-flex text-sm"
+            href='/auth'
+            className='hidden sm:inline-flex text-sm'
             style={{ color: colors.textMuted }}
           >
             Sign In
           </a>
           <motion.a
-            href="/auth"
+            href='/auth'
             whileHover={{
               scale: 1.02,
               boxShadow: `0 0 30px ${colors.cyanGlow}`,
             }}
             whileTap={{ scale: 0.98 }}
-            className="px-5 py-2.5 rounded-lg text-sm font-medium transition-all"
+            className='px-5 py-2.5 rounded-lg text-sm font-medium transition-all'
             style={{
               background: `linear-gradient(135deg, ${colors.cyan}, ${colors.emerald})`,
               color: colors.bg,
@@ -839,7 +839,7 @@ function Navigation() {
 function HeroSection() {
   return (
     <section
-      className="relative min-h-screen flex items-center justify-center overflow-hidden pt-20"
+      className='relative min-h-screen flex items-center justify-center overflow-hidden pt-20'
       style={{ background: colors.bg }}
     >
       <CircuitGrid />
@@ -847,31 +847,31 @@ function HeroSection() {
 
       {/* Radial glows */}
       <div
-        className="absolute top-1/4 left-1/2 -translate-x-1/2 w-200 h-150 rounded-full blur-[150px] pointer-events-none"
+        className='absolute top-1/4 left-1/2 -translate-x-1/2 w-200 h-150 rounded-full blur-[150px] pointer-events-none'
         style={{ background: colors.cyanDim }}
       />
       <div
-        className="absolute bottom-0 right-0 w-125 h-125 rounded-full blur-[120px] pointer-events-none"
+        className='absolute bottom-0 right-0 w-125 h-125 rounded-full blur-[120px] pointer-events-none'
         style={{ background: colors.purpleGlow, opacity: 0.3 }}
       />
 
-      <div className="relative z-10 max-w-6xl mx-auto px-6 py-16">
+      <div className='relative z-10 max-w-6xl mx-auto px-6 py-16'>
         {/* Badge */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="flex justify-center mb-8"
+          className='flex justify-center mb-8'
         >
           <div
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full"
+            className='inline-flex items-center gap-2 px-4 py-2 rounded-full'
             style={{
               background: colors.cyanDim,
               border: `1px solid ${colors.border}`,
             }}
           >
             <motion.div
-              className="w-2 h-2 rounded-full"
+              className='w-2 h-2 rounded-full'
               style={{
                 background: colors.cyan,
                 boxShadow: `0 0 10px ${colors.cyan}`,
@@ -879,7 +879,7 @@ function HeroSection() {
               animate={{ scale: [1, 1.2, 1], opacity: [1, 0.5, 1] }}
               transition={{ duration: 2, repeat: Infinity }}
             />
-            <span className="text-sm font-mono" style={{ color: colors.cyan }}>
+            <span className='text-sm font-mono' style={{ color: colors.cyan }}>
               LIVE BETA
             </span>
           </div>
@@ -890,21 +890,21 @@ function HeroSection() {
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, delay: 0.1 }}
-          className="text-center mb-6"
+          className='text-center mb-6'
         >
           <h1
-            className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold leading-[1.1] tracking-tight"
+            className='text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold leading-[1.1] tracking-tight'
             style={{ color: colors.text, fontFamily: "'DM Sans', sans-serif" }}
           >
-            AI-Powered{" "}
+            AI-Powered{' '}
             <span
-              className="relative inline-block"
+              className='relative inline-block'
               style={{
                 background: `linear-gradient(90deg, ${colors.cyan}, ${colors.emerald}, ${colors.cyan})`,
-                backgroundSize: "200% 100%",
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-                animation: "gradient-shift 3s ease infinite",
+                backgroundSize: '200% 100%',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                animation: 'gradient-shift 3s ease infinite',
               }}
             >
               Prediction Market
@@ -919,7 +919,7 @@ function HeroSection() {
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, delay: 0.2 }}
-          className="text-lg sm:text-xl text-center max-w-2xl mx-auto mb-12 leading-relaxed"
+          className='text-lg sm:text-xl text-center max-w-2xl mx-auto mb-12 leading-relaxed'
           style={{ color: colors.textMuted }}
         >
           Watch our multi-model AI consensus engine analyze markets in
@@ -941,44 +941,44 @@ function HeroSection() {
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, delay: 0.5 }}
-          className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-12"
+          className='flex flex-col sm:flex-row items-center justify-center gap-4 mt-12'
         >
           <motion.a
-            href="/auth"
+            href='/auth'
             whileHover={{
               scale: 1.02,
               boxShadow: `0 0 40px ${colors.cyanGlow}`,
             }}
             whileTap={{ scale: 0.98 }}
-            className="group relative inline-flex items-center gap-2 px-8 py-4 rounded-xl font-semibold overflow-hidden"
+            className='group relative inline-flex items-center gap-2 px-8 py-4 rounded-xl font-semibold overflow-hidden'
             style={{
               background: `linear-gradient(135deg, ${colors.cyan}, ${colors.emerald})`,
               color: colors.bg,
             }}
           >
-            <span className="relative z-10">Start Trading Smarter</span>
+            <span className='relative z-10'>Start Trading Smarter</span>
             <motion.svg
-              className="w-5 h-5 relative z-10"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
+              className='w-5 h-5 relative z-10'
+              viewBox='0 0 24 24'
+              fill='none'
+              stroke='currentColor'
+              strokeWidth='2'
               animate={{ x: [0, 4, 0] }}
               transition={{ duration: 1.5, repeat: Infinity }}
             >
               <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"
+                strokeLinecap='round'
+                strokeLinejoin='round'
+                d='M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3'
               />
             </motion.svg>
           </motion.a>
 
           <motion.a
-            href="#how-it-works"
+            href='#how-it-works'
             whileHover={{ scale: 1.02, borderColor: colors.cyan }}
             whileTap={{ scale: 0.98 }}
-            className="inline-flex items-center gap-2 px-8 py-4 rounded-xl font-semibold transition-colors"
+            className='inline-flex items-center gap-2 px-8 py-4 rounded-xl font-semibold transition-colors'
             style={{
               border: `1px solid ${colors.border}`,
               color: colors.text,
@@ -1006,7 +1006,7 @@ function HeroSection() {
 
 function AnimatedSection({
   children,
-  className = "",
+  className = '',
   delay = 0,
 }: {
   children: React.ReactNode;
@@ -1014,7 +1014,7 @@ function AnimatedSection({
   delay?: number;
 }) {
   const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, margin: "-100px" });
+  const isInView = useInView(ref, { once: true, margin: '-100px' });
 
   return (
     <motion.div
@@ -1051,7 +1051,7 @@ function FeatureCard({
       <motion.div
         whileHover={{ y: -8, scale: 1.02 }}
         transition={{ duration: 0.3 }}
-        className="group relative h-full p-6 rounded-2xl overflow-hidden"
+        className='group relative h-full p-6 rounded-2xl overflow-hidden'
         style={{
           background: `linear-gradient(135deg, ${colors.surface}ee, ${colors.bgSecondary}ee)`,
           border: `1px solid ${colors.border}`,
@@ -1059,7 +1059,7 @@ function FeatureCard({
       >
         {/* Glow effect on hover */}
         <motion.div
-          className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+          className='absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500'
           style={{
             background: `radial-gradient(circle at 50% 0%, ${color}22, transparent 70%)`,
           }}
@@ -1067,16 +1067,16 @@ function FeatureCard({
 
         {/* Scan line on hover */}
         <motion.div
-          className="absolute left-0 right-0 h-px opacity-0 group-hover:opacity-100"
+          className='absolute left-0 right-0 h-px opacity-0 group-hover:opacity-100'
           style={{ background: color, boxShadow: `0 0 20px ${color}` }}
           initial={{ top: 0 }}
-          whileHover={{ top: "100%" }}
+          whileHover={{ top: '100%' }}
           transition={{ duration: 1.5, repeat: Infinity }}
         />
 
-        <div className="relative z-10">
+        <div className='relative z-10'>
           <motion.div
-            className="w-14 h-14 rounded-xl flex items-center justify-center mb-4"
+            className='w-14 h-14 rounded-xl flex items-center justify-center mb-4'
             style={{
               background: `linear-gradient(135deg, ${color}22, ${color}44)`,
               border: `1px solid ${color}66`,
@@ -1088,7 +1088,7 @@ function FeatureCard({
             {icon}
           </motion.div>
           <h3
-            className="text-xl font-semibold mb-2"
+            className='text-xl font-semibold mb-2'
             style={{ color: colors.text, fontFamily: "'DM Sans', sans-serif" }}
           >
             {title}
@@ -1097,9 +1097,9 @@ function FeatureCard({
         </div>
 
         {/* Corner accent */}
-        <div className="absolute top-0 right-0 w-20 h-20 opacity-20">
-          <svg viewBox="0 0 80 80" fill="none">
-            <path d="M80 0v80H0" stroke={color} strokeWidth="1" />
+        <div className='absolute top-0 right-0 w-20 h-20 opacity-20'>
+          <svg viewBox='0 0 80 80' fill='none'>
+            <path d='M80 0v80H0' stroke={color} strokeWidth='1' />
           </svg>
         </div>
       </motion.div>
@@ -1112,115 +1112,115 @@ function FeaturesSection() {
     {
       icon: (
         <svg
-          className="w-7 h-7"
-          viewBox="0 0 24 24"
-          fill="none"
+          className='w-7 h-7'
+          viewBox='0 0 24 24'
+          fill='none'
           stroke={colors.cyan}
-          strokeWidth="1.5"
+          strokeWidth='1.5'
         >
           <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z"
+            strokeLinecap='round'
+            strokeLinejoin='round'
+            d='M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z'
           />
         </svg>
       ),
-      title: "Real-Time Signals",
+      title: 'Real-Time Signals',
       description:
-        "Instant alerts on high-potential opportunities. Our system monitors markets 24/7 and alerts you to edge opportunities.",
+        'Instant alerts on high-potential opportunities. Our system monitors markets 24/7 and alerts you to edge opportunities.',
       color: colors.cyan,
     },
     {
       icon: (
         <svg
-          className="w-7 h-7"
-          viewBox="0 0 24 24"
-          fill="none"
+          className='w-7 h-7'
+          viewBox='0 0 24 24'
+          fill='none'
           stroke={colors.emerald}
-          strokeWidth="1.5"
+          strokeWidth='1.5'
         >
           <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z"
+            strokeLinecap='round'
+            strokeLinejoin='round'
+            d='M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z'
           />
         </svg>
       ),
-      title: "Risk-Adjusted Ideas",
+      title: 'Risk-Adjusted Ideas',
       description:
-        "Trade ideas ranked by expected value and volatility. Know your edge before you trade.",
+        'Trade ideas ranked by expected value and volatility. Know your edge before you trade.',
       color: colors.emerald,
     },
     {
       icon: (
         <svg
-          className="w-7 h-7"
-          viewBox="0 0 24 24"
-          fill="none"
+          className='w-7 h-7'
+          viewBox='0 0 24 24'
+          fill='none'
           stroke={colors.purple}
-          strokeWidth="1.5"
+          strokeWidth='1.5'
         >
           <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"
+            strokeLinecap='round'
+            strokeLinejoin='round'
+            d='M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z'
           />
         </svg>
       ),
-      title: "Multi-Model Consensus",
+      title: 'Multi-Model Consensus',
       description:
-        "Multiple AI models vote independently. High-confidence signals only when they agree.",
+        'Multiple AI models vote independently. High-confidence signals only when they agree.',
       color: colors.purple,
     },
   ];
 
   return (
     <section
-      id="features"
-      className="relative py-24 overflow-hidden"
+      id='features'
+      className='relative py-24 overflow-hidden'
       style={{ background: colors.bgSecondary }}
     >
       {/* Background effects */}
-      <div className="absolute inset-0 pointer-events-none">
+      <div className='absolute inset-0 pointer-events-none'>
         <div
-          className="absolute top-0 left-1/4 w-125 h-125 rounded-full blur-[150px]"
+          className='absolute top-0 left-1/4 w-125 h-125 rounded-full blur-[150px]'
           style={{ background: colors.cyanDim, opacity: 0.5 }}
         />
         <div
-          className="absolute bottom-0 right-1/4 w-100 h-100 rounded-full blur-[120px]"
+          className='absolute bottom-0 right-1/4 w-100 h-100 rounded-full blur-[120px]'
           style={{ background: colors.purpleGlow, opacity: 0.3 }}
         />
       </div>
 
-      <div className="relative max-w-6xl mx-auto px-6">
-        <AnimatedSection className="text-center mb-16">
+      <div className='relative max-w-6xl mx-auto px-6'>
+        <AnimatedSection className='text-center mb-16'>
           <motion.div
-            className="inline-flex items-center gap-2 px-4 py-1 rounded-full mb-4"
+            className='inline-flex items-center gap-2 px-4 py-1 rounded-full mb-4'
             style={{
               background: colors.cyanDim,
               border: `1px solid ${colors.border}`,
             }}
           >
             <span
-              className="text-xs font-mono uppercase tracking-wider"
+              className='text-xs font-mono uppercase tracking-wider'
               style={{ color: colors.cyan }}
             >
               Features
             </span>
           </motion.div>
           <h2
-            className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4"
+            className='text-3xl sm:text-4xl md:text-5xl font-bold mb-4'
             style={{ color: colors.text, fontFamily: "'DM Sans', sans-serif" }}
           >
             Why Traders Choose Hermes
           </h2>
-          <p className="max-w-2xl mx-auto" style={{ color: colors.textMuted }}>
+          <p className='max-w-2xl mx-auto' style={{ color: colors.textMuted }}>
             Built for traders who demand an edge. Our consensus-driven approach
             delivers actionable insights.
           </p>
         </AnimatedSection>
 
-        <div className="grid md:grid-cols-2 gap-6">
+        <div className='grid md:grid-cols-2 gap-6'>
           {features.map((feature, i) => (
             <FeatureCard key={feature.title} {...feature} delay={i * 0.1} />
           ))}
@@ -1237,87 +1237,87 @@ function FeaturesSection() {
 function HowItWorksSection() {
   const steps = [
     {
-      title: "Sign up and connect",
+      title: 'Sign up and connect',
       description:
-        "Create your free account and link your prediction market profiles.",
-      icon: "01",
+        'Create your free account and link your prediction market profiles.',
+      icon: '01',
     },
     {
-      title: "AI analyzes markets",
+      title: 'AI analyzes markets',
       description:
-        "Our multi-model consensus engine scans thousands of markets in real-time.",
-      icon: "02",
+        'Our multi-model consensus engine scans thousands of markets in real-time.',
+      icon: '02',
     },
     {
-      title: "Receive recommendations",
+      title: 'Receive recommendations',
       description:
-        "Get risk-adjusted trade ideas with confidence scores and reasoning.",
-      icon: "03",
+        'Get risk-adjusted trade ideas with confidence scores and reasoning.',
+      icon: '03',
     },
     {
-      title: "Track your portfolio",
+      title: 'Track your portfolio',
       description:
-        "Connect your wallet address to monitor positions and measure performance over time.",
-      icon: "04",
+        'Connect your wallet address to monitor positions and measure performance over time.',
+      icon: '04',
     },
   ];
 
   return (
     <section
-      id="how-it-works"
-      className="relative py-24 overflow-hidden"
+      id='how-it-works'
+      className='relative py-24 overflow-hidden'
       style={{ background: colors.bg }}
     >
       <CircuitGrid />
 
-      <div className="relative max-w-5xl mx-auto px-6">
-        <AnimatedSection className="text-center mb-16">
+      <div className='relative max-w-5xl mx-auto px-6'>
+        <AnimatedSection className='text-center mb-16'>
           <motion.div
-            className="inline-flex items-center gap-2 px-4 py-1 rounded-full mb-4"
+            className='inline-flex items-center gap-2 px-4 py-1 rounded-full mb-4'
             style={{
               background: colors.cyanDim,
               border: `1px solid ${colors.border}`,
             }}
           >
             <span
-              className="text-xs font-mono uppercase tracking-wider"
+              className='text-xs font-mono uppercase tracking-wider'
               style={{ color: colors.cyan }}
             >
               Process
             </span>
           </motion.div>
           <h2
-            className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4"
+            className='text-3xl sm:text-4xl md:text-5xl font-bold mb-4'
             style={{ color: colors.text, fontFamily: "'DM Sans', sans-serif" }}
           >
             Start Trading in Minutes
           </h2>
-          <p className="max-w-xl mx-auto" style={{ color: colors.textMuted }}>
+          <p className='max-w-xl mx-auto' style={{ color: colors.textMuted }}>
             From signup to your first AI-powered recommendation in under five
             minutes.
           </p>
         </AnimatedSection>
 
-        <div className="relative">
+        <div className='relative'>
           {/* Vertical connector line */}
           <div
-            className="absolute left-9.75 top-8 bottom-8 w-px hidden md:block"
+            className='absolute left-9.75 top-8 bottom-8 w-px hidden md:block'
             style={{
               background: `linear-gradient(to bottom, ${colors.cyan}, ${colors.purple}, transparent)`,
               boxShadow: `0 0 10px ${colors.cyanGlow}`,
             }}
           />
 
-          <div className="space-y-8">
+          <div className='space-y-8'>
             {steps.map((step, i) => (
               <AnimatedSection key={step.title} delay={i * 0.15}>
                 <motion.div
-                  className="flex items-start gap-6"
+                  className='flex items-start gap-6'
                   whileHover={{ x: 8 }}
                   transition={{ duration: 0.2 }}
                 >
                   <motion.div
-                    className="shrink-0 w-20 h-20 rounded-2xl flex items-center justify-center font-mono text-2xl font-bold relative overflow-hidden"
+                    className='shrink-0 w-20 h-20 rounded-2xl flex items-center justify-center font-mono text-2xl font-bold relative overflow-hidden'
                     style={{
                       background: `linear-gradient(135deg, ${colors.surface}, ${colors.bgSecondary})`,
                       border: `1px solid ${colors.border}`,
@@ -1330,11 +1330,11 @@ function HowItWorksSection() {
                   >
                     {step.icon}
                     <motion.div
-                      className="absolute inset-0"
+                      className='absolute inset-0'
                       style={{
                         background: `linear-gradient(45deg, transparent, ${colors.cyan}22, transparent)`,
                       }}
-                      animate={{ x: ["-100%", "100%"] }}
+                      animate={{ x: ['-100%', '100%'] }}
                       transition={{
                         duration: 2,
                         repeat: Infinity,
@@ -1342,9 +1342,9 @@ function HowItWorksSection() {
                       }}
                     />
                   </motion.div>
-                  <div className="pt-2">
+                  <div className='pt-2'>
                     <h3
-                      className="text-xl font-semibold mb-2"
+                      className='text-xl font-semibold mb-2'
                       style={{
                         color: colors.text,
                         fontFamily: "'DM Sans', sans-serif",
@@ -1373,53 +1373,53 @@ function HowItWorksSection() {
 function PricingSection() {
   return (
     <section
-      id="pricing"
-      className="relative py-24 overflow-hidden"
+      id='pricing'
+      className='relative py-24 overflow-hidden'
       style={{ background: colors.bgSecondary }}
     >
-      <div className="absolute inset-0 pointer-events-none">
+      <div className='absolute inset-0 pointer-events-none'>
         <div
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-200 h-150 rounded-full blur-[150px]"
+          className='absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-200 h-150 rounded-full blur-[150px]'
           style={{ background: colors.cyanDim, opacity: 0.3 }}
         />
       </div>
 
-      <div className="relative max-w-5xl mx-auto px-6">
-        <AnimatedSection className="text-center mb-12">
+      <div className='relative max-w-5xl mx-auto px-6'>
+        <AnimatedSection className='text-center mb-12'>
           <motion.div
-            className="inline-flex items-center gap-2 px-4 py-1 rounded-full mb-4"
+            className='inline-flex items-center gap-2 px-4 py-1 rounded-full mb-4'
             style={{
               background: colors.cyanDim,
               border: `1px solid ${colors.border}`,
             }}
           >
             <span
-              className="text-xs font-mono uppercase tracking-wider"
+              className='text-xs font-mono uppercase tracking-wider'
               style={{ color: colors.cyan }}
             >
               Pricing
             </span>
           </motion.div>
           <h2
-            className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4"
+            className='text-3xl sm:text-4xl md:text-5xl font-bold mb-4'
             style={{ color: colors.text, fontFamily: "'DM Sans', sans-serif" }}
           >
             Simple, Transparent Pricing
           </h2>
-          <p className="max-w-xl mx-auto" style={{ color: colors.textMuted }}>
-            Start with a{" "}
-            <span style={{ color: colors.cyan }} className="font-semibold">
+          <p className='max-w-xl mx-auto' style={{ color: colors.textMuted }}>
+            Start with a{' '}
+            <span style={{ color: colors.cyan }} className='font-semibold'>
               14-day free trial
-            </span>{" "}
+            </span>{' '}
             — full access to all features.
           </p>
         </AnimatedSection>
 
-        <div className="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto">
+        <div className='grid md:grid-cols-2 gap-6 max-w-3xl mx-auto'>
           {/* Basic */}
           <AnimatedSection delay={0.1}>
             <motion.div
-              className="h-full p-6 rounded-2xl"
+              className='h-full p-6 rounded-2xl'
               style={{
                 background: `linear-gradient(135deg, ${colors.surface}ee, ${colors.bgSecondary}ee)`,
                 border: `1px solid ${colors.border}`,
@@ -1427,7 +1427,7 @@ function PricingSection() {
               whileHover={{ borderColor: colors.borderBright }}
             >
               <h3
-                className="text-xl font-semibold mb-2"
+                className='text-xl font-semibold mb-2'
                 style={{
                   color: colors.text,
                   fontFamily: "'DM Sans', sans-serif",
@@ -1435,37 +1435,37 @@ function PricingSection() {
               >
                 Basic
               </h3>
-              <div className="mb-4">
+              <div className='mb-4'>
                 <span
-                  className="text-4xl font-bold"
+                  className='text-4xl font-bold'
                   style={{ color: colors.text }}
                 >
                   $0
                 </span>
                 <span style={{ color: colors.textMuted }}>/month</span>
               </div>
-              <ul className="space-y-3 mb-6">
+              <ul className='space-y-3 mb-6'>
                 {[
-                  "3 signals per day",
-                  "Basic market insights",
-                  "Email alerts",
+                  '3 signals per day',
+                  'Basic market insights',
+                  'Email alerts',
                 ].map((feature) => (
                   <li
                     key={feature}
-                    className="flex items-center gap-2"
+                    className='flex items-center gap-2'
                     style={{ color: colors.textMuted }}
                   >
                     <svg
-                      className="w-4 h-4"
-                      viewBox="0 0 24 24"
-                      fill="none"
+                      className='w-4 h-4'
+                      viewBox='0 0 24 24'
+                      fill='none'
                       stroke={colors.cyan}
-                      strokeWidth="2"
+                      strokeWidth='2'
                     >
                       <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M4.5 12.75l6 6 9-13.5"
+                        strokeLinecap='round'
+                        strokeLinejoin='round'
+                        d='M4.5 12.75l6 6 9-13.5'
                       />
                     </svg>
                     {feature}
@@ -1475,7 +1475,7 @@ function PricingSection() {
               <motion.button
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                className="w-full py-3 rounded-xl font-medium transition-colors"
+                className='w-full py-3 rounded-xl font-medium transition-colors'
                 style={{
                   border: `1px solid ${colors.border}`,
                   color: colors.text,
@@ -1489,7 +1489,7 @@ function PricingSection() {
           {/* Pro */}
           <AnimatedSection delay={0.2}>
             <motion.div
-              className="h-full p-6 rounded-2xl relative overflow-hidden"
+              className='h-full p-6 rounded-2xl relative overflow-hidden'
               style={{
                 background: `linear-gradient(135deg, ${colors.cyan}11, ${colors.surface}ee)`,
                 border: `1px solid ${colors.cyan}44`,
@@ -1498,14 +1498,14 @@ function PricingSection() {
             >
               {/* Popular badge */}
               <div
-                className="absolute -top-px left-1/2 -translate-x-1/2 px-4 py-1 rounded-b-lg text-xs font-semibold"
+                className='absolute -top-px left-1/2 -translate-x-1/2 px-4 py-1 rounded-b-lg text-xs font-semibold'
                 style={{ background: colors.cyan, color: colors.bg }}
               >
                 Most Popular
               </div>
 
               <h3
-                className="text-xl font-semibold mb-2 mt-4"
+                className='text-xl font-semibold mb-2 mt-4'
                 style={{
                   color: colors.text,
                   fontFamily: "'DM Sans', sans-serif",
@@ -1513,38 +1513,38 @@ function PricingSection() {
               >
                 Pro
               </h3>
-              <div className="mb-4">
+              <div className='mb-4'>
                 <span
-                  className="text-4xl font-bold"
+                  className='text-4xl font-bold'
                   style={{ color: colors.text }}
                 >
                   $29
                 </span>
                 <span style={{ color: colors.textMuted }}>/month</span>
               </div>
-              <ul className="space-y-3 mb-6">
+              <ul className='space-y-3 mb-6'>
                 {[
-                  "Unlimited signals",
-                  "Full portfolio tracking",
-                  "Priority alerts",
-                  "Advanced analytics",
+                  'Unlimited signals',
+                  'Full portfolio tracking',
+                  'Priority alerts',
+                  'Advanced analytics',
                 ].map((feature) => (
                   <li
                     key={feature}
-                    className="flex items-center gap-2"
+                    className='flex items-center gap-2'
                     style={{ color: colors.textMuted }}
                   >
                     <svg
-                      className="w-4 h-4"
-                      viewBox="0 0 24 24"
-                      fill="none"
+                      className='w-4 h-4'
+                      viewBox='0 0 24 24'
+                      fill='none'
                       stroke={colors.cyan}
-                      strokeWidth="2"
+                      strokeWidth='2'
                     >
                       <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M4.5 12.75l6 6 9-13.5"
+                        strokeLinecap='round'
+                        strokeLinejoin='round'
+                        d='M4.5 12.75l6 6 9-13.5'
                       />
                     </svg>
                     {feature}
@@ -1557,7 +1557,7 @@ function PricingSection() {
                   boxShadow: `0 0 30px ${colors.cyanGlow}`,
                 }}
                 whileTap={{ scale: 0.98 }}
-                className="w-full py-3 rounded-xl font-semibold"
+                className='w-full py-3 rounded-xl font-semibold'
                 style={{
                   background: `linear-gradient(135deg, ${colors.cyan}, ${colors.emerald})`,
                   color: colors.bg,
@@ -1568,7 +1568,7 @@ function PricingSection() {
 
               {/* Animated border */}
               <motion.div
-                className="absolute inset-0 rounded-2xl pointer-events-none"
+                className='absolute inset-0 rounded-2xl pointer-events-none'
                 style={{ border: `1px solid ${colors.cyan}` }}
                 animate={{ opacity: [0.3, 0.6, 0.3] }}
                 transition={{ duration: 2, repeat: Infinity }}
@@ -1588,25 +1588,25 @@ function PricingSection() {
 function Footer() {
   return (
     <footer
-      className="py-12 border-t"
+      className='py-12 border-t'
       style={{ background: colors.bg, borderColor: colors.border }}
     >
-      <div className="max-w-6xl mx-auto px-6">
-        <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-          <div className="flex items-center gap-3">
+      <div className='max-w-6xl mx-auto px-6'>
+        <div className='flex flex-col md:flex-row items-center justify-between gap-6'>
+          <div className='flex items-center gap-3'>
             <div
-              className="w-8 h-8 rounded-lg flex items-center justify-center"
+              className='w-8 h-8 rounded-lg flex items-center justify-center'
               style={{
                 background: `linear-gradient(135deg, ${colors.cyan}22, ${colors.purple}22)`,
                 border: `1px solid ${colors.borderBright}`,
               }}
             >
-              <span className="font-bold" style={{ color: colors.cyan }}>
+              <span className='font-bold' style={{ color: colors.cyan }}>
                 H
               </span>
             </div>
             <span
-              className="font-semibold"
+              className='font-semibold'
               style={{
                 color: colors.text,
                 fontFamily: "'DM Sans', sans-serif",
@@ -1617,27 +1617,27 @@ function Footer() {
           </div>
 
           <div
-            className="flex items-center gap-8 text-sm"
+            className='flex items-center gap-8 text-sm'
             style={{ color: colors.textMuted }}
           >
             <a
-              href="/privacy"
-              className="hover:text-(--text) transition-colors"
+              href='/privacy'
+              className='hover:text-(--text) transition-colors'
             >
               Privacy Policy
             </a>
-            <a href="/terms" className="hover:text-(--text) transition-colors">
+            <a href='/terms' className='hover:text-(--text) transition-colors'>
               Terms of Service
             </a>
             <a
-              href="/contact"
-              className="hover:text-(--text) transition-colors"
+              href='/contact'
+              className='hover:text-(--text) transition-colors'
             >
               Contact
             </a>
           </div>
 
-          <p className="text-sm" style={{ color: colors.textDim }}>
+          <p className='text-sm' style={{ color: colors.textDim }}>
             © {new Date().getFullYear()} Hermes. All rights reserved.
           </p>
         </div>
@@ -1653,7 +1653,7 @@ function Footer() {
 export function LandingPage() {
   return (
     <div
-      className="min-h-screen antialiased"
+      className='min-h-screen antialiased'
       style={{
         background: colors.bg,
         fontFamily: "'DM Sans', 'Figtree Variable', sans-serif",

@@ -1,21 +1,21 @@
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { convexQuery, useConvexMutation } from "@convex-dev/react-query";
-import { api } from "backend/convex/_generated/api";
+import { useQuery, useMutation } from '@tanstack/react-query';
+import { convexQuery, useConvexMutation } from '@convex-dev/react-query';
+import { api } from 'backend/convex/_generated/api';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { HugeiconsIcon } from "@hugeicons/react";
+} from '@/components/ui/dropdown-menu';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { HugeiconsIcon } from '@hugeicons/react';
 import {
   Notification01Icon,
   ArrowUp01Icon,
   ArrowDown01Icon,
   MinusSignIcon,
-} from "@hugeicons/core-free-icons";
-import { Link } from "@tanstack/react-router";
+} from '@hugeicons/core-free-icons';
+import { Link } from '@tanstack/react-router';
 
 export function NotificationsBell() {
   // Get user's last seen timestamp
@@ -43,14 +43,26 @@ export function NotificationsBell() {
     }
   };
 
-  const getDecisionIcon = (decision: "YES" | "NO" | "NO_TRADE") => {
+  const getDecisionIcon = (decision: 'YES' | 'NO' | 'NO_TRADE') => {
     switch (decision) {
-      case "YES":
-        return { icon: ArrowUp01Icon, color: "text-emerald-400", bg: "bg-emerald-500/10" };
-      case "NO":
-        return { icon: ArrowDown01Icon, color: "text-red-400", bg: "bg-red-500/10" };
+      case 'YES':
+        return {
+          icon: ArrowUp01Icon,
+          color: 'text-emerald-400',
+          bg: 'bg-emerald-500/10',
+        };
+      case 'NO':
+        return {
+          icon: ArrowDown01Icon,
+          color: 'text-red-400',
+          bg: 'bg-red-500/10',
+        };
       default:
-        return { icon: MinusSignIcon, color: "text-yellow-400", bg: "bg-yellow-500/10" };
+        return {
+          icon: MinusSignIcon,
+          color: 'text-yellow-400',
+          bg: 'bg-yellow-500/10',
+        };
     }
   };
 
@@ -58,32 +70,32 @@ export function NotificationsBell() {
     <DropdownMenu onOpenChange={handleOpenChange}>
       <DropdownMenuTrigger
         render={
-          <Button variant="ghost" size="icon" className="relative">
+          <Button variant='ghost' size='icon' className='relative'>
             <HugeiconsIcon icon={Notification01Icon} size={20} />
             {unreadCount > 0 && (
               <Badge
-                variant="destructive"
-                className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs"
+                variant='destructive'
+                className='absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs'
               >
-                {unreadCount > 9 ? "9+" : unreadCount}
+                {unreadCount > 9 ? '9+' : unreadCount}
               </Badge>
             )}
           </Button>
         }
       />
-      <DropdownMenuContent align="end" className="w-80">
-        <div className="px-3 py-2 border-b border-sidebar-border">
-          <h3 className="font-semibold">New Signals</h3>
-          <p className="text-xs text-muted-foreground">
+      <DropdownMenuContent align='end' className='w-80'>
+        <div className='px-3 py-2 border-b border-sidebar-border'>
+          <h3 className='font-semibold'>New Signals</h3>
+          <p className='text-xs text-muted-foreground'>
             {unreadCount > 0
-              ? `${unreadCount} new signal${unreadCount > 1 ? "s" : ""}`
-              : "No new signals"}
+              ? `${unreadCount} new signal${unreadCount > 1 ? 's' : ''}`
+              : 'No new signals'}
           </p>
         </div>
 
-        <div className="max-h-80 overflow-y-auto">
+        <div className='max-h-80 overflow-y-auto'>
           {!newSignals || newSignals.length === 0 ? (
-            <div className="px-3 py-8 text-center text-muted-foreground text-sm">
+            <div className='px-3 py-8 text-center text-muted-foreground text-sm'>
               No new signals to show
             </div>
           ) : (
@@ -92,8 +104,8 @@ export function NotificationsBell() {
               return (
                 <Link
                   key={signal._id}
-                  to="/dashboard/signals"
-                  className="flex items-start gap-3 px-3 py-2 hover:bg-sidebar-accent transition-colors"
+                  to='/dashboard/signals'
+                  className='flex items-start gap-3 px-3 py-2 hover:bg-sidebar-accent transition-colors'
                 >
                   <div
                     className={`shrink-0 w-8 h-8 rounded-lg flex items-center justify-center ${decisionStyle.bg}`}
@@ -104,12 +116,12 @@ export function NotificationsBell() {
                       className={decisionStyle.color}
                     />
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium line-clamp-1">
-                      {signal.market?.title ?? "Unknown Market"}
+                  <div className='flex-1 min-w-0'>
+                    <p className='text-sm font-medium line-clamp-1'>
+                      {signal.market?.title ?? 'Unknown Market'}
                     </p>
-                    <p className="text-xs text-muted-foreground">
-                      {signal.consensusDecision.replace("_", " ")} &bull;{" "}
+                    <p className='text-xs text-muted-foreground'>
+                      {signal.consensusDecision.replace('_', ' ')} &bull;{' '}
                       {signal.consensusPercentage.toFixed(0)}% consensus
                     </p>
                   </div>
@@ -120,10 +132,10 @@ export function NotificationsBell() {
         </div>
 
         {newSignals && newSignals.length > 0 && (
-          <div className="px-3 py-2 border-t border-sidebar-border">
+          <div className='px-3 py-2 border-t border-sidebar-border'>
             <Link
-              to="/dashboard/signals"
-              className="text-sm text-cyan-400 hover:underline"
+              to='/dashboard/signals'
+              className='text-sm text-cyan-400 hover:underline'
             >
               View all signals &rarr;
             </Link>

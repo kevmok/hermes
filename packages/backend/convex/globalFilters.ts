@@ -1,5 +1,5 @@
-import { v } from "convex/values";
-import { internalQuery, mutation, query } from "./_generated/server";
+import { v } from 'convex/values';
+import { internalQuery, mutation, query } from './_generated/server';
 
 // Default filter values per design decisions document
 const DEFAULT_FILTERS = {
@@ -18,7 +18,7 @@ const DEFAULT_FILTERS = {
 export const getFilters = query({
   args: {},
   handler: async (ctx) => {
-    const filters = await ctx.db.query("globalFilters").first();
+    const filters = await ctx.db.query('globalFilters').first();
     if (!filters) {
       return { ...DEFAULT_FILTERS, _id: null as null };
     }
@@ -29,7 +29,7 @@ export const getFilters = query({
 export const getFiltersInternal = internalQuery({
   args: {},
   handler: async (ctx) => {
-    const filters = await ctx.db.query("globalFilters").first();
+    const filters = await ctx.db.query('globalFilters').first();
     if (!filters) {
       return DEFAULT_FILTERS;
     }
@@ -60,14 +60,16 @@ export const updateFilters = mutation({
     isEnabled: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
-    const existing = await ctx.db.query("globalFilters").first();
+    const existing = await ctx.db.query('globalFilters').first();
 
     // Build updates object, filtering out undefined values
     const updates: Record<string, unknown> = { updatedAt: Date.now() };
-    if (args.minTradeSize !== undefined) updates.minTradeSize = args.minTradeSize;
+    if (args.minTradeSize !== undefined)
+      updates.minTradeSize = args.minTradeSize;
     if (args.maxPriceYes !== undefined) updates.maxPriceYes = args.maxPriceYes;
     if (args.minPriceYes !== undefined) updates.minPriceYes = args.minPriceYes;
-    if (args.minVolume24h !== undefined) updates.minVolume24h = args.minVolume24h;
+    if (args.minVolume24h !== undefined)
+      updates.minVolume24h = args.minVolume24h;
     if (args.excludedCategories !== undefined)
       updates.excludedCategories = args.excludedCategories;
     if (args.deduplicationWindowMs !== undefined)
@@ -82,7 +84,7 @@ export const updateFilters = mutation({
     }
 
     // Create singleton document with defaults + updates
-    return await ctx.db.insert("globalFilters", {
+    return await ctx.db.insert('globalFilters', {
       ...DEFAULT_FILTERS,
       ...updates,
       updatedAt: Date.now(),
@@ -93,10 +95,10 @@ export const updateFilters = mutation({
 export const initializeFilters = mutation({
   args: {},
   handler: async (ctx) => {
-    const existing = await ctx.db.query("globalFilters").first();
+    const existing = await ctx.db.query('globalFilters').first();
     if (existing) return existing._id;
 
-    return await ctx.db.insert("globalFilters", {
+    return await ctx.db.insert('globalFilters', {
       ...DEFAULT_FILTERS,
       updatedAt: Date.now(),
     });
@@ -108,7 +110,7 @@ export const toggleEnabled = mutation({
     isEnabled: v.boolean(),
   },
   handler: async (ctx, args) => {
-    const existing = await ctx.db.query("globalFilters").first();
+    const existing = await ctx.db.query('globalFilters').first();
 
     if (existing) {
       await ctx.db.patch(existing._id, {
@@ -119,7 +121,7 @@ export const toggleEnabled = mutation({
     }
 
     // Create with defaults if doesn't exist
-    return await ctx.db.insert("globalFilters", {
+    return await ctx.db.insert('globalFilters', {
       ...DEFAULT_FILTERS,
       isEnabled: args.isEnabled,
       updatedAt: Date.now(),

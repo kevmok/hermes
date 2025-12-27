@@ -20,6 +20,7 @@ The current dashboard has several UX limitations:
 6. **No URL state** - filters, sorts, and selections reset on refresh
 
 Users need:
+
 - Scannable, sortable table views for signals and events
 - Shareable URLs for specific signal/event details
 - Clear visualization of analysis coverage (analyzed vs unanalyzed markets)
@@ -51,6 +52,7 @@ Users need:
 Convert from state-based modals to route-based drawers:
 
 **File Structure:**
+
 ```
 routes/dashboard/
 ├── trades/
@@ -62,6 +64,7 @@ routes/dashboard/
 ```
 
 **Search Param Schema:**
+
 ```typescript
 // routes/dashboard/trades/route.tsx
 const searchSchema = z.object({
@@ -88,20 +91,21 @@ const searchSchema = z.object({
 
 #### Table Columns
 
-| Column | Data Source | Sortable | Notes |
-|--------|-------------|----------|-------|
-| Timestamp | `signalTimestamp` | Yes | Relative time (e.g., "2h ago") |
-| Market | `market.title` | No | Truncated with tooltip |
-| Event | `market.eventSlug` | No | Link to event detail |
-| Decision | `consensusDecision` | Yes | Badge: YES (green), NO (red), NO_TRADE (gray) |
-| Consensus | `consensusPercentage` | Yes | Percentage with confidence icon |
-| Confidence | `confidenceLevel` | Yes | high/medium/low badge |
-| Price @ Analysis | `priceAtTrigger` | Yes | Format: $0.65 |
-| Trigger Size | `triggerTrade.size` | Yes | Whale indicator if >$5k |
+| Column           | Data Source           | Sortable | Notes                                         |
+| ---------------- | --------------------- | -------- | --------------------------------------------- |
+| Timestamp        | `signalTimestamp`     | Yes      | Relative time (e.g., "2h ago")                |
+| Market           | `market.title`        | No       | Truncated with tooltip                        |
+| Event            | `market.eventSlug`    | No       | Link to event detail                          |
+| Decision         | `consensusDecision`   | Yes      | Badge: YES (green), NO (red), NO_TRADE (gray) |
+| Consensus        | `consensusPercentage` | Yes      | Percentage with confidence icon               |
+| Confidence       | `confidenceLevel`     | Yes      | high/medium/low badge                         |
+| Price @ Analysis | `priceAtTrigger`      | Yes      | Format: $0.65                                 |
+| Trigger Size     | `triggerTrade.size`   | Yes      | Whale indicator if >$5k                       |
 
 #### Signal Detail Drawer (`$signalId.tsx`)
 
 Content structure:
+
 1. **Header**: Market title, decision badge, confidence level
 2. **AI Consensus Section**: Vote distribution chart, reasoning summary
 3. **Individual Model Predictions**: Expandable cards per model (Claude, GPT-4o, Gemini)
@@ -116,18 +120,19 @@ Content structure:
 
 #### Table Columns
 
-| Column | Data Source | Sortable | Notes |
-|--------|-------------|----------|-------|
-| Event | `title` | No | Image + title |
-| Status | `isActive` | Yes | Active/Closed badge |
-| Markets | Computed | Yes | "5/12 analyzed" format |
-| Signals | `signalCount` | Yes | Total AI signals generated |
-| Volume | `totalVolume` | Yes | Formatted (e.g., $1.2M) |
-| Last Activity | `lastTradeAt` | Yes | Relative time |
+| Column        | Data Source   | Sortable | Notes                      |
+| ------------- | ------------- | -------- | -------------------------- |
+| Event         | `title`       | No       | Image + title              |
+| Status        | `isActive`    | Yes      | Active/Closed badge        |
+| Markets       | Computed      | Yes      | "5/12 analyzed" format     |
+| Signals       | `signalCount` | Yes      | Total AI signals generated |
+| Volume        | `totalVolume` | Yes      | Formatted (e.g., $1.2M)    |
+| Last Activity | `lastTradeAt` | Yes      | Relative time              |
 
 #### Event Detail Drawer (`$eventId.tsx`)
 
 Content structure:
+
 1. **Header**: Event title, image, active status
 2. **Stats Row**: Total volume, trade count, signal count
 3. **Markets Table**: All markets with analysis status
@@ -465,6 +470,7 @@ Before implementation, clarify:
 ## References
 
 ### Internal References
+
 - DataTable component: `apps/web/src/routes/dashboard/-components/data-table.tsx`
 - Market columns pattern: `apps/web/src/routes/dashboard/-components/market-columns.tsx`
 - Sheet component: `apps/web/src/components/ui/sheet.tsx`
@@ -473,6 +479,7 @@ Before implementation, clarify:
 - Backend schema: `packages/backend/convex/schema.ts`
 
 ### External References
+
 - TanStack Router outlets: https://tanstack.com/router/latest/docs/framework/react/guide/outlets
 - TanStack Router search params: https://tanstack.com/router/latest/docs/framework/react/guide/search-params
 - TanStack Table sorting: https://tanstack.com/table/v8/docs/guide/sorting

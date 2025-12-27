@@ -147,7 +147,9 @@ const processTradeMessage = (
       slug: t.slug ?? '',
       eventSlug: t.eventSlug ?? '',
       title: t.title, // Include market title for display
-      side: (t.side?.toUpperCase() === 'BUY' ? 'BUY' : 'SELL') as 'BUY' | 'SELL',
+      side: (t.side?.toUpperCase() === 'BUY' ? 'BUY' : 'SELL') as
+        | 'BUY'
+        | 'SELL',
       size: sizeUsd,
       price: t.price,
       timestamp: t.timestamp ?? Math.floor(Date.now() / 1000),

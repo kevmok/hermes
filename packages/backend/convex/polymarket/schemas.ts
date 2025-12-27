@@ -204,13 +204,13 @@ export interface PositionsParams {
   offset?: number;
   sizeThreshold?: number;
   sortBy?: string;
-  sortDirection?: "ASC" | "DESC";
+  sortDirection?: 'ASC' | 'DESC';
 }
 
 export interface TradesParams {
   limit?: number;
   offset?: number;
-  side?: "BUY" | "SELL";
+  side?: 'BUY' | 'SELL';
 }
 
 export interface ActivityParams {
@@ -225,7 +225,7 @@ export interface ClosedPositionsParams {
   limit?: number;
   offset?: number;
   sortBy?: string;
-  sortDirection?: "ASC" | "DESC";
+  sortDirection?: 'ASC' | 'DESC';
 }
 
 export interface LeaderboardParams {

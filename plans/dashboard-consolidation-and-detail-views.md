@@ -65,6 +65,7 @@ After analysis, the current 4-page structure actually serves distinct purposes. 
 ```
 
 **Remove/Consolidate:**
+
 - **Insights page**: Merge into Signals page as "Scheduled Analysis" section or tab
 - **Watchlist page**: Remove from nav until implemented (schema ready, UI not)
 
@@ -193,6 +194,7 @@ const navItems = [
 ```
 
 Change default redirect in `/dashboard/index.tsx`:
+
 ```tsx
 redirect({ to: "/dashboard/signals" }) // Signals is now primary
 ```
@@ -323,11 +325,11 @@ export const getMarketDetail = query({
 
 ## Risks & Mitigations
 
-| Risk | Impact | Mitigation |
-|------|--------|------------|
-| Modal data fetch slow | Poor UX | Use React Query caching, show loading skeleton |
-| Insights users confused | Complaints | Keep Insights URL working, add redirect notice |
-| Mobile modal issues | Unusable on phone | Test on mobile, use Sheet for small screens |
+| Risk                    | Impact            | Mitigation                                     |
+| ----------------------- | ----------------- | ---------------------------------------------- |
+| Modal data fetch slow   | Poor UX           | Use React Query caching, show loading skeleton |
+| Insights users confused | Complaints        | Keep Insights URL working, add redirect notice |
+| Mobile modal issues     | Unusable on phone | Test on mobile, use Sheet for small screens    |
 
 ## Future Considerations
 
@@ -555,16 +557,19 @@ export function MarketDetailModal({ marketId, open, onOpenChange }: MarketDetail
 ## References
 
 ### Internal Files
+
 - `apps/web/src/routes/dashboard/signals/-components/signal-detail-modal.tsx` - Existing modal (needs wiring)
 - `apps/web/src/routes/dashboard/signals/-components/signal-card.tsx` - Card component to update
 - `apps/web/src/routes/dashboard/-components/app-sidebar.tsx` - Navigation to simplify
 - `packages/backend/convex/schema.ts` - Database schema reference
 
 ### External Resources
+
 - [TanStack Router Modal Routes](https://tanstack.com/router/latest/docs/framework/react/guide/route-masking)
 - [shadcn/ui Dialog](https://ui.shadcn.com/docs/components/dialog)
 - [Polymarket URL Structure](https://polymarket.com/event/{eventSlug})
 
 ### Related Work
+
 - Signal detail modal already built, just needs connection
 - Frontend design skill already applied to signal cards
