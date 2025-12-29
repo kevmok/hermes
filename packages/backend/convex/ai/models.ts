@@ -1,25 +1,25 @@
-import { Layer } from "effect";
-import * as Redacted from "effect/Redacted";
-import { LanguageModel } from "@effect/ai";
+import { Layer } from 'effect';
+import * as Redacted from 'effect/Redacted';
+import { LanguageModel } from '@effect/ai';
 import {
   OpenRouterClient,
   OpenRouterLanguageModel,
-} from "@effect/ai-openrouter";
-import { FetchHttpClient } from "@effect/platform";
+} from '@effect/ai-openrouter';
+import { FetchHttpClient } from '@effect/platform';
 
 /**
  * Model configuration for the swarm.
  * Add or remove models here to change which AI models participate in consensus.
  */
 export const SWARM_MODELS = [
-  "qwen/qwen3-vl-8b-thinking",
-  "google/gemini-3-flash-preview",
-  "openai/gpt-5-mini",
-  "anthropic/claude-opus-4.5",
-  "z-ai/glm-4.7",
-  "x-ai/grok-4",
-  "moonshotai/kimi-k2-thinking",
-  "openai/gpt-oss-20b",
+  'qwen/qwen3-vl-8b-thinking',
+  'google/gemini-3-flash-preview',
+  'openai/gpt-5-mini',
+  'anthropic/claude-opus-4.5',
+  'z-ai/glm-4.7',
+  'x-ai/grok-4',
+  'moonshotai/kimi-k2-thinking',
+  'openai/gpt-oss-20b',
 ] as const;
 
 export type SwarmModelId = (typeof SWARM_MODELS)[number];
@@ -28,14 +28,14 @@ export type SwarmModelId = (typeof SWARM_MODELS)[number];
  * Human-readable display names for each model.
  */
 export const MODEL_DISPLAY_NAMES: Record<SwarmModelId, string> = {
-  "qwen/qwen3-vl-8b-thinking": "Qwen 3 VL 8B",
-  "google/gemini-3-flash-preview": "Gemini 3 Pro",
-  "openai/gpt-5-mini": "GPT-5 Mini",
-  "anthropic/claude-opus-4.5": "Claude Opus 4.5",
-  "z-ai/glm-4.7": "GLM 4.7",
-  "x-ai/grok-4": "Grok 4",
-  "moonshotai/kimi-k2-thinking": "Kimi K2",
-  "openai/gpt-oss-20b": "GPT OSS 20B",
+  'qwen/qwen3-vl-8b-thinking': 'Qwen 3 VL 8B',
+  'google/gemini-3-flash-preview': 'Gemini 3 Pro',
+  'openai/gpt-5-mini': 'GPT-5 Mini',
+  'anthropic/claude-opus-4.5': 'Claude Opus 4.5',
+  'z-ai/glm-4.7': 'GLM 4.7',
+  'x-ai/grok-4': 'Grok 4',
+  'moonshotai/kimi-k2-thinking': 'Kimi K2',
+  'openai/gpt-oss-20b': 'GPT OSS 20B',
 };
 
 /**
@@ -46,7 +46,7 @@ const OpenRouterClientLayer = OpenRouterClient.layer({
   apiKey: process.env.OPENROUTER_API_KEY
     ? Redacted.make(process.env.OPENROUTER_API_KEY)
     : undefined,
-  title: "Lofn AI Swarm",
+  title: 'Lofn AI Swarm',
 });
 
 /**
@@ -79,7 +79,7 @@ export interface ModelEntry {
  */
 export const getConfiguredModels = (): ModelEntry[] => {
   if (!process.env.OPENROUTER_API_KEY) {
-    console.warn("OPENROUTER_API_KEY not set - no models available");
+    console.warn('OPENROUTER_API_KEY not set - no models available');
     return [];
   }
 
@@ -96,7 +96,7 @@ export const getConfiguredModels = (): ModelEntry[] => {
  */
 export const getModelsByIds = (ids: SwarmModelId[]): ModelEntry[] => {
   if (!process.env.OPENROUTER_API_KEY) {
-    console.warn("OPENROUTER_API_KEY not set - no models available");
+    console.warn('OPENROUTER_API_KEY not set - no models available');
     return [];
   }
 
@@ -112,6 +112,26 @@ export const getModelsByIds = (ids: SwarmModelId[]): ModelEntry[] => {
  */
 export const isOpenRouterConfigured = (): boolean => {
   return !!process.env.OPENROUTER_API_KEY;
+};
+
+/**
+ * Aggregation model for synthesizing results from multiple predictions.
+ * Uses a fast, cheap model for post-processing.
+ */
+export const AGGREGATION_MODEL = 'xiaomi/mimo-vl-flash' as const;
+
+/**
+ * Get the aggregation model layer for synthesizing consensus results.
+ */
+export const getAggregationModel = (): Layer.Layer<
+  LanguageModel.LanguageModel,
+  never,
+  never
+> | null => {
+  if (!process.env.OPENROUTER_API_KEY) {
+    return null;
+  }
+  return createModelLayer(AGGREGATION_MODEL);
 };
 
 export { LanguageModel };

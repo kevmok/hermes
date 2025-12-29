@@ -98,6 +98,34 @@ export interface SwarmResult {
 }
 
 /**
+ * Schema for AI-powered aggregation of model outputs.
+ * Used by the aggregation model to synthesize insights from multiple predictions.
+ */
+export const AggregationOutputSchema = Schema.Struct({
+  keyFactors: Schema.Array(Schema.String).annotations({
+    description:
+      'Top 3-5 most important factors across all models, deduplicated and synthesized',
+  }),
+
+  risks: Schema.Array(Schema.String).annotations({
+    description:
+      'Top 3 most critical risks across all models, deduplicated and synthesized',
+  }),
+
+  reasoning: Schema.String.annotations({
+    description:
+      'Synthesized reasoning summary (max 500 chars) combining insights from all models',
+  }),
+}).annotations({
+  identifier: 'AggregationOutput',
+  title: 'AI Aggregation Output',
+  description:
+    'Synthesized output from aggregating multiple AI model predictions',
+});
+
+export type AggregationOutput = typeof AggregationOutputSchema.Type;
+
+/**
  * Aggregated response from the AI swarm with consensus calculation
  */
 export interface SwarmResponse {

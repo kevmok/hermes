@@ -1,12 +1,18 @@
 import { LanguageModel } from '@effect/ai';
-import { Duration, Effect, Layer, Schedule } from 'effect';
-import { getConfiguredModels, type ModelEntry } from './models';
+import { Duration, Effect, Schedule } from 'effect';
+import {
+  getConfiguredModels,
+  getAggregationModel,
+  type ModelEntry,
+} from './models';
 import {
   PredictionOutputSchema,
+  AggregationOutputSchema,
   type PredictionOutput,
   type Decision,
   type SwarmResult,
   type SwarmResponse,
+  type AggregationOutput,
 } from './schema';
 
 // Re-export types for external use
@@ -17,178 +23,255 @@ export type { SwarmResult, SwarmResponse, PredictionOutput, Decision };
  *
  * Instead of simple majority voting, this weighs each vote by its confidence score.
  * A high-confidence YES (90%) counts more than a low-confidence NO (40%).
+ *
+ * Uses AI-powered aggregation for synthesizing key factors, risks, and reasoning.
  */
-const calculateConsensus = (results: SwarmResult[]): SwarmResponse => {
-  const successfulResults = results.filter(
-    (r): r is SwarmResult & { prediction: PredictionOutput } =>
-      r.prediction !== null,
-  );
-
-  // Initialize vote distribution
-  const voteDistribution = { YES: 0, NO: 0, NO_TRADE: 0 };
-
-  if (successfulResults.length === 0) {
-    return {
-      results,
-      consensusDecision: 'NO_TRADE',
-      consensusPercentage: 0,
-      totalModels: results.length,
-      successfulModels: 0,
-      voteDistribution,
-      averageConfidence: 0,
-      confidenceRange: { min: 0, max: 0 },
-      aggregatedKeyFactors: [],
-      aggregatedRisks: [],
-      aggregatedReasoning: '',
-    };
-  }
-
-  // Count votes by decision
-  for (const result of successfulResults) {
-    voteDistribution[result.prediction.decision]++;
-  }
-
-  // Filter to only trading decisions (YES or NO) for consensus
-  const tradingResults = successfulResults.filter(
-    (r) => r.prediction.decision !== 'NO_TRADE',
-  );
-
-  // Default to NO_TRADE if no trading votes
-  if (tradingResults.length === 0) {
-    const allConfidences = successfulResults.map(
-      (r) => r.prediction.confidence,
+const calculateConsensus = (results: SwarmResult[]) =>
+  Effect.gen(function* () {
+    const successfulResults = results.filter(
+      (r): r is SwarmResult & { prediction: PredictionOutput } =>
+        r.prediction !== null,
     );
+
+    // Initialize vote distribution
+    const voteDistribution = { YES: 0, NO: 0, NO_TRADE: 0 };
+
+    if (successfulResults.length === 0) {
+      return {
+        results,
+        consensusDecision: 'NO_TRADE' as const,
+        consensusPercentage: 0,
+        totalModels: results.length,
+        successfulModels: 0,
+        voteDistribution,
+        averageConfidence: 0,
+        confidenceRange: { min: 0, max: 0 },
+        aggregatedKeyFactors: [],
+        aggregatedRisks: [],
+        aggregatedReasoning: '',
+      } satisfies SwarmResponse;
+    }
+
+    // Count votes by decision
+    for (const result of successfulResults) {
+      voteDistribution[result.prediction.decision]++;
+    }
+
+    // Filter to only trading decisions (YES or NO) for consensus
+    const tradingResults = successfulResults.filter(
+      (r) => r.prediction.decision !== 'NO_TRADE',
+    );
+
+    // Default to NO_TRADE if no trading votes
+    if (tradingResults.length === 0) {
+      const allConfidences = successfulResults.map(
+        (r) => r.prediction.confidence,
+      );
+
+      // Use AI aggregation for NO_TRADE consensus
+      const aggregation = yield* aggregateWithAI(successfulResults, 'NO_TRADE');
+
+      return {
+        results,
+        consensusDecision: 'NO_TRADE' as const,
+        consensusPercentage: 100,
+        totalModels: results.length,
+        successfulModels: successfulResults.length,
+        voteDistribution,
+        averageConfidence:
+          allConfidences.reduce((a, b) => a + b, 0) / allConfidences.length,
+        confidenceRange: {
+          min: Math.min(...allConfidences),
+          max: Math.max(...allConfidences),
+        },
+        aggregatedKeyFactors: [...aggregation.keyFactors],
+        aggregatedRisks: [...aggregation.risks],
+        aggregatedReasoning: aggregation.reasoning,
+      } satisfies SwarmResponse;
+    }
+
+    // Calculate confidence-weighted scores for YES and NO
+    let yesWeightedScore = 0;
+    let noWeightedScore = 0;
+
+    for (const result of tradingResults) {
+      const confidence = result.prediction.confidence;
+      if (result.prediction.decision === 'YES') {
+        yesWeightedScore += confidence;
+      } else if (result.prediction.decision === 'NO') {
+        noWeightedScore += confidence;
+      }
+    }
+
+    // Determine winner based on weighted scores
+    let consensusDecision: Decision;
+    let agreeingResults: typeof successfulResults;
+
+    if (yesWeightedScore > noWeightedScore) {
+      consensusDecision = 'YES';
+      agreeingResults = successfulResults.filter(
+        (r) => r.prediction.decision === 'YES',
+      );
+    } else if (noWeightedScore > yesWeightedScore) {
+      consensusDecision = 'NO';
+      agreeingResults = successfulResults.filter(
+        (r) => r.prediction.decision === 'NO',
+      );
+    } else {
+      // Tie - default to NO_TRADE
+      consensusDecision = 'NO_TRADE';
+      agreeingResults = successfulResults;
+    }
+
+    // Calculate consensus percentage based on agreeing models
+    const consensusPercentage =
+      (agreeingResults.length / successfulResults.length) * 100;
+
+    // Calculate confidence stats from agreeing models
+    const confidences = agreeingResults.map((r) => r.prediction.confidence);
+    const averageConfidence =
+      confidences.reduce((a, b) => a + b, 0) / confidences.length;
+
+    // Use AI aggregation for synthesized insights
+    const aggregation = yield* aggregateWithAI(
+      agreeingResults,
+      consensusDecision,
+    );
+
     return {
       results,
-      consensusDecision: 'NO_TRADE',
-      consensusPercentage: 100,
+      consensusDecision,
+      consensusPercentage,
       totalModels: results.length,
       successfulModels: successfulResults.length,
       voteDistribution,
-      averageConfidence:
-        allConfidences.reduce((a, b) => a + b, 0) / allConfidences.length,
+      averageConfidence,
       confidenceRange: {
-        min: Math.min(...allConfidences),
-        max: Math.max(...allConfidences),
+        min: Math.min(...confidences),
+        max: Math.max(...confidences),
       },
-      aggregatedKeyFactors: aggregateKeyFactors(successfulResults),
-      aggregatedRisks: aggregateRisks(successfulResults),
-      aggregatedReasoning: aggregateReasoning(successfulResults),
-    };
-  }
+      aggregatedKeyFactors: [...aggregation.keyFactors],
+      aggregatedRisks: [...aggregation.risks],
+      aggregatedReasoning: aggregation.reasoning,
+    } satisfies SwarmResponse;
+  });
 
-  // Calculate confidence-weighted scores for YES and NO
-  let yesWeightedScore = 0;
-  let noWeightedScore = 0;
-
-  for (const result of tradingResults) {
-    const confidence = result.prediction.confidence;
-    if (result.prediction.decision === 'YES') {
-      yesWeightedScore += confidence;
-    } else if (result.prediction.decision === 'NO') {
-      noWeightedScore += confidence;
+/**
+ * Simple fallback aggregation (used when AI aggregation fails).
+ */
+const simpleFallbackAggregation = (
+  results: Array<{ prediction: PredictionOutput }>,
+): AggregationOutput => {
+  // Deduplicate key factors
+  const allFactors = results.flatMap((r) => r.prediction.reasoning.keyFactors);
+  const seenFactors = new Set<string>();
+  const uniqueFactors: string[] = [];
+  for (const factor of allFactors) {
+    const key = factor.toLowerCase().trim();
+    if (!seenFactors.has(key)) {
+      seenFactors.add(key);
+      uniqueFactors.push(factor);
     }
   }
 
-  // Determine winner based on weighted scores
-  let consensusDecision: Decision;
-  let agreeingResults: typeof successfulResults;
-
-  if (yesWeightedScore > noWeightedScore) {
-    consensusDecision = 'YES';
-    agreeingResults = successfulResults.filter(
-      (r) => r.prediction.decision === 'YES',
-    );
-  } else if (noWeightedScore > yesWeightedScore) {
-    consensusDecision = 'NO';
-    agreeingResults = successfulResults.filter(
-      (r) => r.prediction.decision === 'NO',
-    );
-  } else {
-    // Tie - default to NO_TRADE
-    consensusDecision = 'NO_TRADE';
-    agreeingResults = successfulResults;
+  // Deduplicate risks
+  const allRisks = results.flatMap((r) => r.prediction.reasoning.risks);
+  const seenRisks = new Set<string>();
+  const uniqueRisks: string[] = [];
+  for (const risk of allRisks) {
+    const key = risk.toLowerCase().trim();
+    if (!seenRisks.has(key)) {
+      seenRisks.add(key);
+      uniqueRisks.push(risk);
+    }
   }
 
-  // Calculate consensus percentage based on agreeing models
-  const consensusPercentage =
-    (agreeingResults.length / successfulResults.length) * 100;
-
-  // Calculate confidence stats from agreeing models
-  const confidences = agreeingResults.map((r) => r.prediction.confidence);
-  const averageConfidence =
-    confidences.reduce((a, b) => a + b, 0) / confidences.length;
-
   return {
-    results,
-    consensusDecision,
-    consensusPercentage,
-    totalModels: results.length,
-    successfulModels: successfulResults.length,
-    voteDistribution,
-    averageConfidence,
-    confidenceRange: {
-      min: Math.min(...confidences),
-      max: Math.max(...confidences),
-    },
-    aggregatedKeyFactors: aggregateKeyFactors(agreeingResults),
-    aggregatedRisks: aggregateRisks(agreeingResults),
-    aggregatedReasoning: aggregateReasoning(agreeingResults),
+    keyFactors: uniqueFactors.slice(0, 5),
+    risks: uniqueRisks.slice(0, 3),
+    reasoning: results
+      .map((r) => r.prediction.reasoning.summary)
+      .join(' | ')
+      .slice(0, 500),
   };
 };
 
 /**
- * Aggregate key factors from multiple model predictions.
- * Deduplicates and takes top 5.
+ * AI-powered aggregation using xiaomi/mimo-vl-flash.
+ * Synthesizes key factors, risks, and reasoning from multiple model predictions.
  */
-const aggregateKeyFactors = (
+const aggregateWithAI = (
   results: Array<{ prediction: PredictionOutput }>,
-): string[] => {
-  const allFactors = results.flatMap((r) => r.prediction.reasoning.keyFactors);
-  // Deduplicate by lowercasing and comparing
-  const seen = new Set<string>();
-  const unique: string[] = [];
-  for (const factor of allFactors) {
-    const key = factor.toLowerCase().trim();
-    if (!seen.has(key)) {
-      seen.add(key);
-      unique.push(factor);
-    }
-  }
-  return unique.slice(0, 5);
-};
+  consensusDecision: Decision,
+) =>
+  Effect.gen(function* () {
+    const aggregationLayer = getAggregationModel();
 
-/**
- * Aggregate risk factors from multiple model predictions.
- * Deduplicates and takes top 3.
- */
-const aggregateRisks = (
-  results: Array<{ prediction: PredictionOutput }>,
-): string[] => {
-  const allRisks = results.flatMap((r) => r.prediction.reasoning.risks);
-  const seen = new Set<string>();
-  const unique: string[] = [];
-  for (const risk of allRisks) {
-    const key = risk.toLowerCase().trim();
-    if (!seen.has(key)) {
-      seen.add(key);
-      unique.push(risk);
+    // Fallback to simple aggregation if no model configured
+    if (!aggregationLayer) {
+      console.log('Aggregation model not configured, using simple fallback');
+      return simpleFallbackAggregation(results);
     }
-  }
-  return unique.slice(0, 3);
-};
 
-/**
- * Aggregate reasoning summaries from agreeing models.
- */
-const aggregateReasoning = (
-  results: Array<{ prediction: PredictionOutput }>,
-): string => {
-  return results
-    .map((r) => r.prediction.reasoning.summary)
-    .join(' | ')
-    .slice(0, 1000);
-};
+    // Build the aggregation prompt
+    const modelOutputs = results
+      .map(
+        (r, i) => `Model ${i + 1}:
+  Decision: ${r.prediction.decision}
+  Confidence: ${r.prediction.confidence}%
+  Key Factors: ${r.prediction.reasoning.keyFactors.join('; ')}
+  Risks: ${r.prediction.reasoning.risks.join('; ')}
+  Summary: ${r.prediction.reasoning.summary}`,
+      )
+      .join('\n\n');
+
+    const systemPrompt = `You are an expert at synthesizing insights from multiple AI model predictions.
+Your task is to aggregate and deduplicate the key factors, risks, and reasoning from multiple models into a concise summary.
+
+Guidelines:
+- Combine similar factors and risks, removing redundancy
+- Prioritize factors mentioned by multiple models
+- Create a unified reasoning summary that captures the essence of all models
+- Keep the output concise and actionable
+- Focus on factors supporting the consensus decision: ${consensusDecision}`;
+
+    const userPrompt = `Synthesize the following ${results.length} model predictions into a unified analysis:
+
+${modelOutputs}
+
+Provide:
+1. Top 3-5 most important key factors (deduplicated and synthesized)
+2. Top 3 critical risks (deduplicated and synthesized)
+3. A unified reasoning summary (max 500 chars)`;
+
+    const aggregationResult = yield* Effect.gen(function* () {
+      const lm = yield* LanguageModel.LanguageModel;
+      const response = yield* lm.generateObject({
+        prompt: [
+          { role: 'system' as const, content: systemPrompt },
+          { role: 'user' as const, content: userPrompt },
+        ],
+        schema: AggregationOutputSchema,
+        objectName: 'aggregation',
+      });
+      return response;
+    }).pipe(
+      Effect.provide(aggregationLayer),
+      Effect.timeout(Duration.seconds(30)),
+      Effect.catchAll((error) => {
+        console.warn('AI aggregation failed, using fallback:', String(error));
+        return Effect.succeed({ value: null as AggregationOutput | null });
+      }),
+    );
+
+    // Use AI result or fallback
+    if (aggregationResult.value) {
+      console.log('AI aggregation completed successfully');
+      return aggregationResult.value;
+    }
+
+    return simpleFallbackAggregation(results);
+  });
 
 /**
  * Query a single model using structured output (generateObject).
@@ -344,5 +427,7 @@ export const querySwarm = (systemPrompt: string, userPrompt: string) =>
       }
     }
 
-    return calculateConsensus(results);
+    // Calculate consensus with AI-powered aggregation
+    const consensus = yield* calculateConsensus(results);
+    return consensus;
   });

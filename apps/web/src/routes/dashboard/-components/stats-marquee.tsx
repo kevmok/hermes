@@ -53,10 +53,7 @@ export function StatsMarquee() {
   ];
 
   return (
-    <Link
-      to='/dashboard/performance'
-      className='block group'
-    >
+    <Link to='/dashboard/performance' className='block group'>
       <div className='h-9 bg-muted/10 border-b border-sidebar-border/50 overflow-hidden hover:bg-muted/20 transition-colors'>
         <div className='flex h-full items-center animate-marquee whitespace-nowrap'>
           {/* Duplicate content for seamless loop */}

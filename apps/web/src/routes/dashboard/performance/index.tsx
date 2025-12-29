@@ -240,7 +240,9 @@ function PerformancePage() {
             ) : (
               <div className='grid grid-cols-2 md:grid-cols-4 gap-6'>
                 <div className='space-y-1'>
-                  <span className='text-xs text-muted-foreground'>Last 24h</span>
+                  <span className='text-xs text-muted-foreground'>
+                    Last 24h
+                  </span>
                   <div className='text-2xl font-bold tabular-nums'>
                     {stats?.signalsLast24h ?? 0}
                   </div>

@@ -3,6 +3,7 @@
 ## Overview
 
 Improve the Lofn dashboard user experience by:
+
 1. Relocating distracting performance stats to a subtle marquee banner
 2. Replacing trade/signal detail drawers with full dedicated pages
 3. Adding breadcrumb navigation throughout the dashboard
@@ -11,6 +12,7 @@ Improve the Lofn dashboard user experience by:
 ## Problem Statement / Motivation
 
 The current dashboard has several UX issues:
+
 - **Performance stats header is distracting**: Win rate, ROI, and signal counts displayed prominently at the top of every page pulls focus away from the primary content
 - **Drawer pattern limits detail view**: The current Sheet/drawer for trade/signal details constrains the amount of information visible, especially AI reasoning from multiple models
 - **No breadcrumb navigation**: Users can't easily see or navigate the route hierarchy
@@ -25,12 +27,14 @@ Replace the `PerformanceHeader` component with a subtle news ticker that scrolls
 **Location**: Below the top navbar, above page content (global across all dashboard routes)
 
 **Metrics to Display**:
+
 - Win Rate: `XX.X%` (X/Y correct)
 - Total Signals: `XXX` (X high confidence)
 - Simulated ROI: `+/-X.X%`
 - Last 24h: `X new` (Y this week)
 
 **Behavior**:
+
 - Auto-scrolls continuously at readable pace
 - Pauses on hover for inspection
 - Click to navigate to dedicated `/dashboard/performance` page
@@ -72,12 +76,14 @@ Convert from drawer/Sheet pattern to full dedicated pages for viewing trade/sign
 Add dynamic breadcrumbs to the top navbar.
 
 **Structure**:
+
 - `Home > Trades` (on trades list)
 - `Home > Trades > [Market Title]` (on trade/signal detail)
 - `Home > Events > [Event Name]` (on event detail)
 - `Home > Performance` (on performance page)
 
 **Implementation**:
+
 - Truncate market titles > 50 characters with tooltip
 - Use TanStack Router's `useMatches()` for dynamic breadcrumb data
 - Add `staticData.breadcrumb` to route definitions
@@ -85,12 +91,14 @@ Add dynamic breadcrumbs to the top navbar.
 ### 4. Remove/Relocate Unnecessary Stats
 
 Remove from trades page header (or relocate to dedicated page):
+
 - ~~Total Trades~~ (WebSocket trade count - not relevant to AI signals)
 - ~~Whale Trades~~ (trades >= $500 - definition unclear to users)
 - ~~Total Volume~~ (sum of trade sizes - not actionable)
 - ~~Whale Volume~~ (whale trade sizes - not actionable)
 
 Replace with signal-specific metrics:
+
 - Total Signals
 - High Confidence Signals
 - Signals Last 24h
@@ -124,39 +132,41 @@ Replace with signal-specific metrics:
 
 #### New Files
 
-| File | Purpose |
-|------|---------|
-| `dashboard/-components/stats-marquee.tsx` | Scrolling performance stats banner |
-| `dashboard/-components/breadcrumbs.tsx` | Dynamic breadcrumb component |
-| `dashboard/trades/$signalId/index.tsx` | Full trade/signal detail page (replaces drawer) |
-| `dashboard/trades/$signalId/-components/consensus-viz.tsx` | Consensus visualization |
-| `dashboard/trades/$signalId/-components/model-reasoning-cards.tsx` | AI reasoning display |
-| `dashboard/trades/$signalId/-components/market-metadata.tsx` | Market info section |
-| `dashboard/performance/index.tsx` | Dedicated performance stats page |
+| File                                                               | Purpose                                         |
+| ------------------------------------------------------------------ | ----------------------------------------------- |
+| `dashboard/-components/stats-marquee.tsx`                          | Scrolling performance stats banner              |
+| `dashboard/-components/breadcrumbs.tsx`                            | Dynamic breadcrumb component                    |
+| `dashboard/trades/$signalId/index.tsx`                             | Full trade/signal detail page (replaces drawer) |
+| `dashboard/trades/$signalId/-components/consensus-viz.tsx`         | Consensus visualization                         |
+| `dashboard/trades/$signalId/-components/model-reasoning-cards.tsx` | AI reasoning display                            |
+| `dashboard/trades/$signalId/-components/market-metadata.tsx`       | Market info section                             |
+| `dashboard/performance/index.tsx`                                  | Dedicated performance stats page                |
 
 #### Modified Files
 
-| File | Changes |
-|------|---------|
-| `dashboard/route.tsx:27-36` | Add breadcrumbs to header, add marquee below navbar |
-| `dashboard/trades/route.tsx` | Remove Sheet/drawer, use full page navigation |
-| `dashboard/trades/$signalId.tsx` | Convert to directory with index.tsx for full page |
+| File                             | Changes                                             |
+| -------------------------------- | --------------------------------------------------- |
+| `dashboard/route.tsx:27-36`      | Add breadcrumbs to header, add marquee below navbar |
+| `dashboard/trades/route.tsx`     | Remove Sheet/drawer, use full page navigation       |
+| `dashboard/trades/$signalId.tsx` | Convert to directory with index.tsx for full page   |
 
 #### Files to Delete
 
-| File | Reason |
-|------|--------|
-| `dashboard/-components/performance-header.tsx` | Replaced by marquee |
+| File                                                     | Reason                     |
+| -------------------------------------------------------- | -------------------------- |
+| `dashboard/-components/performance-header.tsx`           | Replaced by marquee        |
 | `dashboard/trades/-components/signal-detail-content.tsx` | Content moves to full page |
 
 ### Implementation Phases
 
 #### Phase 1: Foundation (Breadcrumbs & Navigation)
+
 - [ ] Implement breadcrumb component
 - [ ] Add breadcrumbs to dashboard header (replace static "Dashboard" text)
 - [ ] Add `staticData.breadcrumb` to route definitions
 
 #### Phase 2: Trade/Signal Detail Page
+
 - [ ] Convert `$signalId.tsx` to `$signalId/index.tsx` directory structure
 - [ ] Create full page layout (hero, consensus, reasoning, metadata sections)
 - [ ] Build consensus visualization component
@@ -166,6 +176,7 @@ Replace with signal-specific metrics:
 - [ ] Remove Sheet/drawer from trades/route.tsx
 
 #### Phase 3: Performance Stats Marquee
+
 - [ ] Create stats marquee component with CSS animation or motion
 - [ ] Add to dashboard layout (global visibility below navbar)
 - [ ] Implement hover-to-pause behavior
@@ -174,6 +185,7 @@ Replace with signal-specific metrics:
 - [ ] Remove old PerformanceHeader component from trades page
 
 #### Phase 4: Cleanup & Polish
+
 - [ ] Update trades page header with signal-specific metrics
 - [ ] Remove old stats cards (trades/whale/volume)
 - [ ] Add route transitions with motion
@@ -227,11 +239,11 @@ Replace with signal-specific metrics:
 
 ## Risk Analysis & Mitigation
 
-| Risk | Impact | Mitigation |
-|------|--------|------------|
+| Risk                                 | Impact | Mitigation                                         |
+| ------------------------------------ | ------ | -------------------------------------------------- |
 | Mobile UX regression (drawer → page) | Medium | Test thoroughly, consider keeping drawer on mobile |
-| Marquee animation jank | Low | Use CSS transforms, GPU acceleration |
-| Large reasoning text overflow | Low | Add max-height with "read more" expand |
+| Marquee animation jank               | Low    | Use CSS transforms, GPU acceleration               |
+| Large reasoning text overflow        | Low    | Add max-height with "read more" expand             |
 
 ## Future Considerations
 

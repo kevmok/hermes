@@ -75,11 +75,20 @@ export function ConsensusViz({
               {percentage.toFixed(0)}%
             </span>
           </div>
-          <Progress value={percentage} className={cn('h-3', config.progressColor)} />
+          <Progress
+            value={percentage}
+            className={cn('h-3', config.progressColor)}
+          />
           <p className='text-sm text-muted-foreground'>
-            <span className='font-medium text-foreground'>{agreeingModels}</span> of{' '}
-            <span className='font-medium text-foreground'>{totalModels}</span> models
-            agreed on <span className={cn('font-semibold', config.color)}>{config.label}</span>
+            <span className='font-medium text-foreground'>
+              {agreeingModels}
+            </span>{' '}
+            of{' '}
+            <span className='font-medium text-foreground'>{totalModels}</span>{' '}
+            models agreed on{' '}
+            <span className={cn('font-semibold', config.color)}>
+              {config.label}
+            </span>
           </p>
 
           {/* Vote Distribution */}
@@ -88,19 +97,28 @@ export function ConsensusViz({
               <div className='flex items-center gap-2'>
                 <span className='w-3 h-3 rounded-full bg-emerald-500' />
                 <span className='text-sm text-muted-foreground'>
-                  YES: <span className='font-medium text-foreground'>{voteDistribution.YES}</span>
+                  YES:{' '}
+                  <span className='font-medium text-foreground'>
+                    {voteDistribution.YES}
+                  </span>
                 </span>
               </div>
               <div className='flex items-center gap-2'>
                 <span className='w-3 h-3 rounded-full bg-red-500' />
                 <span className='text-sm text-muted-foreground'>
-                  NO: <span className='font-medium text-foreground'>{voteDistribution.NO}</span>
+                  NO:{' '}
+                  <span className='font-medium text-foreground'>
+                    {voteDistribution.NO}
+                  </span>
                 </span>
               </div>
               <div className='flex items-center gap-2'>
                 <span className='w-3 h-3 rounded-full bg-amber-500' />
                 <span className='text-sm text-muted-foreground'>
-                  HOLD: <span className='font-medium text-foreground'>{voteDistribution.NO_TRADE}</span>
+                  HOLD:{' '}
+                  <span className='font-medium text-foreground'>
+                    {voteDistribution.NO_TRADE}
+                  </span>
                 </span>
               </div>
             </div>
@@ -123,7 +141,9 @@ export function ConsensusViz({
             >
               <CardContent className='p-4'>
                 <div className='flex items-center justify-between mb-2'>
-                  <span className='font-medium'>{formatModelName(pred.modelName)}</span>
+                  <span className='font-medium'>
+                    {formatModelName(pred.modelName)}
+                  </span>
                   <div className='flex items-center gap-1.5'>
                     <HugeiconsIcon
                       icon={predConfig.icon}
