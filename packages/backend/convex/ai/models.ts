@@ -12,12 +12,12 @@ import { FetchHttpClient } from "@effect/platform";
  * Add or remove models here to change which AI models participate in consensus.
  */
 export const SWARM_MODELS = [
-  "qwen/qwen3-vl-8b-thinking",
+  "qwen/qwen3-vl-32b-instruct",
   "google/gemini-3-flash-preview",
   "openai/gpt-5-mini",
-  "anthropic/claude-opus-4.5",
+  // "anthropic/claude-haiku-4.5",
   "z-ai/glm-4.7",
-  "x-ai/grok-4",
+  "x-ai/grok-4.1-fast",
   "moonshotai/kimi-k2-thinking",
   "openai/gpt-oss-20b",
 ] as const;
@@ -28,12 +28,12 @@ export type SwarmModelId = (typeof SWARM_MODELS)[number];
  * Human-readable display names for each model.
  */
 export const MODEL_DISPLAY_NAMES: Record<SwarmModelId, string> = {
-  "qwen/qwen3-vl-8b-thinking": "Qwen 3 VL 8B",
+  "qwen/qwen3-vl-32b-instruct": "Qwen 3 VL 32B",
   "google/gemini-3-flash-preview": "Gemini 3 Pro",
   "openai/gpt-5-mini": "GPT-5 Mini",
-  "anthropic/claude-opus-4.5": "Claude Opus 4.5",
+  // "anthropic/claude-haiku-4.5": "Claude Haiku 4.5",
   "z-ai/glm-4.7": "GLM 4.7",
-  "x-ai/grok-4": "Grok 4",
+  "x-ai/grok-4.1-fast": "Grok 4.1 Fast",
   "moonshotai/kimi-k2-thinking": "Kimi K2",
   "openai/gpt-oss-20b": "GPT OSS 20B",
 };

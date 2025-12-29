@@ -43,9 +43,10 @@ export const MarketFilterOutputSchema = Schema.Struct({
 export type MarketFilterOutput = typeof MarketFilterOutputSchema.Type;
 
 /**
- * Filter model - google/gemini-2.0-flash-exp:free for reliable structured output.
+ * Filter model - openai/gpt-4o-mini has best structured output support.
+ * Llama models don't reliably follow JSON schemas.
  */
-const FILTER_MODEL = "google/gemini-2.0-flash-exp:free" as const;
+const FILTER_MODEL = "bytedance-seed/seed-1.6-flash" as const;
 
 /**
  * Create the filter model layer.
@@ -95,13 +96,13 @@ export const filterMarketWithAI = (market: {
 Your job is to classify markets and determine if they should be included for AI analysis.
 
 FILTER OUT (shouldInclude: false) markets that are:
-- Cryptocurrency related (Bitcoin, Ethereum, any token prices, crypto adoption)
+- Cryptocurrency related (Bitcoin, Ethereum, any token prices, crypto adoption, any token airdrops, lighter or any other crypto market cap mentions)
 - Sports related (NFL, NBA, MLB, NHL, UFC, soccer, tennis, any team/player performance)
 - Entertainment gossip (celebrity drama, reality TV outcomes)
 - High emotional volatility (fan-driven, tribal, meme-based)
+- Politics (elections, policy outcomes, geopolitical events)
 
 INCLUDE (shouldInclude: true) markets that are:
-- Politics (elections, policy outcomes, geopolitical events)
 - Economics (Fed rates, inflation, GDP, employment)
 - Technology (product launches, company milestones, AI developments)
 - Science/Health (research outcomes, FDA approvals)
@@ -129,12 +130,15 @@ Should this market be included for analysis?`;
       return response;
     }).pipe(
       Effect.provide(filterLayer),
-      Effect.timeout(Duration.seconds(10)),
+      // Effect.timeout(Duration.seconds(10)),
       Effect.catchAll((error) => {
-        console.warn("AI filter failed, defaulting to include:", String(error));
+        console.warn(
+          "AI filter failed, defaulting to not include:",
+          String(error),
+        );
         return Effect.succeed({
           value: {
-            shouldInclude: true,
+            shouldInclude: false,
             category: "other" as const,
             emotionalLevel: "low" as const,
             reason: "AI filter error, defaulting to include",

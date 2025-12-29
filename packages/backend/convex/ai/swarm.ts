@@ -257,7 +257,7 @@ Provide:
       return response;
     }).pipe(
       Effect.provide(aggregationLayer),
-      Effect.timeout(Duration.seconds(30)),
+      // Effect.timeout(Duration.seconds(30)),
       Effect.catchAll((error) => {
         console.warn("AI aggregation failed, using fallback:", String(error));
         return Effect.succeed({ value: null as AggregationOutput | null });
@@ -298,7 +298,7 @@ const queryWithModel = (
       return response;
     }).pipe(
       Effect.provide(model.layer),
-      Effect.timeout(Duration.seconds(120)),
+      // Effect.timeout(Duration.seconds(120)),
       Effect.catchAll((error) =>
         Effect.succeed({
           value: null as PredictionOutput | null,
