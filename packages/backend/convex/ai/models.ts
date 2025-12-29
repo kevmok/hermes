@@ -1,60 +1,117 @@
 import { Layer } from "effect";
 import * as Redacted from "effect/Redacted";
 import { LanguageModel } from "@effect/ai";
-import { OpenAiClient, OpenAiLanguageModel } from "@effect/ai-openai";
-import { AnthropicClient, AnthropicLanguageModel } from "@effect/ai-anthropic";
-import { GoogleClient, GoogleLanguageModel } from "@effect/ai-google";
+import {
+  OpenRouterClient,
+  OpenRouterLanguageModel,
+} from "@effect/ai-openrouter";
 import { FetchHttpClient } from "@effect/platform";
 
-// OpenAI Client and Language Model
-const OpenAiClientLayer = OpenAiClient.layer({
-  apiKey: process.env.OPENAI_KEY
-    ? Redacted.make(process.env.OPENAI_KEY)
+/**
+ * Model configuration for the swarm.
+ * Add or remove models here to change which AI models participate in consensus.
+ */
+export const SWARM_MODELS = [
+  "qwen/qwen3-vl-8b-thinking",
+  "google/gemini-3-flash-preview",
+  "openai/gpt-5-mini",
+  "anthropic/claude-opus-4.5",
+  "z-ai/glm-4.7",
+  "x-ai/grok-4",
+  "moonshotai/kimi-k2-thinking",
+  "openai/gpt-oss-20b",
+] as const;
+
+export type SwarmModelId = (typeof SWARM_MODELS)[number];
+
+/**
+ * Human-readable display names for each model.
+ */
+export const MODEL_DISPLAY_NAMES: Record<SwarmModelId, string> = {
+  "qwen/qwen3-vl-8b-thinking": "Qwen 3 VL 8B",
+  "google/gemini-3-flash-preview": "Gemini 3 Pro",
+  "openai/gpt-5-mini": "GPT-5 Mini",
+  "anthropic/claude-opus-4.5": "Claude Opus 4.5",
+  "z-ai/glm-4.7": "GLM 4.7",
+  "x-ai/grok-4": "Grok 4",
+  "moonshotai/kimi-k2-thinking": "Kimi K2",
+  "openai/gpt-oss-20b": "GPT OSS 20B",
+};
+
+/**
+ * OpenRouter client layer - shared across all models.
+ * Uses OPENROUTER_API_KEY from environment.
+ */
+const OpenRouterClientLayer = OpenRouterClient.layer({
+  apiKey: process.env.OPENROUTER_API_KEY
+    ? Redacted.make(process.env.OPENROUTER_API_KEY)
     : undefined,
+  title: "Lofn AI Swarm",
 });
 
-const OpenAiModelLayer = OpenAiLanguageModel.layer({
-  model: "gpt-4o",
-});
+/**
+ * Base layer with HTTP client for OpenRouter.
+ */
+const BaseLayer = Layer.provide(OpenRouterClientLayer, FetchHttpClient.layer);
 
-// Anthropic Client and Language Model
-const AnthropicClientLayer = AnthropicClient.layer({
-  apiKey: process.env.ANTHROPIC_KEY
-    ? Redacted.make(process.env.ANTHROPIC_KEY)
-    : undefined,
-});
+/**
+ * Create a language model layer for a specific OpenRouter model.
+ */
+export const createModelLayer = (
+  modelId: string,
+): Layer.Layer<LanguageModel.LanguageModel, never, never> => {
+  const modelLayer = OpenRouterLanguageModel.layer({ model: modelId });
+  return Layer.provideMerge(modelLayer, BaseLayer);
+};
 
-const AnthropicModelLayer = AnthropicLanguageModel.layer({
-  model: "claude-sonnet-4-20250514",
-});
+/**
+ * Model factory entry with name and layer.
+ */
+export interface ModelEntry {
+  readonly id: SwarmModelId;
+  readonly displayName: string;
+  readonly layer: Layer.Layer<LanguageModel.LanguageModel, never, never>;
+}
 
-// Google Client and Language Model
-const GoogleClientLayer = GoogleClient.layer({
-  apiKey: process.env.GEMINI_KEY
-    ? Redacted.make(process.env.GEMINI_KEY)
-    : undefined,
-});
+/**
+ * Get all configured models with their layers.
+ * Only returns models if OPENROUTER_API_KEY is set.
+ */
+export const getConfiguredModels = (): ModelEntry[] => {
+  if (!process.env.OPENROUTER_API_KEY) {
+    console.warn("OPENROUTER_API_KEY not set - no models available");
+    return [];
+  }
 
-const GoogleModelLayer = GoogleLanguageModel.layer({
-  model: "gemini-1.5-pro",
-});
+  return SWARM_MODELS.map((id) => ({
+    id,
+    displayName: MODEL_DISPLAY_NAMES[id],
+    layer: createModelLayer(id),
+  }));
+};
 
-// Primary model layer (Anthropic by default) - provides LanguageModel.LanguageModel
-export const PrimaryModelLayer = Layer.provideMerge(
-  AnthropicModelLayer,
-  AnthropicClientLayer,
-).pipe(Layer.provide(FetchHttpClient.layer));
+/**
+ * Get a subset of models by their IDs.
+ * Useful for testing or running with specific models only.
+ */
+export const getModelsByIds = (ids: SwarmModelId[]): ModelEntry[] => {
+  if (!process.env.OPENROUTER_API_KEY) {
+    console.warn("OPENROUTER_API_KEY not set - no models available");
+    return [];
+  }
 
-// OpenAI model layer
-export const OpenAiLayer = Layer.provideMerge(
-  OpenAiModelLayer,
-  OpenAiClientLayer,
-).pipe(Layer.provide(FetchHttpClient.layer));
+  return ids.map((id) => ({
+    id,
+    displayName: MODEL_DISPLAY_NAMES[id],
+    layer: createModelLayer(id),
+  }));
+};
 
-// Google model layer
-export const GoogleLayer = Layer.provideMerge(
-  GoogleModelLayer,
-  GoogleClientLayer,
-).pipe(Layer.provide(FetchHttpClient.layer));
+/**
+ * Check if OpenRouter is configured.
+ */
+export const isOpenRouterConfigured = (): boolean => {
+  return !!process.env.OPENROUTER_API_KEY;
+};
 
 export { LanguageModel };

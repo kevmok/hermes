@@ -86,6 +86,8 @@
         "@effect/ai-anthropic": "^0.23.0",
         "@effect/ai-google": "^0.12.0",
         "@effect/ai-openai": "^0.37.0",
+        "@effect/ai-openrouter": "^0.8.0",
+        "@effect/experimental": "^0.58.0",
         "@effect/platform": "^0.94.0",
         "autumn-js": "catalog:billing",
         "better-auth": "catalog:auth",
@@ -252,6 +254,8 @@
     "@effect/ai-google": ["@effect/ai-google@0.12.0", "", { "peerDependencies": { "@effect/ai": "^0.33.0", "@effect/experimental": "^0.58.0", "@effect/platform": "^0.94.0", "effect": "^3.19.13" } }, "sha512-a1oamKpbYNXRRuOKLVlnXlW7yRYuAYon5wptBGWoxjTJEH26ezXJMsBSxUvxz8Mroq8UCntrJRt/KnN4A8laQg=="],
 
     "@effect/ai-openai": ["@effect/ai-openai@0.37.0", "", { "dependencies": { "gpt-tokenizer": "^2.9.0" }, "peerDependencies": { "@effect/ai": "^0.33.0", "@effect/experimental": "^0.58.0", "@effect/platform": "^0.94.0", "effect": "^3.19.13" } }, "sha512-Rz6QNJqx8qpzPTNcMf6MjEHM81klrhMW0D1MNzP079PHvslOzWyGF58eikgCDWpX3y+cYnYrcjLFtgYzPJnGww=="],
+
+    "@effect/ai-openrouter": ["@effect/ai-openrouter@0.8.0", "", { "peerDependencies": { "@effect/ai": "^0.33.0", "@effect/experimental": "^0.58.0", "@effect/platform": "^0.94.0", "effect": "^3.19.13" } }, "sha512-Mfq7E5tEWWO+S9gd7dA08Q9Wo4lBwn+zxmaHSrIKzptkI8W3RCJmMnOH7PrgCwStx3RBhuV6ebp2ZqaWh759Og=="],
 
     "@effect/cluster": ["@effect/cluster@0.55.0", "", { "dependencies": { "kubernetes-types": "^1.30.0" }, "peerDependencies": { "@effect/platform": "^0.93.6", "@effect/rpc": "^0.72.2", "@effect/sql": "^0.48.6", "@effect/workflow": "^0.15.0", "effect": "^3.19.8" } }, "sha512-WeLrGpdtWhr4ap3kcW+G+qYyDqzEa65ypPWsU+sNU2gordENsAkxUQqo8taKr114AOk6WE74q0I7iWABcfGlhQ=="],
 
@@ -1768,6 +1772,8 @@
     "@effect/ai-google/@effect/platform": ["@effect/platform@0.94.0", "", { "dependencies": { "find-my-way-ts": "^0.1.6", "msgpackr": "^1.11.4", "multipasta": "^0.2.7" }, "peerDependencies": { "effect": "^3.19.13" } }, "sha512-oIATd3M+RUe2q+bu0Qpgt4/qSbXBM9OEGBrRW7SvtwXGOWkCYkN+LfOPnmPrbMB7jYjpIb7808T1bONM1Nwgfg=="],
 
     "@effect/ai-openai/@effect/platform": ["@effect/platform@0.94.0", "", { "dependencies": { "find-my-way-ts": "^0.1.6", "msgpackr": "^1.11.4", "multipasta": "^0.2.7" }, "peerDependencies": { "effect": "^3.19.13" } }, "sha512-oIATd3M+RUe2q+bu0Qpgt4/qSbXBM9OEGBrRW7SvtwXGOWkCYkN+LfOPnmPrbMB7jYjpIb7808T1bONM1Nwgfg=="],
+
+    "@effect/ai-openrouter/@effect/platform": ["@effect/platform@0.94.0", "", { "dependencies": { "find-my-way-ts": "^0.1.6", "msgpackr": "^1.11.4", "multipasta": "^0.2.7" }, "peerDependencies": { "effect": "^3.19.13" } }, "sha512-oIATd3M+RUe2q+bu0Qpgt4/qSbXBM9OEGBrRW7SvtwXGOWkCYkN+LfOPnmPrbMB7jYjpIb7808T1bONM1Nwgfg=="],
 
     "@effect/experimental/@effect/platform": ["@effect/platform@0.94.0", "", { "dependencies": { "find-my-way-ts": "^0.1.6", "msgpackr": "^1.11.4", "multipasta": "^0.2.7" }, "peerDependencies": { "effect": "^3.19.13" } }, "sha512-oIATd3M+RUe2q+bu0Qpgt4/qSbXBM9OEGBrRW7SvtwXGOWkCYkN+LfOPnmPrbMB7jYjpIb7808T1bONM1Nwgfg=="],
 

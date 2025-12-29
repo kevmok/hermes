@@ -1,6 +1,6 @@
 import { LanguageModel } from '@effect/ai';
 import { Duration, Effect, Layer, Schedule } from 'effect';
-import { PrimaryModelLayer, OpenAiLayer, GoogleLayer } from './models';
+import { getConfiguredModels, type ModelEntry } from './models';
 import {
   PredictionOutputSchema,
   type PredictionOutput,
@@ -193,10 +193,8 @@ const aggregateReasoning = (
 /**
  * Query a single model using structured output (generateObject).
  */
-const queryWithLayer = (
-  name: string,
-  // biome-ignore lint/suspicious/noExplicitAny: Effect Layer types are complex
-  layer: Layer.Layer<LanguageModel.LanguageModel, any, any>,
+const queryWithModel = (
+  model: ModelEntry,
   systemPrompt: string,
   userPrompt: string,
 ) =>
@@ -204,9 +202,9 @@ const queryWithLayer = (
     const startTime = Date.now();
 
     const result = yield* Effect.gen(function* () {
-      const model = yield* LanguageModel.LanguageModel;
+      const lm = yield* LanguageModel.LanguageModel;
       // Use message array format to include system prompt
-      const response = yield* model.generateObject({
+      const response = yield* lm.generateObject({
         prompt: [
           { role: 'system' as const, content: systemPrompt },
           { role: 'user' as const, content: userPrompt },
@@ -216,7 +214,7 @@ const queryWithLayer = (
       });
       return response;
     }).pipe(
-      Effect.provide(layer),
+      Effect.provide(model.layer),
       Effect.timeout(Duration.seconds(120)),
       Effect.catchAll((error) =>
         Effect.succeed({
@@ -230,7 +228,7 @@ const queryWithLayer = (
     const error = (result as { error?: string }).error;
 
     return {
-      modelName: name,
+      modelName: model.id,
       prediction: result.value,
       responseTimeMs,
       error,
@@ -290,36 +288,11 @@ Provide your trading decision with structured reasoning.`;
  */
 export const querySwarm = (systemPrompt: string, userPrompt: string) =>
   Effect.gen(function* () {
-    // Build list of available models based on API keys
-    const models: Array<{
-      name: string;
-      // biome-ignore lint/suspicious/noExplicitAny: Effect Layer types are complex
-      layer: Layer.Layer<LanguageModel.LanguageModel, any, any>;
-    }> = [];
-
-    if (process.env.ANTHROPIC_KEY) {
-      models.push({
-        name: 'claude-sonnet-4',
-        layer: PrimaryModelLayer,
-      });
-    }
-
-    if (process.env.OPENAI_KEY) {
-      models.push({
-        name: 'gpt-4o',
-        layer: OpenAiLayer,
-      });
-    }
-
-    if (process.env.GEMINI_KEY) {
-      models.push({
-        name: 'gemini-1.5-pro',
-        layer: GoogleLayer,
-      });
-    }
+    // Get all configured models from the factory
+    const models = getConfiguredModels();
 
     if (models.length === 0) {
-      console.warn('No AI models configured - check API keys');
+      console.warn('No AI models configured - check OPENROUTER_API_KEY');
       return {
         results: [],
         consensusDecision: 'NO_TRADE' as const,
@@ -335,7 +308,9 @@ export const querySwarm = (systemPrompt: string, userPrompt: string) =>
       };
     }
 
-    console.log(`Querying ${models.length} models with structured output...`);
+    console.log(
+      `Querying ${models.length} models via OpenRouter: ${models.map((m) => m.displayName).join(', ')}`,
+    );
     const startTime = Date.now();
 
     // Retry schedule: exponential backoff starting at 1s, max 3 retries
@@ -345,12 +320,12 @@ export const querySwarm = (systemPrompt: string, userPrompt: string) =>
 
     // Query all models with limited concurrency and retry on transient failures
     const results = yield* Effect.all(
-      models.map(({ name, layer }) =>
-        queryWithLayer(name, layer, systemPrompt, userPrompt).pipe(
+      models.map((model) =>
+        queryWithModel(model, systemPrompt, userPrompt).pipe(
           Effect.retry(retrySchedule),
         ),
       ),
-      { concurrency: 3 },
+      { concurrency: 4 },
     );
 
     const totalTime = Date.now() - startTime;
