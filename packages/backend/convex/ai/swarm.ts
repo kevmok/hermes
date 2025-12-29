@@ -1,10 +1,10 @@
-import { LanguageModel } from '@effect/ai';
-import { Duration, Effect, Schedule } from 'effect';
+import { LanguageModel } from "@effect/ai";
+import { Duration, Effect, Schedule } from "effect";
 import {
   getConfiguredModels,
   getAggregationModel,
   type ModelEntry,
-} from './models';
+} from "./models";
 import {
   PredictionOutputSchema,
   AggregationOutputSchema,
@@ -13,7 +13,7 @@ import {
   type SwarmResult,
   type SwarmResponse,
   type AggregationOutput,
-} from './schema';
+} from "./schema";
 
 // Re-export types for external use
 export type { SwarmResult, SwarmResponse, PredictionOutput, Decision };
@@ -39,7 +39,7 @@ const calculateConsensus = (results: SwarmResult[]) =>
     if (successfulResults.length === 0) {
       return {
         results,
-        consensusDecision: 'NO_TRADE' as const,
+        consensusDecision: "NO_TRADE" as const,
         consensusPercentage: 0,
         totalModels: results.length,
         successfulModels: 0,
@@ -48,7 +48,7 @@ const calculateConsensus = (results: SwarmResult[]) =>
         confidenceRange: { min: 0, max: 0 },
         aggregatedKeyFactors: [],
         aggregatedRisks: [],
-        aggregatedReasoning: '',
+        aggregatedReasoning: "",
       } satisfies SwarmResponse;
     }
 
@@ -59,7 +59,7 @@ const calculateConsensus = (results: SwarmResult[]) =>
 
     // Filter to only trading decisions (YES or NO) for consensus
     const tradingResults = successfulResults.filter(
-      (r) => r.prediction.decision !== 'NO_TRADE',
+      (r) => r.prediction.decision !== "NO_TRADE",
     );
 
     // Default to NO_TRADE if no trading votes
@@ -69,11 +69,11 @@ const calculateConsensus = (results: SwarmResult[]) =>
       );
 
       // Use AI aggregation for NO_TRADE consensus
-      const aggregation = yield* aggregateWithAI(successfulResults, 'NO_TRADE');
+      const aggregation = yield* aggregateWithAI(successfulResults, "NO_TRADE");
 
       return {
         results,
-        consensusDecision: 'NO_TRADE' as const,
+        consensusDecision: "NO_TRADE" as const,
         consensusPercentage: 100,
         totalModels: results.length,
         successfulModels: successfulResults.length,
@@ -96,9 +96,9 @@ const calculateConsensus = (results: SwarmResult[]) =>
 
     for (const result of tradingResults) {
       const confidence = result.prediction.confidence;
-      if (result.prediction.decision === 'YES') {
+      if (result.prediction.decision === "YES") {
         yesWeightedScore += confidence;
-      } else if (result.prediction.decision === 'NO') {
+      } else if (result.prediction.decision === "NO") {
         noWeightedScore += confidence;
       }
     }
@@ -108,18 +108,18 @@ const calculateConsensus = (results: SwarmResult[]) =>
     let agreeingResults: typeof successfulResults;
 
     if (yesWeightedScore > noWeightedScore) {
-      consensusDecision = 'YES';
+      consensusDecision = "YES";
       agreeingResults = successfulResults.filter(
-        (r) => r.prediction.decision === 'YES',
+        (r) => r.prediction.decision === "YES",
       );
     } else if (noWeightedScore > yesWeightedScore) {
-      consensusDecision = 'NO';
+      consensusDecision = "NO";
       agreeingResults = successfulResults.filter(
-        (r) => r.prediction.decision === 'NO',
+        (r) => r.prediction.decision === "NO",
       );
     } else {
       // Tie - default to NO_TRADE
-      consensusDecision = 'NO_TRADE';
+      consensusDecision = "NO_TRADE";
       agreeingResults = successfulResults;
     }
 
@@ -191,7 +191,7 @@ const simpleFallbackAggregation = (
     risks: uniqueRisks.slice(0, 3),
     reasoning: results
       .map((r) => r.prediction.reasoning.summary)
-      .join(' | ')
+      .join(" | ")
       .slice(0, 500),
   };
 };
@@ -209,7 +209,7 @@ const aggregateWithAI = (
 
     // Fallback to simple aggregation if no model configured
     if (!aggregationLayer) {
-      console.log('Aggregation model not configured, using simple fallback');
+      console.log("Aggregation model not configured, using simple fallback");
       return simpleFallbackAggregation(results);
     }
 
@@ -219,11 +219,11 @@ const aggregateWithAI = (
         (r, i) => `Model ${i + 1}:
   Decision: ${r.prediction.decision}
   Confidence: ${r.prediction.confidence}%
-  Key Factors: ${r.prediction.reasoning.keyFactors.join('; ')}
-  Risks: ${r.prediction.reasoning.risks.join('; ')}
+  Key Factors: ${r.prediction.reasoning.keyFactors.join("; ")}
+  Risks: ${r.prediction.reasoning.risks.join("; ")}
   Summary: ${r.prediction.reasoning.summary}`,
       )
-      .join('\n\n');
+      .join("\n\n");
 
     const systemPrompt = `You are an expert at synthesizing insights from multiple AI model predictions.
 Your task is to aggregate and deduplicate the key factors, risks, and reasoning from multiple models into a concise summary.
@@ -248,25 +248,25 @@ Provide:
       const lm = yield* LanguageModel.LanguageModel;
       const response = yield* lm.generateObject({
         prompt: [
-          { role: 'system' as const, content: systemPrompt },
-          { role: 'user' as const, content: userPrompt },
+          { role: "system" as const, content: systemPrompt },
+          { role: "user" as const, content: userPrompt },
         ],
         schema: AggregationOutputSchema,
-        objectName: 'aggregation',
+        objectName: "aggregation",
       });
       return response;
     }).pipe(
       Effect.provide(aggregationLayer),
       Effect.timeout(Duration.seconds(30)),
       Effect.catchAll((error) => {
-        console.warn('AI aggregation failed, using fallback:', String(error));
+        console.warn("AI aggregation failed, using fallback:", String(error));
         return Effect.succeed({ value: null as AggregationOutput | null });
       }),
     );
 
     // Use AI result or fallback
     if (aggregationResult.value) {
-      console.log('AI aggregation completed successfully');
+      console.log("AI aggregation completed successfully");
       return aggregationResult.value;
     }
 
@@ -289,11 +289,11 @@ const queryWithModel = (
       // Use message array format to include system prompt
       const response = yield* lm.generateObject({
         prompt: [
-          { role: 'system' as const, content: systemPrompt },
-          { role: 'user' as const, content: userPrompt },
+          { role: "system" as const, content: systemPrompt },
+          { role: "user" as const, content: userPrompt },
         ],
         schema: PredictionOutputSchema,
-        objectName: 'prediction',
+        objectName: "prediction",
       });
       return response;
     }).pipe(
@@ -375,10 +375,10 @@ export const querySwarm = (systemPrompt: string, userPrompt: string) =>
     const models = getConfiguredModels();
 
     if (models.length === 0) {
-      console.warn('No AI models configured - check OPENROUTER_API_KEY');
+      console.warn("No AI models configured - check OPENROUTER_API_KEY");
       return {
         results: [],
-        consensusDecision: 'NO_TRADE' as const,
+        consensusDecision: "NO_TRADE" as const,
         consensusPercentage: 0,
         totalModels: 0,
         successfulModels: 0,
@@ -387,12 +387,12 @@ export const querySwarm = (systemPrompt: string, userPrompt: string) =>
         confidenceRange: { min: 0, max: 0 },
         aggregatedKeyFactors: [],
         aggregatedRisks: [],
-        aggregatedReasoning: '',
+        aggregatedReasoning: "",
       };
     }
 
     console.log(
-      `Querying ${models.length} models via OpenRouter: ${models.map((m) => m.displayName).join(', ')}`,
+      `Querying ${models.length} models via OpenRouter: ${models.map((m) => m.displayName).join(", ")}`,
     );
     const startTime = Date.now();
 

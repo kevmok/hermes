@@ -9,7 +9,7 @@ import {
 } from '../data/ConvexDataService';
 import {
   buildMarketRow,
-  shouldIncludeTrade,
+  shouldIncludeTradeWithAI,
   type TradeData,
   updateMarketsRef,
   TradeMessageSchema,
@@ -113,8 +113,9 @@ const processTradeMessage = (
       sizeUsd,
     };
 
-    // Use shared filter
-    if (!shouldIncludeTrade(tradeData)) return;
+    // Use AI-powered filter (keyword + emotional market detection)
+    const filterResult = yield* shouldIncludeTradeWithAI(tradeData);
+    if (!filterResult.include) return;
 
     // 1. Update local CSV (backup)
     const row = buildMarketRow(tradeData);

@@ -1,4 +1,4 @@
-import { Ref } from 'effect';
+import { Effect, Ref } from 'effect';
 import pl from 'nodejs-polars';
 import {
   CONFIG,
@@ -6,8 +6,12 @@ import {
   IGNORE_SPORTS_KEYWORDS,
 } from '../../config';
 import type { TradeData, MarketRowData } from './types';
+import { filterMarketWithAI } from './ai-filter';
 
-// Check if a trade should be included based on filters
+/**
+ * Fast keyword-based filter (synchronous).
+ * First pass to filter obvious crypto/sports markets.
+ */
 export const shouldIncludeTrade = (trade: TradeData): boolean => {
   // Filter by size
   if (trade.sizeUsd < CONFIG.MIN_TRADE_SIZE_USD) return false;
@@ -30,6 +34,33 @@ export const shouldIncludeTrade = (trade: TradeData): boolean => {
 
   return true;
 };
+
+/**
+ * Combined filter with AI-powered emotional market detection.
+ * First runs fast keyword filter, then AI filter for edge cases.
+ */
+export const shouldIncludeTradeWithAI = (trade: TradeData) =>
+  Effect.gen(function* () {
+    // First pass: fast keyword filter
+    if (!shouldIncludeTrade(trade)) {
+      return { include: false, reason: 'Failed keyword filter' };
+    }
+
+    // Second pass: AI filter for emotional markets
+    const aiResult = yield* filterMarketWithAI({
+      title: trade.title,
+      eventSlug: trade.eventSlug,
+    });
+
+    if (!aiResult.shouldInclude) {
+      console.log(
+        `AI filtered: ${trade.title.slice(0, 40)}... | ${aiResult.category} (${aiResult.emotionalLevel}) - ${aiResult.reason}`,
+      );
+      return { include: false, reason: aiResult.reason };
+    }
+
+    return { include: true, reason: 'Passed all filters' };
+  });
 
 // Build a market row from trade data
 export const buildMarketRow = (trade: TradeData): MarketRowData => {
