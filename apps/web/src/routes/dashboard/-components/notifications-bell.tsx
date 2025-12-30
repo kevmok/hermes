@@ -84,7 +84,7 @@ export function NotificationsBell() {
         }
       />
       <DropdownMenuContent align='end' className='w-80'>
-        <div className='px-3 py-2 border-b border-sidebar-border'>
+        <div className='px-3 py-2 border-b border-border'>
           <h3 className='font-semibold'>New Signals</h3>
           <p className='text-xs text-muted-foreground'>
             {unreadCount > 0
@@ -104,8 +104,8 @@ export function NotificationsBell() {
               return (
                 <Link
                   key={signal._id}
-                  to='/dashboard/signals'
-                  className='flex items-start gap-3 px-3 py-2 hover:bg-sidebar-accent transition-colors'
+                  to='/dashboard/trades'
+                  className='flex items-start gap-3 px-3 py-2 hover:bg-muted transition-colors'
                 >
                   <div
                     className={`shrink-0 w-8 h-8 rounded-lg flex items-center justify-center ${decisionStyle.bg}`}
@@ -132,10 +132,10 @@ export function NotificationsBell() {
         </div>
 
         {newSignals && newSignals.length > 0 && (
-          <div className='px-3 py-2 border-t border-sidebar-border'>
+          <div className='px-3 py-2 border-t border-border'>
             <Link
-              to='/dashboard/signals'
-              className='text-sm text-cyan-400 hover:underline'
+              to='/dashboard/trades'
+              className='text-sm text-primary hover:underline'
             >
               View all signals &rarr;
             </Link>

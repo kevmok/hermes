@@ -137,7 +137,7 @@ export function SignalsTable({ filters, onRowClick }: SignalsTableProps) {
           <Skeleton className='h-10 w-32' />
           <Skeleton className='h-10 w-32' />
         </div>
-        <div className='rounded-lg border border-sidebar-border overflow-hidden'>
+        <div className='rounded-lg border border-border overflow-hidden'>
           <div className='space-y-2 p-4'>
             {Array.from({ length: 8 }).map((_, i) => (
               <Skeleton key={i} className='h-14 w-full' />
@@ -171,7 +171,7 @@ export function SignalsTable({ filters, onRowClick }: SignalsTableProps) {
           placeholder='Search markets...'
           value={globalFilter}
           onChange={(e) => setGlobalFilter(e.target.value)}
-          className='max-w-sm bg-sidebar border-sidebar-border'
+          className='max-w-sm bg-card border-border'
         />
         <Select
           value={filters.decision}
@@ -183,7 +183,7 @@ export function SignalsTable({ filters, onRowClick }: SignalsTableProps) {
             NO_TRADE: 'NO TRADE',
           }}
         >
-          <SelectTrigger className='w-[140px] bg-sidebar border-sidebar-border'>
+          <SelectTrigger className='w-[140px] bg-card border-border'>
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -203,7 +203,7 @@ export function SignalsTable({ filters, onRowClick }: SignalsTableProps) {
             low: 'Low',
           }}
         >
-          <SelectTrigger className='w-[140px] bg-sidebar border-sidebar-border'>
+          <SelectTrigger className='w-[140px] bg-card border-border'>
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -215,13 +215,13 @@ export function SignalsTable({ filters, onRowClick }: SignalsTableProps) {
         </Select>
       </div>
 
-      <div className='rounded-lg border border-sidebar-border overflow-hidden'>
+      <div className='rounded-lg border border-border overflow-hidden'>
         <Table>
-          <TableHeader className='bg-sidebar/50'>
+          <TableHeader className='bg-muted/50'>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow
                 key={headerGroup.id}
-                className='border-sidebar-border hover:bg-transparent'
+                className='border-border hover:bg-transparent'
               >
                 {headerGroup.headers.map((header) => (
                   <TableHead key={header.id} className='text-muted-foreground'>
@@ -242,7 +242,7 @@ export function SignalsTable({ filters, onRowClick }: SignalsTableProps) {
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && 'selected'}
-                  className='border-sidebar-border hover:bg-sidebar/30 cursor-pointer'
+                  className='border-border hover:bg-muted/50 cursor-pointer'
                   onClick={() => onRowClick(row.original._id)}
                 >
                   {row.getVisibleCells().map((cell) => (
@@ -279,7 +279,6 @@ export function SignalsTable({ filters, onRowClick }: SignalsTableProps) {
             size='sm'
             onClick={() => table.previousPage()}
             disabled={!table.getCanPreviousPage()}
-            className='border-sidebar-border'
           >
             Previous
           </Button>
@@ -288,7 +287,6 @@ export function SignalsTable({ filters, onRowClick }: SignalsTableProps) {
             size='sm'
             onClick={() => table.nextPage()}
             disabled={!table.getCanNextPage()}
-            className='border-sidebar-border'
           >
             Next
           </Button>
