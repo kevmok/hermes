@@ -72,69 +72,48 @@ const AI_MODELS = [
 ];
 
 // ============================================================================
-// ANIMATED BACKGROUND COMPONENTS
+// ANIMATED BACKGROUND COMPONENTS (CSS-optimized)
 // ============================================================================
+
+const PARTICLE_POSITIONS = [
+  { left: '10%', top: '20%', delay: '0s' },
+  { left: '70%', top: '40%', delay: '1s' },
+  { left: '85%', top: '70%', delay: '0.5s' },
+  { left: '30%', top: '80%', delay: '1.5s' },
+  { left: '55%', top: '15%', delay: '0.8s' },
+  { left: '90%', top: '50%', delay: '1.2s' },
+] as const;
 
 function CircuitGrid() {
   return (
     <div className='absolute inset-0 overflow-hidden pointer-events-none'>
-      {/* Animated grid lines */}
       <svg className='absolute inset-0 w-full h-full opacity-20'>
         <defs>
-          <pattern
-            id='circuit-grid'
-            width='60'
-            height='60'
-            patternUnits='userSpaceOnUse'
-          >
-            <path
-              d='M 60 0 L 0 0 0 60'
-              fill='none'
-              stroke={colors.cyan}
-              strokeWidth='0.5'
-              opacity='0.3'
-            />
+          <pattern id='circuit-grid' width='60' height='60' patternUnits='userSpaceOnUse'>
+            <path d='M 60 0 L 0 0 0 60' fill='none' stroke={colors.cyan} strokeWidth='0.5' opacity='0.3' />
           </pattern>
-          <linearGradient id='scan-gradient' x1='0%' y1='0%' x2='0%' y2='100%'>
-            <stop offset='0%' stopColor={colors.cyan} stopOpacity='0' />
-            <stop offset='50%' stopColor={colors.cyan} stopOpacity='0.8' />
-            <stop offset='100%' stopColor={colors.cyan} stopOpacity='0' />
-          </linearGradient>
         </defs>
         <rect width='100%' height='100%' fill='url(#circuit-grid)' />
       </svg>
 
-      {/* Scanning line */}
-      <motion.div
-        className='absolute left-0 right-0 h-0.5 pointer-events-none'
+      <div
+        className='absolute left-0 right-0 h-0.5 pointer-events-none animate-[scan_8s_linear_infinite]'
         style={{
           background: `linear-gradient(90deg, transparent, ${colors.cyan}, transparent)`,
-          boxShadow: `0 0 20px ${colors.cyanGlow}, 0 0 40px ${colors.cyanGlow}`,
+          boxShadow: `0 0 20px ${colors.cyanGlow}`,
         }}
-        animate={{ y: ['-10vh', '110vh'] }}
-        transition={{ duration: 8, repeat: Infinity, ease: 'linear' }}
       />
 
-      {/* Floating particles */}
-      {[...Array(20)].map((_, i) => (
-        <motion.div
+      {PARTICLE_POSITIONS.map((pos, i) => (
+        <div
           key={i}
-          className='absolute w-1 h-1 rounded-full'
+          className='absolute w-1 h-1 rounded-full animate-[particle_4s_ease-in-out_infinite]'
           style={{
             background: colors.cyan,
             boxShadow: `0 0 6px ${colors.cyan}`,
-            left: `${Math.random() * 100}%`,
-            top: `${Math.random() * 100}%`,
-          }}
-          animate={{
-            y: [0, -30, 0],
-            opacity: [0.2, 0.8, 0.2],
-            scale: [1, 1.5, 1],
-          }}
-          transition={{
-            duration: 3 + Math.random() * 2,
-            repeat: Infinity,
-            delay: Math.random() * 2,
+            left: pos.left,
+            top: pos.top,
+            animationDelay: pos.delay,
           }}
         />
       ))}
@@ -142,239 +121,18 @@ function CircuitGrid() {
   );
 }
 
-// Circuit trace path - clean right-angle turns like PCB traces
-function CircuitTrace({
-  path,
-  delay,
-  duration,
-  color,
-}: {
-  path: string;
-  delay: number;
-  duration: number;
-  color: string;
-}) {
-  return (
-    <g>
-      {/* Static trace line (always visible, dim) */}
-      <path
-        d={path}
-        fill='none'
-        stroke={color}
-        strokeWidth='1'
-        opacity='0.15'
-      />
-
-      {/* Animated data pulse traveling along the trace */}
-      <motion.path
-        d={path}
-        fill='none'
-        stroke={color}
-        strokeWidth='2'
-        strokeLinecap='round'
-        style={{
-          filter: `drop-shadow(0 0 6px ${color})`,
-        }}
-        initial={{ pathLength: 0, pathOffset: 0 }}
-        animate={{
-          pathLength: [0, 0.15, 0.15, 0],
-          pathOffset: [0, 0, 0.85, 1],
-        }}
-        transition={{
-          duration: duration,
-          repeat: Infinity,
-          delay: delay,
-          ease: 'linear',
-          times: [0, 0.05, 0.95, 1],
-        }}
-      />
-
-      {/* Brighter core of the pulse */}
-      <motion.path
-        d={path}
-        fill='none'
-        stroke='#ffffff'
-        strokeWidth='1'
-        strokeLinecap='round'
-        initial={{ pathLength: 0, pathOffset: 0 }}
-        animate={{
-          pathLength: [0, 0.08, 0.08, 0],
-          pathOffset: [0, 0, 0.92, 1],
-        }}
-        transition={{
-          duration: duration,
-          repeat: Infinity,
-          delay: delay,
-          ease: 'linear',
-          times: [0, 0.05, 0.95, 1],
-        }}
-      />
-    </g>
-  );
-}
-
-// Circuit node (connection point)
-function CircuitNode({
-  x,
-  y,
-  delay,
-  color,
-  size = 4,
-}: {
-  x: number;
-  y: number;
-  delay: number;
-  color: string;
-  size?: number;
-}) {
-  return (
-    <g>
-      {/* Outer ring */}
-      <circle
-        cx={x}
-        cy={y}
-        r={size + 2}
-        fill='none'
-        stroke={color}
-        strokeWidth='1'
-        opacity='0.3'
-      />
-      {/* Inner dot */}
-      <circle cx={x} cy={y} r={size / 2} fill={color} opacity='0.5' />
-      {/* Pulse effect */}
-      <motion.circle
-        cx={x}
-        cy={y}
-        r={size}
-        fill={color}
-        initial={{ opacity: 0.2, scale: 1 }}
-        animate={{
-          opacity: [0.2, 0.6, 0.2],
-          scale: [1, 1.2, 1],
-        }}
-        transition={{
-          duration: 3,
-          repeat: Infinity,
-          delay: delay,
-          ease: 'easeInOut',
-        }}
-        style={{ filter: `drop-shadow(0 0 4px ${color})` }}
-      />
-    </g>
-  );
-}
-
 function CircuitBoard() {
-  // Define circuit paths with clean right-angle turns (like PCB traces)
-  const circuits = [
-    // Left side circuits
-    {
-      path: 'M 0 120 L 80 120 L 80 200 L 160 200 L 160 320 L 100 320',
-      delay: 0,
-      duration: 4,
-      color: colors.cyan,
-    },
-    {
-      path: 'M 0 280 L 120 280 L 120 180 L 200 180',
-      delay: 1.5,
-      duration: 3,
-      color: colors.cyan,
-    },
-    {
-      path: 'M 60 0 L 60 80 L 180 80 L 180 160',
-      delay: 0.8,
-      duration: 3.5,
-      color: colors.emerald,
-    },
-
-    // Right side circuits
-    {
-      path: 'M 1440 100 L 1320 100 L 1320 180 L 1240 180 L 1240 280',
-      delay: 0.5,
-      duration: 4,
-      color: colors.cyan,
-    },
-    {
-      path: 'M 1440 240 L 1360 240 L 1360 160 L 1280 160',
-      delay: 2,
-      duration: 3,
-      color: colors.cyan,
-    },
-    {
-      path: 'M 1380 0 L 1380 100 L 1280 100 L 1280 200',
-      delay: 1.2,
-      duration: 3.5,
-      color: colors.emerald,
-    },
-
-    // Top decorative circuits
-    {
-      path: 'M 400 0 L 400 60 L 500 60 L 500 120',
-      delay: 0.3,
-      duration: 3,
-      color: colors.cyan,
-    },
-    {
-      path: 'M 900 0 L 900 80 L 1000 80',
-      delay: 1.8,
-      duration: 2.5,
-      color: colors.cyan,
-    },
-
-    // Bottom area circuits
-    {
-      path: 'M 0 500 L 100 500 L 100 420 L 200 420',
-      delay: 2.5,
-      duration: 3,
-      color: colors.emerald,
-    },
-    {
-      path: 'M 1440 480 L 1300 480 L 1300 400',
-      delay: 3,
-      duration: 2.8,
-      color: colors.emerald,
-    },
-  ];
-
-  // Define node positions (connection points)
-  const nodes = [
-    // Left side
-    { x: 80, y: 120, delay: 0.5, color: colors.cyan },
-    { x: 160, y: 200, delay: 1, color: colors.cyan },
-    { x: 120, y: 280, delay: 1.8, color: colors.cyan },
-    { x: 180, y: 80, delay: 0.3, color: colors.emerald },
-
-    // Right side
-    { x: 1320, y: 100, delay: 0.8, color: colors.cyan },
-    { x: 1240, y: 180, delay: 1.5, color: colors.cyan },
-    { x: 1360, y: 240, delay: 2.2, color: colors.cyan },
-    { x: 1280, y: 100, delay: 1, color: colors.emerald },
-
-    // Top
-    { x: 400, y: 60, delay: 0.6, color: colors.cyan },
-    { x: 500, y: 60, delay: 1.2, color: colors.cyan },
-    { x: 900, y: 80, delay: 2, color: colors.cyan },
-
-    // Bottom
-    { x: 100, y: 500, delay: 2.8, color: colors.emerald },
-    { x: 1300, y: 480, delay: 3.2, color: colors.emerald },
-  ];
-
   return (
     <svg
-      className='absolute inset-0 w-full h-full pointer-events-none'
+      className='absolute inset-0 w-full h-full pointer-events-none opacity-30 hidden md:block'
       style={{ overflow: 'visible' }}
       preserveAspectRatio='none'
     >
-      {/* Render circuit traces */}
-      {circuits.map((circuit, i) => (
-        <CircuitTrace key={`trace-${i}`} {...circuit} />
-      ))}
-
-      {/* Render connection nodes */}
-      {nodes.map((node, i) => (
-        <CircuitNode key={`node-${i}`} {...node} size={4} />
-      ))}
+      <path d='M 0 120 L 80 120 L 80 200 L 160 200' fill='none' stroke={colors.cyan} strokeWidth='1' opacity='0.2' />
+      <path d='M 1440 100 L 1320 100 L 1320 180' fill='none' stroke={colors.cyan} strokeWidth='1' opacity='0.2' />
+      <circle cx={80} cy={120} r={4} fill={colors.cyan} opacity='0.4' />
+      <circle cx={160} cy={200} r={4} fill={colors.cyan} opacity='0.4' />
+      <circle cx={1320} cy={100} r={4} fill={colors.cyan} opacity='0.4' />
     </svg>
   );
 }
@@ -441,13 +199,18 @@ function AIModelNode({
 
 function TradeAnalysisWheel() {
   const [currentTradeIndex, setCurrentTradeIndex] = useState(0);
-  const [phase, setPhase] = useState<
-    'entering' | 'analyzing' | 'verdict' | 'exiting'
-  >('entering');
+  const [phase, setPhase] = useState<'entering' | 'analyzing' | 'verdict' | 'exiting'>('entering');
+  const [isHydrated, setIsHydrated] = useState(false);
 
   const currentTrade = SAMPLE_TRADES[currentTradeIndex];
 
   useEffect(() => {
+    setIsHydrated(true);
+  }, []);
+
+  useEffect(() => {
+    if (!isHydrated) return;
+
     const phases = [
       { name: 'entering' as const, duration: 800 },
       { name: 'analyzing' as const, duration: 2500 },
@@ -456,7 +219,7 @@ function TradeAnalysisWheel() {
     ];
 
     let totalDelay = 0;
-    const timeouts: NodeJS.Timeout[] = [];
+    const timeouts: ReturnType<typeof setTimeout>[] = [];
 
     phases.forEach((p) => {
       const timeout = setTimeout(() => {
@@ -473,7 +236,7 @@ function TradeAnalysisWheel() {
     });
 
     return () => timeouts.forEach(clearTimeout);
-  }, [currentTradeIndex]);
+  }, [currentTradeIndex, isHydrated]);
 
   const isAnalyzing = phase === 'analyzing';
   const showVerdict = phase === 'verdict' || phase === 'exiting';
@@ -750,41 +513,27 @@ function Navigation() {
   }, []);
 
   return (
-    <motion.header
-      initial={{ y: -100, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      transition={{ duration: 0.6 }}
+    <header
       className='fixed top-0 left-0 right-0 z-50 transition-all duration-300'
       style={{
         background: scrolled ? `${colors.bg}ee` : 'transparent',
         backdropFilter: scrolled ? 'blur(20px)' : 'none',
-        borderBottom: scrolled
-          ? `1px solid ${colors.border}`
-          : '1px solid transparent',
+        borderBottom: scrolled ? `1px solid ${colors.border}` : '1px solid transparent',
       }}
     >
       <nav className='max-w-6xl mx-auto px-6 py-4 flex items-center justify-between'>
         <a href='/' className='flex items-center gap-3 group'>
-          <motion.div
-            className='relative w-10 h-10 rounded-lg flex items-center justify-center overflow-hidden'
+          <div
+            className='relative w-10 h-10 rounded-lg flex items-center justify-center overflow-hidden transition-transform hover:scale-105'
             style={{
               background: `linear-gradient(135deg, ${colors.cyan}22, ${colors.purple}22)`,
               border: `1px solid ${colors.borderBright}`,
             }}
-            whileHover={{ scale: 1.05 }}
           >
             <span className='text-xl font-bold' style={{ color: colors.cyan }}>
               H
             </span>
-            <motion.div
-              className='absolute inset-0'
-              style={{
-                background: `linear-gradient(45deg, transparent, ${colors.cyan}33, transparent)`,
-              }}
-              animate={{ x: ['-100%', '100%'] }}
-              transition={{ duration: 2, repeat: Infinity, repeatDelay: 1 }}
-            />
-          </motion.div>
+          </div>
           <span
             className='text-xl font-bold'
             style={{ color: colors.text, fontFamily: "'DM Sans', sans-serif" }}
@@ -831,7 +580,7 @@ function Navigation() {
           </motion.a>
         </div>
       </nav>
-    </motion.header>
+    </header>
   );
 }
 
@@ -873,14 +622,12 @@ function HeroSection() {
               border: `1px solid ${colors.border}`,
             }}
           >
-            <motion.div
-              className='w-2 h-2 rounded-full'
+            <div
+              className='w-2 h-2 rounded-full animate-[pulse_2s_ease-in-out_infinite]'
               style={{
                 background: colors.cyan,
                 boxShadow: `0 0 10px ${colors.cyan}`,
               }}
-              animate={{ scale: [1, 1.2, 1], opacity: [1, 0.5, 1] }}
-              transition={{ duration: 2, repeat: Infinity }}
             />
             <span className='text-sm font-mono' style={{ color: colors.cyan }}>
               LIVE BETA
@@ -991,11 +738,22 @@ function HeroSection() {
         </motion.div>
       </div>
 
-      {/* CSS for gradient animation */}
       <style>{`
         @keyframes gradient-shift {
           0%, 100% { background-position: 0% 50%; }
           50% { background-position: 100% 50%; }
+        }
+        @keyframes scan {
+          0% { transform: translateY(-10vh); }
+          100% { transform: translateY(110vh); }
+        }
+        @keyframes particle {
+          0%, 100% { transform: translateY(0) scale(1); opacity: 0.2; }
+          50% { transform: translateY(-20px) scale(1.3); opacity: 0.7; }
+        }
+        @keyframes pulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.4; }
         }
       `}</style>
     </section>
@@ -1217,20 +975,17 @@ function FeaturesSection() {
 
       <div className='relative max-w-6xl mx-auto px-6'>
         <AnimatedSection className='text-center mb-16'>
-          <motion.div
+          <div
             className='inline-flex items-center gap-2 px-4 py-1 rounded-full mb-4'
             style={{
               background: colors.cyanDim,
               border: `1px solid ${colors.border}`,
             }}
           >
-            <span
-              className='text-xs font-mono uppercase tracking-wider'
-              style={{ color: colors.cyan }}
-            >
+            <span className='text-xs font-mono uppercase tracking-wider' style={{ color: colors.cyan }}>
               Features
             </span>
-          </motion.div>
+          </div>
           <h2
             className='text-3xl sm:text-4xl md:text-5xl font-bold mb-4'
             style={{ color: colors.text, fontFamily: "'DM Sans', sans-serif" }}
@@ -1238,8 +993,7 @@ function FeaturesSection() {
             Why Traders Choose Hermes
           </h2>
           <p className='max-w-2xl mx-auto' style={{ color: colors.textMuted }}>
-            Built for traders who demand an edge. Our consensus-driven approach
-            delivers actionable insights.
+            Built for traders who demand an edge. Our consensus-driven approach delivers actionable insights.
           </p>
         </AnimatedSection>
 
@@ -1346,18 +1100,16 @@ function LiveStatsSection() {
 
       <div className='relative max-w-6xl mx-auto px-6'>
         <AnimatedSection className='text-center mb-12'>
-          <motion.div
+          <div
             className='inline-flex items-center gap-2 px-4 py-1 rounded-full mb-4'
             style={{
               background: colors.emeraldGlow,
               border: `1px solid ${colors.emerald}33`,
             }}
           >
-            <motion.div
-              className='w-2 h-2 rounded-full'
+            <div
+              className='w-2 h-2 rounded-full animate-[pulse_2s_ease-in-out_infinite]'
               style={{ background: colors.emerald }}
-              animate={{ scale: [1, 1.2, 1], opacity: [1, 0.5, 1] }}
-              transition={{ duration: 2, repeat: Infinity }}
             />
             <span
               className='text-xs font-mono uppercase tracking-wider'
@@ -1365,7 +1117,7 @@ function LiveStatsSection() {
             >
               Live Stats
             </span>
-          </motion.div>
+          </div>
           <h2
             className='text-3xl sm:text-4xl md:text-5xl font-bold mb-4'
             style={{ color: colors.text, fontFamily: "'DM Sans', sans-serif" }}
@@ -1470,20 +1222,17 @@ function HowItWorksSection() {
 
       <div className='relative max-w-5xl mx-auto px-6'>
         <AnimatedSection className='text-center mb-16'>
-          <motion.div
+          <div
             className='inline-flex items-center gap-2 px-4 py-1 rounded-full mb-4'
             style={{
               background: colors.cyanDim,
               border: `1px solid ${colors.border}`,
             }}
           >
-            <span
-              className='text-xs font-mono uppercase tracking-wider'
-              style={{ color: colors.cyan }}
-            >
+            <span className='text-xs font-mono uppercase tracking-wider' style={{ color: colors.cyan }}>
               Process
             </span>
-          </motion.div>
+          </div>
           <h2
             className='text-3xl sm:text-4xl md:text-5xl font-bold mb-4'
             style={{ color: colors.text, fontFamily: "'DM Sans', sans-serif" }}
@@ -1491,8 +1240,7 @@ function HowItWorksSection() {
             Start Trading in Minutes
           </h2>
           <p className='max-w-xl mx-auto' style={{ color: colors.textMuted }}>
-            From signup to your first AI-powered recommendation in under five
-            minutes.
+            From signup to your first AI-powered recommendation in under five minutes.
           </p>
         </AnimatedSection>
 
@@ -1629,20 +1377,17 @@ function PricingSection() {
 
       <div className='relative max-w-6xl mx-auto px-6'>
         <AnimatedSection className='text-center mb-12'>
-          <motion.div
+          <div
             className='inline-flex items-center gap-2 px-4 py-1 rounded-full mb-4'
             style={{
               background: colors.cyanDim,
               border: `1px solid ${colors.border}`,
             }}
           >
-            <span
-              className='text-xs font-mono uppercase tracking-wider'
-              style={{ color: colors.cyan }}
-            >
+            <span className='text-xs font-mono uppercase tracking-wider' style={{ color: colors.cyan }}>
               Pricing
             </span>
-          </motion.div>
+          </div>
           <h2
             className='text-3xl sm:text-4xl md:text-5xl font-bold mb-4'
             style={{ color: colors.text, fontFamily: "'DM Sans', sans-serif" }}
@@ -1651,10 +1396,8 @@ function PricingSection() {
           </h2>
           <p className='max-w-xl mx-auto' style={{ color: colors.textMuted }}>
             Start with a{' '}
-            <span style={{ color: colors.cyan }} className='font-semibold'>
-              14-day free trial
-            </span>{' '}
-            — full access to all features.
+            <span style={{ color: colors.cyan }} className='font-semibold'>14-day free trial</span>
+            {' '}— full access to all features.
           </p>
         </AnimatedSection>
 
