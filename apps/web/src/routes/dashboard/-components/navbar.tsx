@@ -5,6 +5,7 @@ import {
   Activity03Icon,
   Calendar03Icon,
   Award01Icon,
+  Wallet01Icon,
   Settings01Icon,
   Logout01Icon,
   Sun01Icon,
@@ -41,6 +42,12 @@ const navItems = [
     href: '/dashboard/performance',
     icon: Award01Icon,
     description: 'Signal accuracy metrics',
+  },
+  {
+    title: 'Portfolio',
+    href: '/dashboard/portfolio',
+    icon: Wallet01Icon,
+    description: 'Your tracked positions',
   },
 ];
 

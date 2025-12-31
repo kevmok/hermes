@@ -19,6 +19,7 @@ import { Route as DashboardTradesRouteRouteImport } from './routes/dashboard/tra
 import { Route as DashboardEventsRouteRouteImport } from './routes/dashboard/events/route'
 import { Route as DashboardTradesIndexRouteImport } from './routes/dashboard/trades/index'
 import { Route as DashboardSettingsIndexRouteImport } from './routes/dashboard/settings/index'
+import { Route as DashboardPortfolioIndexRouteImport } from './routes/dashboard/portfolio/index'
 import { Route as DashboardPerformanceIndexRouteImport } from './routes/dashboard/performance/index'
 import { Route as DashboardEventsEventIdRouteImport } from './routes/dashboard/events/$eventId'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth.$'
@@ -73,6 +74,11 @@ const DashboardSettingsIndexRoute = DashboardSettingsIndexRouteImport.update({
   path: '/settings/',
   getParentRoute: () => DashboardRouteRoute,
 } as any)
+const DashboardPortfolioIndexRoute = DashboardPortfolioIndexRouteImport.update({
+  id: '/portfolio/',
+  path: '/portfolio/',
+  getParentRoute: () => DashboardRouteRoute,
+} as any)
 const DashboardPerformanceIndexRoute =
   DashboardPerformanceIndexRouteImport.update({
     id: '/performance/',
@@ -107,6 +113,7 @@ export interface FileRoutesByFullPath {
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/dashboard/events/$eventId': typeof DashboardEventsEventIdRoute
   '/dashboard/performance': typeof DashboardPerformanceIndexRoute
+  '/dashboard/portfolio': typeof DashboardPortfolioIndexRoute
   '/dashboard/settings': typeof DashboardSettingsIndexRoute
   '/dashboard/trades/': typeof DashboardTradesIndexRoute
   '/dashboard/trades/$signalId': typeof DashboardTradesSignalIdIndexRoute
@@ -120,6 +127,7 @@ export interface FileRoutesByTo {
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/dashboard/events/$eventId': typeof DashboardEventsEventIdRoute
   '/dashboard/performance': typeof DashboardPerformanceIndexRoute
+  '/dashboard/portfolio': typeof DashboardPortfolioIndexRoute
   '/dashboard/settings': typeof DashboardSettingsIndexRoute
   '/dashboard/trades': typeof DashboardTradesIndexRoute
   '/dashboard/trades/$signalId': typeof DashboardTradesSignalIdIndexRoute
@@ -137,6 +145,7 @@ export interface FileRoutesById {
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/dashboard/events/$eventId': typeof DashboardEventsEventIdRoute
   '/dashboard/performance/': typeof DashboardPerformanceIndexRoute
+  '/dashboard/portfolio/': typeof DashboardPortfolioIndexRoute
   '/dashboard/settings/': typeof DashboardSettingsIndexRoute
   '/dashboard/trades/': typeof DashboardTradesIndexRoute
   '/dashboard/trades/$signalId/': typeof DashboardTradesSignalIdIndexRoute
@@ -154,6 +163,7 @@ export interface FileRouteTypes {
     | '/api/auth/$'
     | '/dashboard/events/$eventId'
     | '/dashboard/performance'
+    | '/dashboard/portfolio'
     | '/dashboard/settings'
     | '/dashboard/trades/'
     | '/dashboard/trades/$signalId'
@@ -167,6 +177,7 @@ export interface FileRouteTypes {
     | '/api/auth/$'
     | '/dashboard/events/$eventId'
     | '/dashboard/performance'
+    | '/dashboard/portfolio'
     | '/dashboard/settings'
     | '/dashboard/trades'
     | '/dashboard/trades/$signalId'
@@ -183,6 +194,7 @@ export interface FileRouteTypes {
     | '/api/auth/$'
     | '/dashboard/events/$eventId'
     | '/dashboard/performance/'
+    | '/dashboard/portfolio/'
     | '/dashboard/settings/'
     | '/dashboard/trades/'
     | '/dashboard/trades/$signalId/'
@@ -267,6 +279,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardSettingsIndexRouteImport
       parentRoute: typeof DashboardRouteRoute
     }
+    '/dashboard/portfolio/': {
+      id: '/dashboard/portfolio/'
+      path: '/portfolio'
+      fullPath: '/dashboard/portfolio'
+      preLoaderRoute: typeof DashboardPortfolioIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
     '/dashboard/performance/': {
       id: '/dashboard/performance/'
       path: '/performance'
@@ -341,6 +360,7 @@ interface DashboardRouteRouteChildren {
   DashboardTradesRouteRoute: typeof DashboardTradesRouteRouteWithChildren
   DashboardIndexRoute: typeof DashboardIndexRoute
   DashboardPerformanceIndexRoute: typeof DashboardPerformanceIndexRoute
+  DashboardPortfolioIndexRoute: typeof DashboardPortfolioIndexRoute
   DashboardSettingsIndexRoute: typeof DashboardSettingsIndexRoute
 }
 
@@ -349,6 +369,7 @@ const DashboardRouteRouteChildren: DashboardRouteRouteChildren = {
   DashboardTradesRouteRoute: DashboardTradesRouteRouteWithChildren,
   DashboardIndexRoute: DashboardIndexRoute,
   DashboardPerformanceIndexRoute: DashboardPerformanceIndexRoute,
+  DashboardPortfolioIndexRoute: DashboardPortfolioIndexRoute,
   DashboardSettingsIndexRoute: DashboardSettingsIndexRoute,
 }
 

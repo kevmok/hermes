@@ -406,4 +406,21 @@ export default defineSchema({
     .index('by_user', ['userId', 'sentAt'])
     .index('by_signal', ['signalId'])
     .index('by_user_signal', ['userId', 'signalId']),
+
+  userPortfolio: defineTable({
+    userId: v.id('user'),
+    polymarketAddress: v.string(),
+    nickname: v.optional(v.string()),
+    addedAt: v.number(),
+    lastSyncedAt: v.optional(v.number()),
+    lastSyncStatus: v.optional(
+      v.union(
+        v.literal('success'),
+        v.literal('failed'),
+        v.literal('no_positions'),
+      ),
+    ),
+  })
+    .index('by_user', ['userId'])
+    .index('by_address', ['polymarketAddress']),
 });

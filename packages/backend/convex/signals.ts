@@ -639,3 +639,14 @@ export const getSignalsSinceInternal = internalQuery({
       .map((r) => r.value);
   },
 });
+
+export const getLatestSignalForMarketInternal = internalQuery({
+  args: { marketId: v.id('markets') },
+  handler: async (ctx, args) => {
+    return await ctx.db
+      .query('signals')
+      .withIndex('by_market', (q) => q.eq('marketId', args.marketId))
+      .order('desc')
+      .first();
+  },
+});

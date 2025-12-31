@@ -28,6 +28,7 @@ import type * as polymarket_index from "../polymarket/index.js";
 import type * as polymarket_markets from "../polymarket/markets.js";
 import type * as polymarket_schemas from "../polymarket/schemas.js";
 import type * as polymarket_users from "../polymarket/users.js";
+import type * as portfolio from "../portfolio.js";
 import type * as resolution from "../resolution.js";
 import type * as scheduledJobs from "../scheduledJobs.js";
 import type * as signals from "../signals.js";
@@ -63,6 +64,7 @@ declare const fullApi: ApiFromModules<{
   "polymarket/markets": typeof polymarket_markets;
   "polymarket/schemas": typeof polymarket_schemas;
   "polymarket/users": typeof polymarket_users;
+  portfolio: typeof portfolio;
   resolution: typeof resolution;
   scheduledJobs: typeof scheduledJobs;
   signals: typeof signals;

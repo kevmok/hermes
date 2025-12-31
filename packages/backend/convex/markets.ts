@@ -211,6 +211,19 @@ export const getUnresolvedMarkets = internalQuery({
   },
 });
 
+export const getMarketsByConditionIdsInternal = internalQuery({
+  args: { conditionIds: v.array(v.string()) },
+  handler: async (ctx, args) => {
+    if (args.conditionIds.length === 0) return [];
+
+    const markets = await ctx.db.query('markets').collect();
+
+    return markets.filter(
+      (m) => m.conditionId && args.conditionIds.includes(m.conditionId),
+    );
+  },
+});
+
 // ============ PUBLIC QUERIES ============
 
 export const listActiveMarkets = query({
