@@ -1,5 +1,8 @@
 import { motion, AnimatePresence, useInView } from 'motion/react';
 import { useRef, useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { convexQuery } from '@convex-dev/react-query';
+import { api } from 'backend/convex/_generated/api';
 
 // ============================================================================
 // DESIGN SYSTEM
@@ -896,7 +899,7 @@ function HeroSection() {
             className='text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold leading-[1.1] tracking-tight'
             style={{ color: colors.text, fontFamily: "'DM Sans', sans-serif" }}
           >
-            AI-Powered{' '}
+            Stop Guessing.{' '}
             <span
               className='relative inline-block'
               style={{
@@ -907,10 +910,10 @@ function HeroSection() {
                 animation: 'gradient-shift 3s ease infinite',
               }}
             >
-              Prediction Market
+              Start Seeing
             </span>
             <br />
-            Intelligence
+            What Smart Money Sees.
           </h1>
         </motion.div>
 
@@ -922,9 +925,8 @@ function HeroSection() {
           className='text-lg sm:text-xl text-center max-w-2xl mx-auto mb-12 leading-relaxed'
           style={{ color: colors.textMuted }}
         >
-          Watch our multi-model AI consensus engine analyze markets in
-          real-time. Multiple models vote independently — high-confidence
-          signals only when they agree.
+          Hermes monitors Polymarket 24/7, detects whale trades, and runs
+          multi-AI consensus analysis in seconds.
         </motion.p>
 
         {/* Trade Analysis Animation */}
@@ -1121,13 +1123,13 @@ function FeaturesSection() {
           <path
             strokeLinecap='round'
             strokeLinejoin='round'
-            d='M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z'
+            d='M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z'
           />
         </svg>
       ),
-      title: 'Real-Time Signals',
+      title: 'Whale Detection',
       description:
-        'Instant alerts on high-potential opportunities. Our system monitors markets 24/7 and alerts you to edge opportunities.',
+        'Know within 60 seconds when $10k+ trades hit any market. Track smart money moves before prices adjust.',
       color: colors.cyan,
     },
     {
@@ -1142,13 +1144,13 @@ function FeaturesSection() {
           <path
             strokeLinecap='round'
             strokeLinejoin='round'
-            d='M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z'
+            d='M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z'
           />
         </svg>
       ),
-      title: 'Risk-Adjusted Ideas',
+      title: 'Multi-AI Consensus',
       description:
-        'Trade ideas ranked by expected value and volatility. Know your edge before you trade.',
+        'Claude, GPT-4, and Gemini analyze independently. We only signal when they agree.',
       color: colors.emerald,
     },
     {
@@ -1163,14 +1165,35 @@ function FeaturesSection() {
           <path
             strokeLinecap='round'
             strokeLinejoin='round'
-            d='M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z'
+            d='M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z'
           />
         </svg>
       ),
-      title: 'Multi-Model Consensus',
+      title: 'Transparent Track Record',
       description:
-        'Multiple AI models vote independently. High-confidence signals only when they agree.',
+        'See our historical accuracy by category, confidence level, and time period. No hiding, no cherry-picking.',
       color: colors.purple,
+    },
+    {
+      icon: (
+        <svg
+          className='w-7 h-7'
+          viewBox='0 0 24 24'
+          fill='none'
+          stroke={colors.cyan}
+          strokeWidth='1.5'
+        >
+          <path
+            strokeLinecap='round'
+            strokeLinejoin='round'
+            d='M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0'
+          />
+        </svg>
+      ),
+      title: 'Instant Alerts',
+      description:
+        'Email alerts for high-confidence signals. Never miss a trade while you sleep.',
+      color: colors.cyan,
     },
   ];
 
@@ -1225,6 +1248,181 @@ function FeaturesSection() {
             <FeatureCard key={feature.title} {...feature} delay={i * 0.1} />
           ))}
         </div>
+      </div>
+    </section>
+  );
+}
+
+// ============================================================================
+// LIVE STATS SECTION (Social Proof)
+// ============================================================================
+
+function StatCard({
+  value,
+  label,
+  suffix = '',
+  delay,
+  color,
+}: {
+  value: string | number;
+  label: string;
+  suffix?: string;
+  delay: number;
+  color: string;
+}) {
+  return (
+    <AnimatedSection delay={delay}>
+      <motion.div
+        className='relative p-6 rounded-2xl text-center overflow-hidden'
+        style={{
+          background: `linear-gradient(135deg, ${colors.surface}ee, ${colors.bgSecondary}ee)`,
+          border: `1px solid ${colors.border}`,
+        }}
+        whileHover={{
+          borderColor: color,
+          boxShadow: `0 0 30px ${color}33`,
+        }}
+      >
+        {/* Glow effect */}
+        <div
+          className='absolute inset-0 opacity-20'
+          style={{
+            background: `radial-gradient(circle at 50% 0%, ${color}44, transparent 70%)`,
+          }}
+        />
+
+        <div className='relative z-10'>
+          <motion.div
+            className='text-4xl md:text-5xl font-bold mb-2'
+            style={{
+              color: color,
+              fontFamily: "'DM Sans', sans-serif",
+            }}
+          >
+            {value}
+            {suffix}
+          </motion.div>
+          <div className='text-sm' style={{ color: colors.textMuted }}>
+            {label}
+          </div>
+        </div>
+
+        {/* Corner accent */}
+        <div className='absolute top-0 right-0 w-12 h-12 opacity-20'>
+          <svg viewBox='0 0 48 48' fill='none'>
+            <path d='M48 0v48H0' stroke={color} strokeWidth='1' />
+          </svg>
+        </div>
+      </motion.div>
+    </AnimatedSection>
+  );
+}
+
+function LiveStatsSection() {
+  const { data: stats, isLoading } = useQuery(
+    convexQuery(api.performanceMetrics.getPerformanceStats, {})
+  );
+
+  // Fallback values while loading or if no data
+  const displayStats = {
+    totalSignals: stats?.totalSignals ?? 0,
+    winRate: stats?.winRate ?? 0,
+    highConfidenceWinRate: stats?.highConfidenceWinRate ?? 0,
+    signalsLast7d: stats?.signalsLast7d ?? 0,
+  };
+
+  return (
+    <section
+      className='relative py-24 overflow-hidden'
+      style={{ background: colors.bg }}
+    >
+      {/* Background effects */}
+      <div className='absolute inset-0 pointer-events-none'>
+        <div
+          className='absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-200 h-150 rounded-full blur-[150px]'
+          style={{ background: colors.emeraldGlow, opacity: 0.15 }}
+        />
+      </div>
+
+      <div className='relative max-w-6xl mx-auto px-6'>
+        <AnimatedSection className='text-center mb-12'>
+          <motion.div
+            className='inline-flex items-center gap-2 px-4 py-1 rounded-full mb-4'
+            style={{
+              background: colors.emeraldGlow,
+              border: `1px solid ${colors.emerald}33`,
+            }}
+          >
+            <motion.div
+              className='w-2 h-2 rounded-full'
+              style={{ background: colors.emerald }}
+              animate={{ scale: [1, 1.2, 1], opacity: [1, 0.5, 1] }}
+              transition={{ duration: 2, repeat: Infinity }}
+            />
+            <span
+              className='text-xs font-mono uppercase tracking-wider'
+              style={{ color: colors.emerald }}
+            >
+              Live Stats
+            </span>
+          </motion.div>
+          <h2
+            className='text-3xl sm:text-4xl md:text-5xl font-bold mb-4'
+            style={{ color: colors.text, fontFamily: "'DM Sans', sans-serif" }}
+          >
+            Real Results, Real-Time
+          </h2>
+          <p className='max-w-2xl mx-auto' style={{ color: colors.textMuted }}>
+            Our track record speaks for itself. All stats update in real-time as
+            markets resolve.
+          </p>
+        </AnimatedSection>
+
+        <div className='grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6'>
+          <StatCard
+            value={isLoading ? '...' : displayStats.totalSignals.toLocaleString()}
+            label='Total Signals Generated'
+            delay={0}
+            color={colors.cyan}
+          />
+          <StatCard
+            value={isLoading ? '...' : displayStats.winRate}
+            label='Overall Win Rate'
+            suffix='%'
+            delay={0.1}
+            color={colors.emerald}
+          />
+          <StatCard
+            value={isLoading ? '...' : displayStats.highConfidenceWinRate}
+            label='High-Confidence Accuracy'
+            suffix='%'
+            delay={0.2}
+            color={colors.purple}
+          />
+          <StatCard
+            value={isLoading ? '...' : displayStats.signalsLast7d}
+            label='Signals This Week'
+            delay={0.3}
+            color={colors.cyan}
+          />
+        </div>
+
+        {/* Trust badge */}
+        <AnimatedSection delay={0.4}>
+          <div className='mt-12 text-center'>
+            <p className='text-sm' style={{ color: colors.textDim }}>
+              All performance metrics are calculated from verified market
+              resolutions.{' '}
+              <a
+                href='/performance'
+                className='underline hover:no-underline'
+                style={{ color: colors.cyan }}
+              >
+                View detailed performance →
+              </a>
+            </p>
+          </div>
+        </AnimatedSection>
       </div>
     </section>
   );
@@ -1371,6 +1569,51 @@ function HowItWorksSection() {
 // ============================================================================
 
 function PricingSection() {
+  const tiers = [
+    {
+      name: 'Starter',
+      price: 29,
+      description: 'Perfect for getting started',
+      features: [
+        'All AI signals',
+        'Email alerts',
+        '1 deep dive research/month',
+        'Basic analytics',
+      ],
+      cta: 'Start Free Trial',
+      highlighted: false,
+    },
+    {
+      name: 'Pro',
+      price: 79,
+      description: 'For serious traders',
+      features: [
+        'Everything in Starter',
+        '10 deep dives/month',
+        'Portfolio sync',
+        'Whale watch alerts',
+        'Priority support',
+      ],
+      cta: 'Start Free Trial',
+      highlighted: true,
+    },
+    {
+      name: 'Enterprise',
+      price: 249,
+      description: 'For teams & power users',
+      features: [
+        'Everything in Pro',
+        '50 deep dives/month',
+        'API access',
+        'Team seats (up to 5)',
+        'Custom integrations',
+        'Dedicated support',
+      ],
+      cta: 'Contact Sales',
+      highlighted: false,
+    },
+  ];
+
   return (
     <section
       id='pricing'
@@ -1384,7 +1627,7 @@ function PricingSection() {
         />
       </div>
 
-      <div className='relative max-w-5xl mx-auto px-6'>
+      <div className='relative max-w-6xl mx-auto px-6'>
         <AnimatedSection className='text-center mb-12'>
           <motion.div
             className='inline-flex items-center gap-2 px-4 py-1 rounded-full mb-4'
@@ -1415,166 +1658,110 @@ function PricingSection() {
           </p>
         </AnimatedSection>
 
-        <div className='grid md:grid-cols-2 gap-6 max-w-3xl mx-auto'>
-          {/* Basic */}
-          <AnimatedSection delay={0.1}>
-            <motion.div
-              className='h-full p-6 rounded-2xl'
-              style={{
-                background: `linear-gradient(135deg, ${colors.surface}ee, ${colors.bgSecondary}ee)`,
-                border: `1px solid ${colors.border}`,
-              }}
-              whileHover={{ borderColor: colors.borderBright }}
-            >
-              <h3
-                className='text-xl font-semibold mb-2'
-                style={{
-                  color: colors.text,
-                  fontFamily: "'DM Sans', sans-serif",
-                }}
-              >
-                Basic
-              </h3>
-              <div className='mb-4'>
-                <span
-                  className='text-4xl font-bold'
-                  style={{ color: colors.text }}
-                >
-                  $0
-                </span>
-                <span style={{ color: colors.textMuted }}>/month</span>
-              </div>
-              <ul className='space-y-3 mb-6'>
-                {[
-                  '3 signals per day',
-                  'Basic market insights',
-                  'Email alerts',
-                ].map((feature) => (
-                  <li
-                    key={feature}
-                    className='flex items-center gap-2'
-                    style={{ color: colors.textMuted }}
-                  >
-                    <svg
-                      className='w-4 h-4'
-                      viewBox='0 0 24 24'
-                      fill='none'
-                      stroke={colors.cyan}
-                      strokeWidth='2'
-                    >
-                      <path
-                        strokeLinecap='round'
-                        strokeLinejoin='round'
-                        d='M4.5 12.75l6 6 9-13.5'
-                      />
-                    </svg>
-                    {feature}
-                  </li>
-                ))}
-              </ul>
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                className='w-full py-3 rounded-xl font-medium transition-colors'
-                style={{
-                  border: `1px solid ${colors.border}`,
-                  color: colors.text,
-                }}
-              >
-                Get Started Free
-              </motion.button>
-            </motion.div>
-          </AnimatedSection>
-
-          {/* Pro */}
-          <AnimatedSection delay={0.2}>
-            <motion.div
-              className='h-full p-6 rounded-2xl relative overflow-hidden'
-              style={{
-                background: `linear-gradient(135deg, ${colors.cyan}11, ${colors.surface}ee)`,
-                border: `1px solid ${colors.cyan}44`,
-              }}
-              whileHover={{ boxShadow: `0 0 40px ${colors.cyanGlow}` }}
-            >
-              {/* Popular badge */}
-              <div
-                className='absolute -top-px left-1/2 -translate-x-1/2 px-4 py-1 rounded-b-lg text-xs font-semibold'
-                style={{ background: colors.cyan, color: colors.bg }}
-              >
-                Most Popular
-              </div>
-
-              <h3
-                className='text-xl font-semibold mb-2 mt-4'
-                style={{
-                  color: colors.text,
-                  fontFamily: "'DM Sans', sans-serif",
-                }}
-              >
-                Pro
-              </h3>
-              <div className='mb-4'>
-                <span
-                  className='text-4xl font-bold'
-                  style={{ color: colors.text }}
-                >
-                  $29
-                </span>
-                <span style={{ color: colors.textMuted }}>/month</span>
-              </div>
-              <ul className='space-y-3 mb-6'>
-                {[
-                  'Unlimited signals',
-                  'Full portfolio tracking',
-                  'Priority alerts',
-                  'Advanced analytics',
-                ].map((feature) => (
-                  <li
-                    key={feature}
-                    className='flex items-center gap-2'
-                    style={{ color: colors.textMuted }}
-                  >
-                    <svg
-                      className='w-4 h-4'
-                      viewBox='0 0 24 24'
-                      fill='none'
-                      stroke={colors.cyan}
-                      strokeWidth='2'
-                    >
-                      <path
-                        strokeLinecap='round'
-                        strokeLinejoin='round'
-                        d='M4.5 12.75l6 6 9-13.5'
-                      />
-                    </svg>
-                    {feature}
-                  </li>
-                ))}
-              </ul>
-              <motion.button
-                whileHover={{
-                  scale: 1.02,
-                  boxShadow: `0 0 30px ${colors.cyanGlow}`,
-                }}
-                whileTap={{ scale: 0.98 }}
-                className='w-full py-3 rounded-xl font-semibold'
-                style={{
-                  background: `linear-gradient(135deg, ${colors.cyan}, ${colors.emerald})`,
-                  color: colors.bg,
-                }}
-              >
-                Start Your Free Trial
-              </motion.button>
-
-              {/* Animated border */}
+        <div className='grid md:grid-cols-3 gap-6'>
+          {tiers.map((tier, i) => (
+            <AnimatedSection key={tier.name} delay={i * 0.1}>
               <motion.div
-                className='absolute inset-0 rounded-2xl pointer-events-none'
-                style={{ border: `1px solid ${colors.cyan}` }}
-                animate={{ opacity: [0.3, 0.6, 0.3] }}
-                transition={{ duration: 2, repeat: Infinity }}
-              />
-            </motion.div>
-          </AnimatedSection>
+                className={`h-full p-6 rounded-2xl relative overflow-hidden ${tier.highlighted ? 'md:-mt-4 md:mb-4' : ''}`}
+                style={{
+                  background: tier.highlighted
+                    ? `linear-gradient(135deg, ${colors.cyan}11, ${colors.surface}ee)`
+                    : `linear-gradient(135deg, ${colors.surface}ee, ${colors.bgSecondary}ee)`,
+                  border: `1px solid ${tier.highlighted ? colors.cyan + '44' : colors.border}`,
+                }}
+                whileHover={{
+                  borderColor: tier.highlighted ? colors.cyan : colors.borderBright,
+                  boxShadow: tier.highlighted ? `0 0 40px ${colors.cyanGlow}` : 'none',
+                }}
+              >
+                {tier.highlighted && (
+                  <div
+                    className='absolute -top-px left-1/2 -translate-x-1/2 px-4 py-1 rounded-b-lg text-xs font-semibold'
+                    style={{ background: colors.cyan, color: colors.bg }}
+                  >
+                    Most Popular
+                  </div>
+                )}
+
+                <h3
+                  className={`text-xl font-semibold mb-1 ${tier.highlighted ? 'mt-4' : ''}`}
+                  style={{
+                    color: colors.text,
+                    fontFamily: "'DM Sans', sans-serif",
+                  }}
+                >
+                  {tier.name}
+                </h3>
+                <p className='text-sm mb-4' style={{ color: colors.textDim }}>
+                  {tier.description}
+                </p>
+                <div className='mb-6'>
+                  <span
+                    className='text-4xl font-bold'
+                    style={{ color: colors.text }}
+                  >
+                    ${tier.price}
+                  </span>
+                  <span style={{ color: colors.textMuted }}>/month</span>
+                </div>
+                <ul className='space-y-3 mb-6'>
+                  {tier.features.map((feature) => (
+                    <li
+                      key={feature}
+                      className='flex items-center gap-2'
+                      style={{ color: colors.textMuted }}
+                    >
+                      <svg
+                        className='w-4 h-4 shrink-0'
+                        viewBox='0 0 24 24'
+                        fill='none'
+                        stroke={colors.cyan}
+                        strokeWidth='2'
+                      >
+                        <path
+                          strokeLinecap='round'
+                          strokeLinejoin='round'
+                          d='M4.5 12.75l6 6 9-13.5'
+                        />
+                      </svg>
+                      {feature}
+                    </li>
+                  ))}
+                </ul>
+                <motion.a
+                  href={tier.name === 'Enterprise' ? '/contact' : '/auth'}
+                  whileHover={{
+                    scale: 1.02,
+                    boxShadow: tier.highlighted ? `0 0 30px ${colors.cyanGlow}` : 'none',
+                  }}
+                  whileTap={{ scale: 0.98 }}
+                  className='block w-full py-3 rounded-xl font-semibold text-center transition-colors'
+                  style={
+                    tier.highlighted
+                      ? {
+                          background: `linear-gradient(135deg, ${colors.cyan}, ${colors.emerald})`,
+                          color: colors.bg,
+                        }
+                      : {
+                          border: `1px solid ${colors.border}`,
+                          color: colors.text,
+                        }
+                  }
+                >
+                  {tier.cta}
+                </motion.a>
+
+                {tier.highlighted && (
+                  <motion.div
+                    className='absolute inset-0 rounded-2xl pointer-events-none'
+                    style={{ border: `1px solid ${colors.cyan}` }}
+                    animate={{ opacity: [0.3, 0.6, 0.3] }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                  />
+                )}
+              </motion.div>
+            </AnimatedSection>
+          ))}
         </div>
       </div>
     </section>
@@ -1662,6 +1849,7 @@ export function LandingPage() {
       <Navigation />
       <HeroSection />
       <FeaturesSection />
+      <LiveStatsSection />
       <HowItWorksSection />
       <PricingSection />
       <Footer />
