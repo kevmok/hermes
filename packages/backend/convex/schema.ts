@@ -311,14 +311,17 @@ export default defineSchema({
     // Schema version for backwards compatibility
     schemaVersion: v.optional(v.string()), // "2.0.0" for structured outputs
 
-    // When the signal was stored
     signalTimestamp: v.number(),
+
+    edgeScore: v.optional(v.number()),
+    marketCategory: v.optional(v.string()),
   })
     .index('by_market', ['marketId'])
     .index('by_timestamp', ['signalTimestamp'])
     .index('by_decision', ['consensusDecision', 'signalTimestamp'])
     .index('by_high_confidence', ['isHighConfidence', 'signalTimestamp'])
-    .index('by_market_time', ['marketId', 'signalTimestamp']),
+    .index('by_market_time', ['marketId', 'signalTimestamp'])
+    .index('by_category', ['marketCategory', 'signalTimestamp']),
 
   // ============ ANALYSIS REQUESTS (for on-demand) ============
 
@@ -359,14 +362,48 @@ export default defineSchema({
   // ============ GLOBAL FILTERS (Singleton Config) ============
 
   globalFilters: defineTable({
-    minTradeSize: v.number(), // Min trade size in USD (e.g., 500)
-    maxPriceYes: v.number(), // Max YES price to track (e.g., 0.98)
-    minPriceYes: v.number(), // Min YES price to track (e.g., 0.02)
-    minVolume24h: v.number(), // Min 24h volume in USD (e.g., 10000)
-    excludedCategories: v.array(v.string()), // Categories to exclude
-    deduplicationWindowMs: v.number(), // Dedup window in ms (e.g., 60000)
-    minConsensusPercentage: v.number(), // Min consensus to create signal (e.g., 60)
-    isEnabled: v.boolean(), // Master switch for signal generation
+    minTradeSize: v.number(),
+    maxPriceYes: v.number(),
+    minPriceYes: v.number(),
+    minVolume24h: v.number(),
+    excludedCategories: v.array(v.string()),
+    deduplicationWindowMs: v.number(),
+    minConsensusPercentage: v.number(),
+    isEnabled: v.boolean(),
     updatedAt: v.number(),
   }),
+
+  userPreferences: defineTable({
+    userId: v.id('user'),
+    emailAlerts: v.boolean(),
+    alertThreshold: v.union(
+      v.literal('high'),
+      v.literal('medium'),
+      v.literal('all'),
+    ),
+    categories: v.array(v.string()),
+    digestFrequency: v.union(
+      v.literal('instant'),
+      v.literal('daily'),
+      v.literal('weekly'),
+    ),
+    digestHourUTC: v.number(),
+    timezone: v.string(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index('by_user', ['userId'])
+    .index('by_digest', ['digestFrequency', 'digestHourUTC']),
+
+  alertLog: defineTable({
+    userId: v.id('user'),
+    signalId: v.id('signals'),
+    channel: v.union(v.literal('email'), v.literal('digest')),
+    sentAt: v.number(),
+    opened: v.optional(v.boolean()),
+    clicked: v.optional(v.boolean()),
+  })
+    .index('by_user', ['userId', 'sentAt'])
+    .index('by_signal', ['signalId'])
+    .index('by_user_signal', ['userId', 'signalId']),
 });

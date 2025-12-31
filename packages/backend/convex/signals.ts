@@ -1,9 +1,77 @@
 import { ConvexError, v } from 'convex/values';
-import { internalMutation, query } from './_generated/server';
+import { internalMutation, internalQuery, query } from './_generated/server';
 import type { Doc, Id } from './_generated/dataModel';
 import type { QueryCtx } from './_generated/server';
 
-// ============ TYPE DEFINITIONS ============
+function deriveCategory(eventSlug: string): string {
+  const slug = eventSlug.toLowerCase();
+
+  if (
+    slug.includes('trump') ||
+    slug.includes('biden') ||
+    slug.includes('election') ||
+    slug.includes('congress') ||
+    slug.includes('senate') ||
+    slug.includes('president')
+  ) {
+    return 'politics';
+  }
+  if (
+    slug.includes('bitcoin') ||
+    slug.includes('eth') ||
+    slug.includes('crypto') ||
+    slug.includes('token') ||
+    slug.includes('btc')
+  ) {
+    return 'crypto';
+  }
+  if (
+    slug.includes('nfl') ||
+    slug.includes('nba') ||
+    slug.includes('mlb') ||
+    slug.includes('soccer') ||
+    slug.includes('sports') ||
+    slug.includes('ufc')
+  ) {
+    return 'sports';
+  }
+  if (
+    slug.includes('fed') ||
+    slug.includes('rate') ||
+    slug.includes('inflation') ||
+    slug.includes('gdp') ||
+    slug.includes('economy') ||
+    slug.includes('recession')
+  ) {
+    return 'economics';
+  }
+  if (
+    slug.includes('ai') ||
+    slug.includes('tech') ||
+    slug.includes('apple') ||
+    slug.includes('google') ||
+    slug.includes('meta') ||
+    slug.includes('openai')
+  ) {
+    return 'tech';
+  }
+
+  return 'general';
+}
+
+function calculateEdgeScore(
+  consensusDecision: 'YES' | 'NO' | 'NO_TRADE',
+  priceAtTrigger: number,
+  consensusPercentage: number,
+): number {
+  if (consensusDecision === 'NO_TRADE') return 0;
+
+  const impliedProbability =
+    consensusDecision === 'YES' ? 1 - priceAtTrigger : priceAtTrigger;
+
+  const edge = Math.abs(impliedProbability - priceAtTrigger);
+  return edge * (consensusPercentage / 100);
+}
 
 const tradeObjectValidator = v.object({
   size: v.number(),
@@ -29,6 +97,7 @@ export const createSignal = internalMutation({
     agreeingModels: v.number(),
     aggregatedReasoning: v.string(),
     priceAtTrigger: v.number(),
+    eventSlug: v.optional(v.string()),
     // NEW: Structured output fields (optional for backwards compatibility)
     voteDistribution: v.optional(
       v.object({
@@ -57,6 +126,22 @@ export const createSignal = internalMutation({
           ? ('medium' as const)
           : ('low' as const);
 
+    let marketCategory = 'general';
+    if (args.eventSlug) {
+      marketCategory = deriveCategory(args.eventSlug);
+    } else {
+      const market = await ctx.db.get(args.marketId);
+      if (market?.eventSlug) {
+        marketCategory = deriveCategory(market.eventSlug);
+      }
+    }
+
+    const edgeScore = calculateEdgeScore(
+      args.consensusDecision,
+      args.priceAtTrigger,
+      args.consensusPercentage,
+    );
+
     return await ctx.db.insert('signals', {
       marketId: args.marketId,
       triggerTrade: args.triggerTrade,
@@ -69,6 +154,8 @@ export const createSignal = internalMutation({
       isHighConfidence: args.consensusPercentage >= 80,
       priceAtTrigger: args.priceAtTrigger,
       signalTimestamp: Date.now(),
+      edgeScore,
+      marketCategory,
       // NEW: Structured output fields
       voteDistribution: args.voteDistribution,
       averageConfidence: args.averageConfidence,
@@ -148,6 +235,8 @@ const signalObjectValidator = v.object({
   aggregatedKeyFactors: v.optional(v.array(v.string())),
   aggregatedRisks: v.optional(v.array(v.string())),
   schemaVersion: v.optional(v.string()),
+  edgeScore: v.optional(v.number()),
+  marketCategory: v.optional(v.string()),
 });
 
 // Simplified market object - no volatile price data
@@ -463,3 +552,90 @@ async function enrichSignalsWithMarkets(
     )
     .map((r) => r.value);
 }
+
+// ============ INTERNAL QUERIES (for use in actions) ============
+
+export const getSignalWithPredictionsInternal = internalQuery({
+  args: { signalId: v.union(v.id('signals'), v.null()) },
+  handler: async (ctx, args) => {
+    if (!args.signalId) return null;
+    const signal = await ctx.db.get(args.signalId);
+    if (!signal) return null;
+
+    const market = await ctx.db.get(signal.marketId);
+
+    const predictionWindow = 60 * 1000;
+    const predictions = await ctx.db
+      .query('modelPredictions')
+      .withIndex('by_market', (q) => q.eq('marketId', signal.marketId))
+      .filter((q) =>
+        q.and(
+          q.gte(
+            q.field('timestamp'),
+            signal.signalTimestamp - predictionWindow,
+          ),
+          q.lte(
+            q.field('timestamp'),
+            signal.signalTimestamp + predictionWindow,
+          ),
+        ),
+      )
+      .collect();
+
+    const firstTrade = Array.isArray(signal.triggerTrade)
+      ? signal.triggerTrade[0]
+      : signal.triggerTrade;
+
+    return {
+      ...signal,
+      triggerTrade: firstTrade,
+      market: market
+        ? {
+            _id: market._id,
+            title: market.title,
+            eventSlug: market.eventSlug,
+            outcome: market.outcome,
+            resolvedAt: market.resolvedAt,
+          }
+        : null,
+      predictions,
+    };
+  },
+});
+
+export const getSignalsSinceInternal = internalQuery({
+  args: {
+    since: v.number(),
+    limit: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const signals = await ctx.db
+      .query('signals')
+      .withIndex('by_timestamp')
+      .filter((q) => q.gt(q.field('signalTimestamp'), args.since))
+      .order('desc')
+      .take(args.limit ?? 20);
+
+    const results = await Promise.allSettled(
+      signals.map(async (signal) => {
+        const market = await ctx.db.get(signal.marketId);
+        return {
+          ...signal,
+          market: market ? { _id: market._id, title: market.title } : null,
+        };
+      }),
+    );
+
+    return results
+      .filter(
+        (
+          r,
+        ): r is PromiseFulfilledResult<
+          Doc<'signals'> & {
+            market: { _id: Id<'markets'>; title: string } | null;
+          }
+        > => r.status === 'fulfilled',
+      )
+      .map((r) => r.value);
+  },
+});

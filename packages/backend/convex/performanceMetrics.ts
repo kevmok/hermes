@@ -1,5 +1,5 @@
 import { v } from 'convex/values';
-import { query } from './_generated/server';
+import { internalQuery, query } from './_generated/server';
 
 // ============ CORE METRICS QUERY ============
 
@@ -372,5 +372,283 @@ export const getConfidenceCalibration = query({
       actualAccuracy:
         b.total > 0 ? Math.round((b.correct / b.total) * 1000) / 10 : 0,
     }));
+  },
+});
+
+export const getPerformanceStatsInternal = internalQuery({
+  args: {
+    sinceDays: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const sinceMs = args.sinceDays
+      ? Date.now() - args.sinceDays * 24 * 60 * 60 * 1000
+      : 0;
+
+    let signalsQuery = ctx.db
+      .query('signals')
+      .withIndex('by_timestamp')
+      .order('desc');
+
+    const allSignals =
+      sinceMs > 0
+        ? await signalsQuery
+            .filter((q) => q.gte(q.field('signalTimestamp'), sinceMs))
+            .collect()
+        : await signalsQuery.collect();
+
+    const resolvedMarkets = await ctx.db
+      .query('markets')
+      .withIndex('by_resolved')
+      .filter((q) => q.neq(q.field('outcome'), undefined))
+      .collect();
+
+    const resolvedMap = new Map<string, 'YES' | 'NO' | 'INVALID' | null>();
+    for (const market of resolvedMarkets) {
+      resolvedMap.set(market._id, market.outcome ?? null);
+    }
+
+    const totalSignals = allSignals.length;
+    let signalsOnResolved = 0;
+    let correctPredictions = 0;
+    let incorrectPredictions = 0;
+    let yesSignals = 0;
+    let noSignals = 0;
+    let noTradeSignals = 0;
+    let highConfidenceSignals = 0;
+    let highConfidenceCorrect = 0;
+    let highConfidenceEvaluated = 0;
+    let totalConsensusOnWins = 0;
+
+    const now = Date.now();
+    const oneDayAgo = now - 24 * 60 * 60 * 1000;
+    const sevenDaysAgo = now - 7 * 24 * 60 * 60 * 1000;
+    let signalsLast24h = 0;
+    let signalsLast7d = 0;
+
+    for (const signal of allSignals) {
+      if (signal.consensusDecision === 'YES') yesSignals++;
+      else if (signal.consensusDecision === 'NO') noSignals++;
+      else noTradeSignals++;
+
+      if (signal.isHighConfidence) {
+        highConfidenceSignals++;
+      }
+
+      if (signal.signalTimestamp >= oneDayAgo) signalsLast24h++;
+      if (signal.signalTimestamp >= sevenDaysAgo) signalsLast7d++;
+
+      const outcome = resolvedMap.get(signal.marketId);
+      if (outcome !== undefined && outcome !== null && outcome !== 'INVALID') {
+        signalsOnResolved++;
+
+        if (signal.consensusDecision === 'NO_TRADE') continue;
+
+        const isCorrect = signal.consensusDecision === outcome;
+
+        if (signal.isHighConfidence) {
+          highConfidenceEvaluated++;
+        }
+
+        if (isCorrect) {
+          correctPredictions++;
+          totalConsensusOnWins += signal.consensusPercentage;
+          if (signal.isHighConfidence) highConfidenceCorrect++;
+        } else {
+          incorrectPredictions++;
+        }
+      }
+    }
+
+    const predictionsEvaluated = correctPredictions + incorrectPredictions;
+    const winRate =
+      predictionsEvaluated > 0
+        ? (correctPredictions / predictionsEvaluated) * 100
+        : 0;
+
+    const highConfidenceWinRate =
+      highConfidenceEvaluated > 0
+        ? (highConfidenceCorrect / highConfidenceEvaluated) * 100
+        : 0;
+
+    const avgConsensusOnWins =
+      correctPredictions > 0 ? totalConsensusOnWins / correctPredictions : 0;
+
+    const simulatedROI =
+      predictionsEvaluated > 0
+        ? ((correctPredictions - incorrectPredictions) / predictionsEvaluated) *
+          100
+        : 0;
+
+    return {
+      totalSignals,
+      signalsOnResolved,
+      predictionsEvaluated,
+      correctPredictions,
+      incorrectPredictions,
+      winRate: Math.round(winRate * 10) / 10,
+      highConfidenceWinRate: Math.round(highConfidenceWinRate * 10) / 10,
+      avgConsensusOnWins: Math.round(avgConsensusOnWins * 10) / 10,
+      simulatedROI: Math.round(simulatedROI * 10) / 10,
+      yesSignals,
+      noSignals,
+      noTradeSignals,
+      highConfidenceSignals,
+      signalsLast24h,
+      signalsLast7d,
+    };
+  },
+});
+
+export const getEquityCurve = query({
+  args: {
+    days: v.optional(v.number()),
+    betSize: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const days = args.days ?? 30;
+    const betSize = args.betSize ?? 100;
+    const startMs = Date.now() - days * 24 * 60 * 60 * 1000;
+
+    const signals = await ctx.db
+      .query('signals')
+      .withIndex('by_timestamp')
+      .filter((q) => q.gte(q.field('signalTimestamp'), startMs))
+      .order('asc')
+      .collect();
+
+    const resolvedMarkets = await ctx.db
+      .query('markets')
+      .withIndex('by_resolved')
+      .filter((q) => q.neq(q.field('outcome'), undefined))
+      .collect();
+
+    const resolvedMap = new Map<string, 'YES' | 'NO' | 'INVALID' | null>();
+    for (const market of resolvedMarkets) {
+      resolvedMap.set(market._id, market.outcome ?? null);
+    }
+
+    let cumulativePnL = 0;
+    const dataPoints: Array<{
+      timestamp: number;
+      date: string;
+      pnl: number;
+      cumulativePnL: number;
+      signalId: string;
+      decision: string;
+      outcome: string | null;
+      isCorrect: boolean | null;
+    }> = [];
+
+    for (const signal of signals) {
+      if (signal.consensusDecision === 'NO_TRADE') continue;
+
+      const outcome = resolvedMap.get(signal.marketId);
+      if (outcome === undefined || outcome === null || outcome === 'INVALID') {
+        continue;
+      }
+
+      const isCorrect = signal.consensusDecision === outcome;
+      const pnl = isCorrect ? betSize : -betSize;
+      cumulativePnL += pnl;
+
+      const dateParts = new Date(signal.signalTimestamp)
+        .toISOString()
+        .split('T');
+
+      dataPoints.push({
+        timestamp: signal.signalTimestamp,
+        date: dateParts[0] ?? 'unknown',
+        pnl,
+        cumulativePnL,
+        signalId: signal._id,
+        decision: signal.consensusDecision,
+        outcome,
+        isCorrect,
+      });
+    }
+
+    return {
+      dataPoints,
+      summary: {
+        totalPnL: cumulativePnL,
+        totalTrades: dataPoints.length,
+        winCount: dataPoints.filter((d) => d.isCorrect === true).length,
+        lossCount: dataPoints.filter((d) => d.isCorrect === false).length,
+        maxDrawdown: calculateMaxDrawdown(dataPoints.map((d) => d.cumulativePnL)),
+        betSize,
+      },
+    };
+  },
+});
+
+function calculateMaxDrawdown(equityCurve: number[]): number {
+  if (equityCurve.length === 0) return 0;
+
+  let peak = equityCurve[0] ?? 0;
+  let maxDrawdown = 0;
+
+  for (const value of equityCurve) {
+    if (value > peak) peak = value;
+    const drawdown = peak - value;
+    if (drawdown > maxDrawdown) maxDrawdown = drawdown;
+  }
+
+  return maxDrawdown;
+}
+
+export const getCategoryAccuracy = query({
+  args: {},
+  handler: async (ctx) => {
+    const signals = await ctx.db.query('signals').collect();
+
+    const resolvedMarkets = await ctx.db
+      .query('markets')
+      .withIndex('by_resolved')
+      .filter((q) => q.neq(q.field('outcome'), undefined))
+      .collect();
+
+    const resolvedMap = new Map<string, 'YES' | 'NO' | 'INVALID' | null>();
+    for (const market of resolvedMarkets) {
+      resolvedMap.set(market._id, market.outcome ?? null);
+    }
+
+    const categoryStats = new Map<
+      string,
+      { total: number; evaluated: number; correct: number }
+    >();
+
+    for (const signal of signals) {
+      const category = signal.marketCategory ?? 'general';
+
+      if (!categoryStats.has(category)) {
+        categoryStats.set(category, { total: 0, evaluated: 0, correct: 0 });
+      }
+
+      const stats = categoryStats.get(category)!;
+      stats.total++;
+
+      if (signal.consensusDecision === 'NO_TRADE') continue;
+
+      const outcome = resolvedMap.get(signal.marketId);
+      if (outcome === 'YES' || outcome === 'NO') {
+        stats.evaluated++;
+        if (signal.consensusDecision === outcome) {
+          stats.correct++;
+        }
+      }
+    }
+
+    return Array.from(categoryStats.entries())
+      .map(([category, stats]) => ({
+        category,
+        total: stats.total,
+        evaluated: stats.evaluated,
+        correct: stats.correct,
+        winRate:
+          stats.evaluated > 0
+            ? Math.round((stats.correct / stats.evaluated) * 1000) / 10
+            : 0,
+      }))
+      .sort((a, b) => b.total - a.total);
   },
 });
