@@ -2,7 +2,6 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { HugeiconsIcon } from '@hugeicons/react';
 import {
-  LinkSquare01Icon,
   Clock01Icon,
   Dollar01Icon,
   CheckmarkCircle01Icon,
@@ -11,7 +10,6 @@ import {
 
 interface MarketMetadataProps {
   priceAtTrigger: number;
-  eventSlug?: string;
   signalTimestamp: number;
   triggerTrade: {
     size: number;
@@ -26,7 +24,6 @@ interface MarketMetadataProps {
 
 export function MarketMetadata({
   priceAtTrigger,
-  eventSlug,
   signalTimestamp,
   triggerTrade,
   outcome,
@@ -41,9 +38,8 @@ export function MarketMetadata({
 
   return (
     <div className='space-y-4'>
-      {/* Market Outcome (if resolved) */}
       {isResolved && (
-        <Card className='border-white/5 bg-white/[0.02]'>
+        <Card className='border-border'>
           <CardContent className='p-6'>
             <h3 className='text-sm font-semibold mb-4 text-muted-foreground uppercase tracking-wider'>
               Market Outcome
@@ -89,8 +85,7 @@ export function MarketMetadata({
         </Card>
       )}
 
-      {/* Trigger Trade Details */}
-      <Card className='border-white/5 bg-white/[0.02]'>
+      <Card className='border-border'>
         <CardContent className='p-6'>
           <h3 className='text-sm font-semibold mb-4 text-muted-foreground uppercase tracking-wider'>
             Trigger Trade
@@ -136,22 +131,7 @@ export function MarketMetadata({
         </CardContent>
       </Card>
 
-      {/* External Link */}
-      {eventSlug && (
-        <a
-          href={`https://polymarket.com/event/${eventSlug}`}
-          target='_blank'
-          rel='noopener noreferrer'
-          className='flex items-center gap-3 p-4 rounded-lg border border-white/5 bg-white/[0.02] hover:bg-white/[0.04] hover:border-white/10 transition-colors'
-        >
-          <HugeiconsIcon
-            icon={LinkSquare01Icon}
-            size={20}
-            className='text-cyan-400'
-          />
-          <span className='text-sm'>Trade on Polymarket</span>
-        </a>
-      )}
+
     </div>
   );
 }

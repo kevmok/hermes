@@ -64,8 +64,7 @@ export function ConsensusViz({
 
   return (
     <div className='space-y-6'>
-      {/* Agreement Bar */}
-      <Card className='border-white/5 bg-white/[0.02]'>
+      <Card className='border-border'>
         <CardContent className='p-6 space-y-4'>
           <div className='flex items-center justify-between'>
             <span className='text-sm text-muted-foreground'>
@@ -91,9 +90,8 @@ export function ConsensusViz({
             </span>
           </p>
 
-          {/* Vote Distribution */}
           {voteDistribution && (
-            <div className='flex items-center gap-6 pt-4 border-t border-white/5'>
+            <div className='flex items-center gap-6 pt-4 border-t border-border'>
               <div className='flex items-center gap-2'>
                 <span className='w-3 h-3 rounded-full bg-emerald-500' />
                 <span className='text-sm text-muted-foreground'>
@@ -126,8 +124,7 @@ export function ConsensusViz({
         </CardContent>
       </Card>
 
-      {/* Model Voting Grid */}
-      <div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
+      <div className='grid grid-cols-1 md:grid-cols-3 gap-3'>
         {predictions.map((pred) => {
           const predConfig = decisionConfig[pred.decision];
           return (

@@ -66,7 +66,7 @@ function ReasoningCard({ prediction }: { prediction: Prediction }) {
     <Collapsible open={isOpen} onOpenChange={setIsOpen}>
       <Card className={cn('border', config.borderColor, config.bgColor)}>
         <CollapsibleTrigger className='w-full text-left'>
-          <CardHeader className='cursor-pointer hover:bg-white/[0.02] transition-colors p-4'>
+          <CardHeader className='cursor-pointer hover:bg-muted/50 transition-colors p-4'>
             <div className='flex items-center justify-between'>
               <div className='flex items-center gap-3'>
                 <HugeiconsIcon
