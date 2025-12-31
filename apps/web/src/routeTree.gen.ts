@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as PerformanceRouteImport } from './routes/performance'
 import { Route as DashboardRouteRouteImport } from './routes/dashboard/route'
 import { Route as authRouteRouteImport } from './routes/(auth)/route'
 import { Route as IndexRouteImport } from './routes/index'
@@ -26,6 +27,11 @@ import { Route as DashboardEventsEventIdRouteImport } from './routes/dashboard/e
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth.$'
 import { Route as DashboardTradesSignalIdIndexRouteImport } from './routes/dashboard/trades/$signalId/index'
 
+const PerformanceRoute = PerformanceRouteImport.update({
+  id: '/performance',
+  path: '/performance',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DashboardRouteRoute = DashboardRouteRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -111,6 +117,7 @@ const DashboardTradesSignalIdIndexRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/dashboard': typeof DashboardRouteRouteWithChildren
+  '/performance': typeof PerformanceRoute
   '/dashboard/events': typeof DashboardEventsRouteRouteWithChildren
   '/dashboard/trades': typeof DashboardTradesRouteRouteWithChildren
   '/auth': typeof authAuthRoute
@@ -127,6 +134,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/performance': typeof PerformanceRoute
   '/dashboard/events': typeof DashboardEventsRouteRouteWithChildren
   '/auth': typeof authAuthRoute
   '/authcallback': typeof authAuthcallbackRoute
@@ -145,6 +153,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/(auth)': typeof authRouteRouteWithChildren
   '/dashboard': typeof DashboardRouteRouteWithChildren
+  '/performance': typeof PerformanceRoute
   '/dashboard/events': typeof DashboardEventsRouteRouteWithChildren
   '/dashboard/trades': typeof DashboardTradesRouteRouteWithChildren
   '/(auth)/auth': typeof authAuthRoute
@@ -164,6 +173,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/dashboard'
+    | '/performance'
     | '/dashboard/events'
     | '/dashboard/trades'
     | '/auth'
@@ -180,6 +190,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/performance'
     | '/dashboard/events'
     | '/auth'
     | '/authcallback'
@@ -197,6 +208,7 @@ export interface FileRouteTypes {
     | '/'
     | '/(auth)'
     | '/dashboard'
+    | '/performance'
     | '/dashboard/events'
     | '/dashboard/trades'
     | '/(auth)/auth'
@@ -216,11 +228,19 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   authRouteRoute: typeof authRouteRouteWithChildren
   DashboardRouteRoute: typeof DashboardRouteRouteWithChildren
+  PerformanceRoute: typeof PerformanceRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/performance': {
+      id: '/performance'
+      path: '/performance'
+      fullPath: '/performance'
+      preLoaderRoute: typeof PerformanceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/dashboard': {
       id: '/dashboard'
       path: '/dashboard'
@@ -402,6 +422,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   authRouteRoute: authRouteRouteWithChildren,
   DashboardRouteRoute: DashboardRouteRouteWithChildren,
+  PerformanceRoute: PerformanceRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
 }
 export const routeTree = rootRouteImport

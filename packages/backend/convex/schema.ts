@@ -517,4 +517,18 @@ export default defineSchema({
     .index('by_address', ['address'])
     .index('by_smart_money', ['isSmartMoney', 'totalVolume'])
     .index('by_volume', ['totalVolume']),
+
+  // ============ PHASE 4: ENGAGEMENT & ACTIVITY ============
+
+  userActivity: defineTable({
+    userId: v.id('user'),
+    signalsViewed: v.number(),
+    deepDivesUsed: v.number(),
+    sharesGenerated: v.number(),
+    daysActive: v.number(),
+    currentStreak: v.number(),
+    longestStreak: v.number(),
+    lastActiveAt: v.number(),
+    badges: v.array(v.string()),
+  }).index('by_user', ['userId']),
 });
