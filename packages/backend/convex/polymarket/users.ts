@@ -4,9 +4,9 @@
  * Internal actions fetch from the API directly.
  * Public actions use ActionCache for TTL-based caching.
  */
-import { action, internalAction } from '../_generated/server';
-import { v } from 'convex/values';
-import { api as polymarketApi } from './client';
+import { action, internalAction } from "../_generated/server";
+import { v } from "convex/values";
+import { api as polymarketApi } from "./client";
 import {
   userPositionsCache,
   userTradesCache,
@@ -14,7 +14,7 @@ import {
   portfolioValueCache,
   closedPositionsCache,
   leaderboardCache,
-} from './cache';
+} from "./cache";
 
 // ============ INTERNAL ACTIONS (used by cache) ============
 
@@ -25,7 +25,7 @@ export const fetchUserPositions = internalAction({
     offset: v.optional(v.number()),
     sizeThreshold: v.optional(v.number()),
     sortBy: v.optional(v.string()),
-    sortDirection: v.optional(v.union(v.literal('ASC'), v.literal('DESC'))),
+    sortDirection: v.optional(v.union(v.literal("ASC"), v.literal("DESC"))),
   },
   returns: v.any(),
   handler: async (_ctx, args) => {
@@ -44,7 +44,7 @@ export const fetchUserTrades = internalAction({
     user: v.string(),
     limit: v.optional(v.number()),
     offset: v.optional(v.number()),
-    side: v.optional(v.union(v.literal('BUY'), v.literal('SELL'))),
+    side: v.optional(v.union(v.literal("BUY"), v.literal("SELL"))),
   },
   returns: v.any(),
   handler: async (_ctx, args) => {
@@ -91,7 +91,7 @@ export const fetchClosedPositions = internalAction({
     limit: v.optional(v.number()),
     offset: v.optional(v.number()),
     sortBy: v.optional(v.string()),
-    sortDirection: v.optional(v.union(v.literal('ASC'), v.literal('DESC'))),
+    sortDirection: v.optional(v.union(v.literal("ASC"), v.literal("DESC"))),
   },
   returns: v.any(),
   handler: async (_ctx, args) => {
@@ -133,7 +133,7 @@ export const getUserPositions = action({
     offset: v.optional(v.number()),
     sizeThreshold: v.optional(v.number()),
     sortBy: v.optional(v.string()),
-    sortDirection: v.optional(v.union(v.literal('ASC'), v.literal('DESC'))),
+    sortDirection: v.optional(v.union(v.literal("ASC"), v.literal("DESC"))),
   },
   returns: v.any(),
   handler: async (ctx, args) => {
@@ -146,7 +146,7 @@ export const getUserTrades = action({
     user: v.string(),
     limit: v.optional(v.number()),
     offset: v.optional(v.number()),
-    side: v.optional(v.union(v.literal('BUY'), v.literal('SELL'))),
+    side: v.optional(v.union(v.literal("BUY"), v.literal("SELL"))),
   },
   returns: v.any(),
   handler: async (ctx, args) => {
@@ -183,7 +183,7 @@ export const getClosedPositions = action({
     limit: v.optional(v.number()),
     offset: v.optional(v.number()),
     sortBy: v.optional(v.string()),
-    sortDirection: v.optional(v.union(v.literal('ASC'), v.literal('DESC'))),
+    sortDirection: v.optional(v.union(v.literal("ASC"), v.literal("DESC"))),
   },
   returns: v.any(),
   handler: async (ctx, args) => {

@@ -19,14 +19,14 @@ src/
 
 ## WHERE TO LOOK
 
-| Task | Location |
-|------|----------|
-| Change trade filters | `src/domain/market/filters.ts` |
-| Add new market filter | `src/domain/market/ai-filter.ts` |
+| Task                      | Location                                      |
+| ------------------------- | --------------------------------------------- |
+| Change trade filters      | `src/domain/market/filters.ts`                |
+| Add new market filter     | `src/domain/market/ai-filter.ts`              |
 | Modify WebSocket handling | `src/services/polymarket/WebSocketService.ts` |
-| Change Convex mutations | `src/services/data/ConvexDataService.ts` |
-| Adjust constants | `src/config/constants.ts` |
-| Modify layer composition | `src/layers/AppLayers.ts` |
+| Change Convex mutations   | `src/services/data/ConvexDataService.ts`      |
+| Adjust constants          | `src/config/constants.ts`                     |
+| Modify layer composition  | `src/layers/AppLayers.ts`                     |
 
 ## EFFECT.TS PATTERNS
 
@@ -49,12 +49,12 @@ BunRuntime.runMain(program.pipe(Effect.provide(AppLayer)));
 
 ## KEY SERVICES
 
-| Service | Purpose |
-|---------|---------|
-| `DataService` | Local CSV storage (backup), load/save/prune |
-| `ConvexDataService` | Push trades to Convex, triggers AI analysis |
-| `WebSocketService` | Connect to Polymarket WS, filter + forward trades |
-| `HistoricalService` | Fetch historical trades on startup |
+| Service             | Purpose                                           |
+| ------------------- | ------------------------------------------------- |
+| `DataService`       | Local CSV storage (backup), load/save/prune       |
+| `ConvexDataService` | Push trades to Convex, triggers AI analysis       |
+| `WebSocketService`  | Connect to Polymarket WS, filter + forward trades |
+| `HistoricalService` | Fetch historical trades on startup                |
 
 ## DATA FLOW
 

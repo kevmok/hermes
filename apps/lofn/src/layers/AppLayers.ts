@@ -1,7 +1,7 @@
-import { Layer } from 'effect';
-import { FetchHttpClient } from '@effect/platform';
-import { DataLayer } from '../services/data';
-import { ConvexDataLayer } from '../services/data/ConvexDataService';
+import { Layer } from "effect";
+import { FetchHttpClient } from "@effect/platform";
+import { DataLayer } from "../services/data";
+import { ConvexDataLayer } from "../services/data/ConvexDataService";
 
 // Compose all application layers
 // DataLayer = local CSV storage (backup)

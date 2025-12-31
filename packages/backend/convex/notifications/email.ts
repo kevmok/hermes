@@ -1,28 +1,31 @@
-import { v } from 'convex/values';
+import { v } from "convex/values";
 import {
   internalAction,
   internalMutation,
   internalQuery,
-} from '../_generated/server';
-import { internal } from '../_generated/api';
-import { Resend } from '@convex-dev/resend';
-import { components } from '../_generated/api';
-import type { Id } from '../_generated/dataModel';
+} from "../_generated/server";
+import { internal } from "../_generated/api";
+import { Resend } from "@convex-dev/resend";
+import { components } from "../_generated/api";
+import type { Id } from "../_generated/dataModel";
 
 const resend = new Resend(components.resend, {});
 
-const FROM_EMAIL = 'Hermes <alerts@hermes.trading>';
-const DASHBOARD_URL = 'https://hermes.trading/dashboard';
+const FROM_EMAIL = "Hermes <alerts@hermes.trading>";
+const DASHBOARD_URL = "https://hermes.trading/dashboard";
 
 export const sendSignalAlert = internalAction({
   args: {
-    signalId: v.id('signals'),
+    signalId: v.id("signals"),
   },
   returns: v.object({ sent: v.number(), skipped: v.number() }),
   handler: async (ctx, args): Promise<{ sent: number; skipped: number }> => {
-    const signal = await ctx.runQuery(internal.signals.getSignalWithPredictionsInternal, {
-      signalId: args.signalId,
-    });
+    const signal = await ctx.runQuery(
+      internal.signals.getSignalWithPredictionsInternal,
+      {
+        signalId: args.signalId,
+      },
+    );
 
     if (!signal) return { sent: 0, skipped: 0 };
 
@@ -30,7 +33,7 @@ export const sendSignalAlert = internalAction({
       internal.notifications.email.getEligibleUsersForAlert,
       {
         consensusPercentage: signal.consensusPercentage,
-        category: signal.marketCategory ?? 'general',
+        category: signal.marketCategory ?? "general",
       },
     );
 
@@ -61,7 +64,7 @@ export const sendSignalAlert = internalAction({
         await ctx.runMutation(internal.notifications.email.logAlert, {
           userId: user.userId,
           signalId: args.signalId,
-          channel: 'email',
+          channel: "email",
         });
 
         sent++;
@@ -81,14 +84,17 @@ export const sendDailyDigest = internalAction({
     const currentHourUTC = new Date().getUTCHours();
     const users = await ctx.runQuery(
       internal.notifications.email.getUsersForDigest,
-      { frequency: 'daily', hourUTC: currentHourUTC },
+      { frequency: "daily", hourUTC: currentHourUTC },
     );
 
     const oneDayAgo = Date.now() - 24 * 60 * 60 * 1000;
-    const signals = await ctx.runQuery(internal.signals.getSignalsSinceInternal, {
-      since: oneDayAgo,
-      limit: 10,
-    });
+    const signals = await ctx.runQuery(
+      internal.signals.getSignalsSinceInternal,
+      {
+        since: oneDayAgo,
+        limit: 10,
+      },
+    );
 
     if (signals.length === 0) return { sent: 0 };
 
@@ -126,14 +132,17 @@ export const sendWeeklyDigest = internalAction({
   handler: async (ctx): Promise<{ sent: number }> => {
     const users = await ctx.runQuery(
       internal.notifications.email.getUsersForDigest,
-      { frequency: 'weekly', hourUTC: 9 },
+      { frequency: "weekly", hourUTC: 9 },
     );
 
     const oneWeekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
-    const signals = await ctx.runQuery(internal.signals.getSignalsSinceInternal, {
-      since: oneWeekAgo,
-      limit: 20,
-    });
+    const signals = await ctx.runQuery(
+      internal.signals.getSignalsSinceInternal,
+      {
+        since: oneWeekAgo,
+        limit: 20,
+      },
+    );
 
     const stats = await ctx.runQuery(
       internal.performanceMetrics.getPerformanceStatsInternal,
@@ -170,29 +179,29 @@ export const getEligibleUsersForAlert = internalQuery({
   },
   returns: v.array(
     v.object({
-      userId: v.id('user'),
+      userId: v.id("user"),
       email: v.string(),
     }),
   ),
   handler: async (
     ctx,
     args,
-  ): Promise<Array<{ userId: Id<'user'>; email: string }>> => {
+  ): Promise<Array<{ userId: Id<"user">; email: string }>> => {
     const prefs = await ctx.db
-      .query('userPreferences')
+      .query("userPreferences")
       .filter((q) =>
         q.and(
-          q.eq(q.field('emailAlerts'), true),
-          q.eq(q.field('digestFrequency'), 'instant'),
+          q.eq(q.field("emailAlerts"), true),
+          q.eq(q.field("digestFrequency"), "instant"),
         ),
       )
       .collect();
 
     const eligiblePrefs = prefs.filter((pref) => {
       const meetsThreshold =
-        pref.alertThreshold === 'all' ||
-        (pref.alertThreshold === 'medium' && args.consensusPercentage >= 60) ||
-        (pref.alertThreshold === 'high' && args.consensusPercentage >= 80);
+        pref.alertThreshold === "all" ||
+        (pref.alertThreshold === "medium" && args.consensusPercentage >= 60) ||
+        (pref.alertThreshold === "high" && args.consensusPercentage >= 80);
 
       const meetsCategory =
         pref.categories.length === 0 || pref.categories.includes(args.category);
@@ -208,32 +217,34 @@ export const getEligibleUsersForAlert = internalQuery({
     );
 
     return users.filter(
-      (u): u is { userId: Id<'user'>; email: string } => u !== null,
+      (u): u is { userId: Id<"user">; email: string } => u !== null,
     );
   },
 });
 
 export const getUsersForDigest = internalQuery({
   args: {
-    frequency: v.union(v.literal('daily'), v.literal('weekly')),
+    frequency: v.union(v.literal("daily"), v.literal("weekly")),
     hourUTC: v.number(),
   },
   returns: v.array(
     v.object({
-      userId: v.id('user'),
+      userId: v.id("user"),
       email: v.string(),
     }),
   ),
   handler: async (
     ctx,
     args,
-  ): Promise<Array<{ userId: Id<'user'>; email: string }>> => {
+  ): Promise<Array<{ userId: Id<"user">; email: string }>> => {
     const prefs = await ctx.db
-      .query('userPreferences')
-      .withIndex('by_digest', (q) =>
-        q.eq('digestFrequency', args.frequency).eq('digestHourUTC', args.hourUTC),
+      .query("userPreferences")
+      .withIndex("by_digest", (q) =>
+        q
+          .eq("digestFrequency", args.frequency)
+          .eq("digestHourUTC", args.hourUTC),
       )
-      .filter((q) => q.eq(q.field('emailAlerts'), true))
+      .filter((q) => q.eq(q.field("emailAlerts"), true))
       .collect();
 
     const users = await Promise.all(
@@ -244,22 +255,22 @@ export const getUsersForDigest = internalQuery({
     );
 
     return users.filter(
-      (u): u is { userId: Id<'user'>; email: string } => u !== null,
+      (u): u is { userId: Id<"user">; email: string } => u !== null,
     );
   },
 });
 
 export const hasAlertBeenSent = internalQuery({
   args: {
-    userId: v.id('user'),
-    signalId: v.id('signals'),
+    userId: v.id("user"),
+    signalId: v.id("signals"),
   },
   returns: v.boolean(),
   handler: async (ctx, args): Promise<boolean> => {
     const existing = await ctx.db
-      .query('alertLog')
-      .withIndex('by_user_signal', (q) =>
-        q.eq('userId', args.userId).eq('signalId', args.signalId),
+      .query("alertLog")
+      .withIndex("by_user_signal", (q) =>
+        q.eq("userId", args.userId).eq("signalId", args.signalId),
       )
       .first();
     return existing !== null;
@@ -268,13 +279,13 @@ export const hasAlertBeenSent = internalQuery({
 
 export const logAlert = internalMutation({
   args: {
-    userId: v.id('user'),
-    signalId: v.id('signals'),
-    channel: v.union(v.literal('email'), v.literal('digest')),
+    userId: v.id("user"),
+    signalId: v.id("signals"),
+    channel: v.union(v.literal("email"), v.literal("digest")),
   },
   returns: v.null(),
   handler: async (ctx, args): Promise<null> => {
-    await ctx.db.insert('alertLog', {
+    await ctx.db.insert("alertLog", {
       userId: args.userId,
       signalId: args.signalId,
       channel: args.channel,
@@ -285,7 +296,7 @@ export const logAlert = internalMutation({
 });
 
 function buildSignalAlertHtml(signal: {
-  _id: Id<'signals'>;
+  _id: Id<"signals">;
   consensusDecision: string;
   consensusPercentage: number;
   confidenceLevel: string;
@@ -294,11 +305,11 @@ function buildSignalAlertHtml(signal: {
   market?: { title: string } | null;
 }): string {
   const decisionColor =
-    signal.consensusDecision === 'YES'
-      ? '#10b981'
-      : signal.consensusDecision === 'NO'
-        ? '#ef4444'
-        : '#f59e0b';
+    signal.consensusDecision === "YES"
+      ? "#10b981"
+      : signal.consensusDecision === "NO"
+        ? "#ef4444"
+        : "#f59e0b";
 
   const keyFactorsHtml = signal.aggregatedKeyFactors?.length
     ? `
@@ -307,10 +318,10 @@ function buildSignalAlertHtml(signal: {
         ${signal.aggregatedKeyFactors
           .slice(0, 3)
           .map((f) => `<li style="margin-bottom: 4px;">${f}</li>`)
-          .join('')}
+          .join("")}
       </ul>
     `
-    : '';
+    : "";
 
   return `
     <!DOCTYPE html>
@@ -326,7 +337,7 @@ function buildSignalAlertHtml(signal: {
         </div>
         <div style="background: white; padding: 24px; border-radius: 0 0 12px 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
           <h2 style="margin-top: 0; color: #1e293b; font-size: 18px; line-height: 1.4;">
-            ${signal.market?.title ?? 'Unknown Market'}
+            ${signal.market?.title ?? "Unknown Market"}
           </h2>
           
           <div style="margin: 16px 0;">
@@ -339,7 +350,7 @@ function buildSignalAlertHtml(signal: {
           </div>
           
           <p style="color: #475569; line-height: 1.6;">
-            ${signal.aggregatedReasoning?.slice(0, 250) ?? ''}...
+            ${signal.aggregatedReasoning?.slice(0, 250) ?? ""}...
           </p>
           
           ${keyFactorsHtml}
@@ -364,7 +375,7 @@ function buildSignalAlertHtml(signal: {
 
 function buildDailyDigestHtml(
   signals: Array<{
-    _id: Id<'signals'>;
+    _id: Id<"signals">;
     consensusDecision: string;
     consensusPercentage: number;
     market?: { title: string } | null;
@@ -375,16 +386,16 @@ function buildDailyDigestHtml(
     .slice(0, 5)
     .map((s) => {
       const color =
-        s.consensusDecision === 'YES'
-          ? '#10b981'
-          : s.consensusDecision === 'NO'
-            ? '#ef4444'
-            : '#f59e0b';
+        s.consensusDecision === "YES"
+          ? "#10b981"
+          : s.consensusDecision === "NO"
+            ? "#ef4444"
+            : "#f59e0b";
       return `
         <tr>
           <td style="padding: 12px; border-bottom: 1px solid #e2e8f0;">
             <a href="${DASHBOARD_URL}/trades/${s._id}" style="color: #1e293b; text-decoration: none; font-weight: 500;">
-              ${s.market?.title?.slice(0, 60) ?? 'Unknown'}...
+              ${s.market?.title?.slice(0, 60) ?? "Unknown"}...
             </a>
           </td>
           <td style="padding: 12px; border-bottom: 1px solid #e2e8f0; text-align: center;">
@@ -396,7 +407,7 @@ function buildDailyDigestHtml(
         </tr>
       `;
     })
-    .join('');
+    .join("");
 
   return `
     <!DOCTYPE html>
@@ -457,7 +468,7 @@ function buildDailyDigestHtml(
 
 function buildWeeklyDigestHtml(
   signals: Array<{
-    _id: Id<'signals'>;
+    _id: Id<"signals">;
     consensusDecision: string;
     consensusPercentage: number;
     market?: { title: string } | null;
@@ -510,15 +521,15 @@ function buildWeeklyDigestHtml(
           ${topSignals
             .map((s) => {
               const color =
-                s.consensusDecision === 'YES'
-                  ? '#10b981'
-                  : s.consensusDecision === 'NO'
-                    ? '#ef4444'
-                    : '#f59e0b';
+                s.consensusDecision === "YES"
+                  ? "#10b981"
+                  : s.consensusDecision === "NO"
+                    ? "#ef4444"
+                    : "#f59e0b";
               return `
               <div style="padding: 12px; border-left: 3px solid ${color}; background: #f8fafc; margin-bottom: 8px; border-radius: 0 8px 8px 0;">
                 <a href="${DASHBOARD_URL}/trades/${s._id}" style="color: #1e293b; text-decoration: none; font-weight: 500;">
-                  ${s.market?.title?.slice(0, 50) ?? 'Unknown'}...
+                  ${s.market?.title?.slice(0, 50) ?? "Unknown"}...
                 </a>
                 <div style="color: ${color}; font-size: 12px; margin-top: 4px;">
                   ${s.consensusDecision} (${s.consensusPercentage.toFixed(0)}%)
@@ -526,7 +537,7 @@ function buildWeeklyDigestHtml(
               </div>
             `;
             })
-            .join('')}
+            .join("")}
           
           <a href="${DASHBOARD_URL}" 
              style="display: block; text-align: center; background: #7c3aed; color: white; padding: 14px; border-radius: 8px; text-decoration: none; font-weight: 600; margin-top: 24px;">

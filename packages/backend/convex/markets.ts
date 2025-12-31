@@ -1,11 +1,11 @@
-import { v } from 'convex/values';
+import { v } from "convex/values";
 import {
   internalMutation,
   internalQuery,
   mutation,
   query,
-} from './_generated/server';
-import { internal } from './_generated/api';
+} from "./_generated/server";
+import { internal } from "./_generated/api";
 
 // ============ COLLECTOR MUTATIONS (called by lofn collector service) ============
 // These are public mutations for the collector service to call via ConvexHttpClient.
@@ -15,7 +15,7 @@ import { internal } from './_generated/api';
 const tradeContextValidator = v.object({
   size: v.number(),
   price: v.number(),
-  side: v.union(v.literal('YES'), v.literal('NO')),
+  side: v.union(v.literal("YES"), v.literal("NO")),
   taker: v.optional(v.string()),
   timestamp: v.number(),
 });
@@ -32,9 +32,9 @@ export const upsertMarket = mutation({
   },
   handler: async (ctx, args) => {
     const existing = await ctx.db
-      .query('markets')
-      .withIndex('by_polymarket_id', (q) =>
-        q.eq('polymarketId', args.polymarketId),
+      .query("markets")
+      .withIndex("by_polymarket_id", (q) =>
+        q.eq("polymarketId", args.polymarketId),
       )
       .first();
 
@@ -49,7 +49,7 @@ export const upsertMarket = mutation({
       return existing._id;
     }
 
-    const marketId = await ctx.db.insert('markets', {
+    const marketId = await ctx.db.insert("markets", {
       ...args,
       createdAt: now,
       updatedAt: now,
@@ -78,9 +78,9 @@ export const upsertMarketWithTrade = mutation({
     const { tradeContext, ...marketArgs } = args;
 
     const existing = await ctx.db
-      .query('markets')
-      .withIndex('by_polymarket_id', (q) =>
-        q.eq('polymarketId', args.polymarketId),
+      .query("markets")
+      .withIndex("by_polymarket_id", (q) =>
+        q.eq("polymarketId", args.polymarketId),
       )
       .first();
 
@@ -95,7 +95,7 @@ export const upsertMarketWithTrade = mutation({
       });
       marketId = existing._id;
     } else {
-      marketId = await ctx.db.insert('markets', {
+      marketId = await ctx.db.insert("markets", {
         ...marketArgs,
         createdAt: now,
         updatedAt: now,
@@ -112,7 +112,7 @@ export const upsertMarketWithTrade = mutation({
       });
     } catch (error) {
       // Log but don't fail - market upsert succeeded
-      console.error('Failed to schedule signal analysis:', { marketId, error });
+      console.error("Failed to schedule signal analysis:", { marketId, error });
     }
 
     return marketId;
@@ -139,9 +139,9 @@ export const upsertMarketsBatch = mutation({
 
     for (const market of args.markets) {
       const existing = await ctx.db
-        .query('markets')
-        .withIndex('by_polymarket_id', (q) =>
-          q.eq('polymarketId', market.polymarketId),
+        .query("markets")
+        .withIndex("by_polymarket_id", (q) =>
+          q.eq("polymarketId", market.polymarketId),
         )
         .first();
 
@@ -153,7 +153,7 @@ export const upsertMarketsBatch = mutation({
         });
         results.push(existing._id);
       } else {
-        const id = await ctx.db.insert('markets', {
+        const id = await ctx.db.insert("markets", {
           ...market,
           createdAt: now,
           updatedAt: now,
@@ -169,13 +169,13 @@ export const upsertMarketsBatch = mutation({
 
 export const recordSnapshot = mutation({
   args: {
-    marketId: v.id('markets'),
+    marketId: v.id("markets"),
     yesPrice: v.number(),
     noPrice: v.number(),
     volume: v.number(),
   },
   handler: async (ctx, args) => {
-    return await ctx.db.insert('marketSnapshots', {
+    return await ctx.db.insert("marketSnapshots", {
       ...args,
       timestamp: Date.now(),
     });
@@ -183,7 +183,7 @@ export const recordSnapshot = mutation({
 });
 
 export const markMarketAnalyzed = mutation({
-  args: { marketId: v.id('markets') },
+  args: { marketId: v.id("markets") },
   handler: async (ctx, args) => {
     await ctx.db.patch(args.marketId, {
       lastAnalyzedAt: Date.now(),
@@ -194,7 +194,7 @@ export const markMarketAnalyzed = mutation({
 // ============ INTERNAL QUERIES ============
 
 export const getMarketById = internalQuery({
-  args: { marketId: v.id('markets') },
+  args: { marketId: v.id("markets") },
   handler: async (ctx, args) => {
     return await ctx.db.get(args.marketId);
   },
@@ -204,9 +204,9 @@ export const getUnresolvedMarkets = internalQuery({
   args: { limit: v.optional(v.number()) },
   handler: async (ctx, args) => {
     return ctx.db
-      .query('markets')
-      .withIndex('by_active', (q) => q.eq('isActive', true))
-      .filter((q) => q.eq(q.field('outcome'), undefined))
+      .query("markets")
+      .withIndex("by_active", (q) => q.eq("isActive", true))
+      .filter((q) => q.eq(q.field("outcome"), undefined))
       .take(args.limit ?? 100);
   },
 });
@@ -216,7 +216,7 @@ export const getMarketsByConditionIdsInternal = internalQuery({
   handler: async (ctx, args) => {
     if (args.conditionIds.length === 0) return [];
 
-    const markets = await ctx.db.query('markets').collect();
+    const markets = await ctx.db.query("markets").collect();
 
     return markets.filter(
       (m) => m.conditionId && args.conditionIds.includes(m.conditionId),
@@ -231,7 +231,7 @@ export const listActiveMarkets = query({
     limit: v.optional(v.number()),
     eventSlug: v.optional(v.string()),
     sortBy: v.optional(
-      v.union(v.literal('recent'), v.literal('analyzed'), v.literal('volume')),
+      v.union(v.literal("recent"), v.literal("analyzed"), v.literal("volume")),
     ),
   },
   handler: async (ctx, args) => {
@@ -241,19 +241,19 @@ export const listActiveMarkets = query({
     const eventSlug = args.eventSlug;
     if (eventSlug) {
       markets = await ctx.db
-        .query('markets')
-        .withIndex('by_event_slug', (q) => q.eq('eventSlug', eventSlug))
-        .filter((q) => q.eq(q.field('isActive'), true))
+        .query("markets")
+        .withIndex("by_event_slug", (q) => q.eq("eventSlug", eventSlug))
+        .filter((q) => q.eq(q.field("isActive"), true))
         .take(limit * 2);
     } else {
       markets = await ctx.db
-        .query('markets')
-        .withIndex('by_active', (q) => q.eq('isActive', true))
+        .query("markets")
+        .withIndex("by_active", (q) => q.eq("isActive", true))
         .take(limit * 2);
     }
 
     // Sort based on preference
-    if (args.sortBy === 'analyzed') {
+    if (args.sortBy === "analyzed") {
       markets.sort((a, b) => (b.lastAnalyzedAt ?? 0) - (a.lastAnalyzedAt ?? 0));
     } else {
       // Default: recent (by lastTradeAt) - also used for 'volume' since markets don't store volume
@@ -265,7 +265,7 @@ export const listActiveMarkets = query({
 });
 
 export const getMarket = query({
-  args: { marketId: v.union(v.id('markets'), v.null()) },
+  args: { marketId: v.union(v.id("markets"), v.null()) },
   handler: async (ctx, args) => {
     if (!args.marketId) return null;
     return await ctx.db.get(args.marketId);
@@ -276,9 +276,9 @@ export const getMarketByPolymarketId = query({
   args: { polymarketId: v.string() },
   handler: async (ctx, args) => {
     return await ctx.db
-      .query('markets')
-      .withIndex('by_polymarket_id', (q) =>
-        q.eq('polymarketId', args.polymarketId),
+      .query("markets")
+      .withIndex("by_polymarket_id", (q) =>
+        q.eq("polymarketId", args.polymarketId),
       )
       .first();
   },
@@ -286,7 +286,7 @@ export const getMarketByPolymarketId = query({
 
 export const getMarketSnapshots = query({
   args: {
-    marketId: v.id('markets'),
+    marketId: v.id("markets"),
     since: v.optional(v.number()),
     limit: v.optional(v.number()),
   },
@@ -294,9 +294,9 @@ export const getMarketSnapshots = query({
     const since = args.since ?? Date.now() - 24 * 60 * 60 * 1000; // Default 24h
 
     return await ctx.db
-      .query('marketSnapshots')
-      .withIndex('by_market_time', (q) =>
-        q.eq('marketId', args.marketId).gte('timestamp', since),
+      .query("marketSnapshots")
+      .withIndex("by_market_time", (q) =>
+        q.eq("marketId", args.marketId).gte("timestamp", since),
       )
       .take(args.limit ?? 500);
   },
@@ -310,8 +310,8 @@ export const searchMarkets = query({
 
     // Simple search - for production, consider Convex search indexes
     const markets = await ctx.db
-      .query('markets')
-      .withIndex('by_active', (q) => q.eq('isActive', true))
+      .query("markets")
+      .withIndex("by_active", (q) => q.eq("isActive", true))
       .take(1000);
 
     return markets
@@ -323,7 +323,7 @@ export const searchMarkets = query({
 // ============ PUBLIC MUTATIONS ============
 
 export const deactivateMarket = mutation({
-  args: { marketId: v.id('markets') },
+  args: { marketId: v.id("markets") },
   handler: async (ctx, args) => {
     await ctx.db.patch(args.marketId, {
       isActive: false,
@@ -336,11 +336,11 @@ export const deactivateMarket = mutation({
 
 export const updateMarketOutcome = internalMutation({
   args: {
-    marketId: v.id('markets'),
+    marketId: v.id("markets"),
     outcome: v.union(
-      v.literal('YES'),
-      v.literal('NO'),
-      v.literal('INVALID'),
+      v.literal("YES"),
+      v.literal("NO"),
+      v.literal("INVALID"),
       v.null(),
     ),
   },
@@ -365,15 +365,15 @@ export const getResolvedMarkets = query({
     const limit = args.limit ?? 100;
 
     const markets = await ctx.db
-      .query('markets')
-      .withIndex('by_resolved')
+      .query("markets")
+      .withIndex("by_resolved")
       .filter((q) =>
         q.and(
-          q.neq(q.field('outcome'), undefined),
-          args.since ? q.gte(q.field('resolvedAt'), args.since) : true,
+          q.neq(q.field("outcome"), undefined),
+          args.since ? q.gte(q.field("resolvedAt"), args.since) : true,
         ),
       )
-      .order('desc')
+      .order("desc")
       .take(limit);
 
     return markets;
@@ -387,17 +387,17 @@ export const getUnresolvedMarketsWithSignals = query({
   handler: async (ctx, args) => {
     // Get active markets that have signals but no outcome yet
     const activeMarkets = await ctx.db
-      .query('markets')
-      .withIndex('by_active', (q) => q.eq('isActive', true))
-      .filter((q) => q.eq(q.field('outcome'), undefined))
+      .query("markets")
+      .withIndex("by_active", (q) => q.eq("isActive", true))
+      .filter((q) => q.eq(q.field("outcome"), undefined))
       .take(args.limit ?? 100);
 
     // Check signals in parallel (avoid N+1)
     const marketsWithSignalStatus = await Promise.all(
       activeMarkets.map(async (market) => {
         const hasSignal = await ctx.db
-          .query('signals')
-          .withIndex('by_market', (q) => q.eq('marketId', market._id))
+          .query("signals")
+          .withIndex("by_market", (q) => q.eq("marketId", market._id))
           .first();
         return { market, hasSignal: !!hasSignal };
       }),

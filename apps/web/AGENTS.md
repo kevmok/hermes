@@ -28,14 +28,14 @@ src/
 
 ## WHERE TO LOOK
 
-| Task | Location |
-|------|----------|
-| Add dashboard page | `src/routes/dashboard/` - create `pagename/route.tsx` |
-| Add UI component | `src/components/ui/` - shadcn pattern |
-| Add Convex query | `src/lib/queries/` - query factory |
-| Modify auth | `src/lib/auth/` - client.ts or server.ts |
-| Change theme | `src/lib/theme/` |
-| Add route loader | In route file: `export const Route = createFileRoute(...)` |
+| Task               | Location                                                   |
+| ------------------ | ---------------------------------------------------------- |
+| Add dashboard page | `src/routes/dashboard/` - create `pagename/route.tsx`      |
+| Add UI component   | `src/components/ui/` - shadcn pattern                      |
+| Add Convex query   | `src/lib/queries/` - query factory                         |
+| Modify auth        | `src/lib/auth/` - client.ts or server.ts                   |
+| Change theme       | `src/lib/theme/`                                           |
+| Add route loader   | In route file: `export const Route = createFileRoute(...)` |
 
 ## ROUTING (TanStack Router)
 
@@ -72,12 +72,12 @@ await mutation({ marketId, ... });
 
 ## DASHBOARD PAGES
 
-| Route | Purpose |
-|-------|---------|
-| `/dashboard` | Overview with stats |
-| `/dashboard/signals` | AI signal feed |
-| `/dashboard/trades` | Trade history |
-| `/dashboard/markets` | Market browser |
-| `/dashboard/events` | Event listings |
-| `/dashboard/watchlist` | User watchlist |
-| `/dashboard/settings` | User settings |
+| Route                  | Purpose             |
+| ---------------------- | ------------------- |
+| `/dashboard`           | Overview with stats |
+| `/dashboard/signals`   | AI signal feed      |
+| `/dashboard/trades`    | Trade history       |
+| `/dashboard/markets`   | Market browser      |
+| `/dashboard/events`    | Event listings      |
+| `/dashboard/watchlist` | User watchlist      |
+| `/dashboard/settings`  | User settings       |

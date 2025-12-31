@@ -1,13 +1,13 @@
-import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { useMutation } from 'convex/react';
-import { convexQuery } from '@convex-dev/react-query';
-import { api } from 'backend/convex/_generated/api';
-import type { Id } from 'backend/convex/_generated/dataModel';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { HugeiconsIcon } from '@hugeicons/react';
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useMutation } from "convex/react";
+import { convexQuery } from "@convex-dev/react-query";
+import { api } from "backend/convex/_generated/api";
+import type { Id } from "backend/convex/_generated/dataModel";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { HugeiconsIcon } from "@hugeicons/react";
 import {
   Search01Icon,
   Loading03Icon,
@@ -15,21 +15,21 @@ import {
   AlertCircleIcon,
   News01Icon,
   LinkSquare01Icon,
-} from '@hugeicons/core-free-icons';
+} from "@hugeicons/core-free-icons";
 
 interface DeepDivePanelProps {
-  marketId: Id<'markets'>;
+  marketId: Id<"markets">;
   marketTitle: string;
 }
 
-type DeepDiveStatus = 'pending' | 'processing' | 'completed' | 'failed';
+type DeepDiveStatus = "pending" | "processing" | "completed" | "failed";
 
 interface NewsItem {
   title: string;
   url: string;
   source: string;
   summary: string;
-  sentiment: 'positive' | 'negative' | 'neutral';
+  sentiment: "positive" | "negative" | "neutral";
 }
 
 interface DeepDiveResult {
@@ -45,7 +45,7 @@ interface DeepDiveResult {
 }
 
 interface DeepDiveRequest {
-  _id: Id<'deepDiveRequests'>;
+  _id: Id<"deepDiveRequests">;
   status: DeepDiveStatus;
   result?: DeepDiveResult;
   errorMessage?: string;
@@ -55,21 +55,18 @@ interface DeepDiveRequest {
 
 export function DeepDivePanel({ marketId, marketTitle }: DeepDivePanelProps) {
   const { data: credits } = useQuery(convexQuery(api.deepDive.getCredits, {}));
-  const [requestId, setRequestId] = useState<Id<'deepDiveRequests'> | null>(
+  const [requestId, setRequestId] = useState<Id<"deepDiveRequests"> | null>(
     null,
   );
 
   const { data: deepDiveResult } = useQuery({
     ...convexQuery(
       api.deepDive.getDeepDiveResult,
-      requestId ? { requestId } : 'skip',
+      requestId ? { requestId } : "skip",
     ),
     refetchInterval: (query) => {
       const data = query.state.data as DeepDiveRequest | null | undefined;
-      if (
-        data &&
-        (data.status === 'pending' || data.status === 'processing')
-      ) {
+      if (data && (data.status === "pending" || data.status === "processing")) {
         return 2000;
       }
       return false;
@@ -86,7 +83,7 @@ export function DeepDivePanel({ marketId, marketTitle }: DeepDivePanelProps) {
       const id = await requestDeepDive({ marketId });
       setRequestId(id);
     } catch (error) {
-      console.error('Failed to request deep dive:', error);
+      console.error("Failed to request deep dive:", error);
     } finally {
       setIsRequesting(false);
     }
@@ -95,10 +92,10 @@ export function DeepDivePanel({ marketId, marketTitle }: DeepDivePanelProps) {
   const result = deepDiveResult as DeepDiveRequest | null | undefined;
   const isLoading =
     isRequesting ||
-    result?.status === 'pending' ||
-    result?.status === 'processing';
-  const isComplete = result?.status === 'completed';
-  const isFailed = result?.status === 'failed';
+    result?.status === "pending" ||
+    result?.status === "processing";
+  const isComplete = result?.status === "completed";
+  const isFailed = result?.status === "failed";
 
   return (
     <Card>
@@ -162,7 +159,7 @@ export function DeepDivePanel({ marketId, marketTitle }: DeepDivePanelProps) {
             />
             <p className="text-sm text-destructive">Research failed</p>
             <p className="text-xs text-muted-foreground">
-              {result?.errorMessage ?? 'Unknown error'}
+              {result?.errorMessage ?? "Unknown error"}
             </p>
             <Button variant="outline" size="sm" onClick={handleRequestDeepDive}>
               Try Again
@@ -181,10 +178,10 @@ export function DeepDivePanel({ marketId, marketTitle }: DeepDivePanelProps) {
 function DeepDiveResults({ result }: { result: DeepDiveResult }) {
   const sentimentColor =
     result.socialSentiment.score > 0.2
-      ? 'text-green-600 dark:text-green-400'
+      ? "text-green-600 dark:text-green-400"
       : result.socialSentiment.score < -0.2
-        ? 'text-red-600 dark:text-red-400'
-        : 'text-muted-foreground';
+        ? "text-red-600 dark:text-red-400"
+        : "text-muted-foreground";
 
   return (
     <div className="space-y-4">
@@ -205,10 +202,12 @@ function DeepDiveResults({ result }: { result: DeepDiveResult }) {
           <h4 className="text-sm font-medium">Social Sentiment</h4>
           <div className="flex items-center gap-3">
             <span className={`text-lg font-bold ${sentimentColor}`}>
-              {result.socialSentiment.score > 0 ? '+' : ''}
+              {result.socialSentiment.score > 0 ? "+" : ""}
               {(result.socialSentiment.score * 100).toFixed(0)}%
             </span>
-            <Badge variant="outline">{result.socialSentiment.volume} Volume</Badge>
+            <Badge variant="outline">
+              {result.socialSentiment.volume} Volume
+            </Badge>
           </div>
         </div>
       )}
@@ -232,14 +231,14 @@ function DeepDiveResults({ result }: { result: DeepDiveResult }) {
                   <HugeiconsIcon icon={LinkSquare01Icon} size={12} />
                 </a>
                 <p className="text-xs text-muted-foreground mt-1">
-                  {news.source} •{' '}
+                  {news.source} •{" "}
                   <span
                     className={
-                      news.sentiment === 'positive'
-                        ? 'text-green-600'
-                        : news.sentiment === 'negative'
-                          ? 'text-red-600'
-                          : ''
+                      news.sentiment === "positive"
+                        ? "text-green-600"
+                        : news.sentiment === "negative"
+                          ? "text-red-600"
+                          : ""
                     }
                   >
                     {news.sentiment}

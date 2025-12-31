@@ -4,8 +4,8 @@
  * Provides type-safe query options for tracked events.
  * Events are derived from trades captured via WebSocket (not from Polymarket API).
  */
-import { convexQuery, convexAction } from '@convex-dev/react-query';
-import { api } from 'backend/convex/_generated/api';
+import { convexQuery, convexAction } from "@convex-dev/react-query";
+import { api } from "backend/convex/_generated/api";
 
 // Default stale time for events (30 seconds - events update from trades)
 const EVENTS_STALE_TIME = 1000 * 30;
@@ -20,12 +20,12 @@ export const eventsQueries = {
   /** List tracked events (from our database) */
   tracked: (options?: {
     limit?: number;
-    sortBy?: 'recent' | 'volume';
+    sortBy?: "recent" | "volume";
     activeOnly?: boolean;
   }) =>
     convexQuery(api.events.listTrackedEvents, {
       limit: options?.limit ?? 50,
-      sortBy: options?.sortBy ?? 'recent',
+      sortBy: options?.sortBy ?? "recent",
       activeOnly: options?.activeOnly ?? false,
     }),
 
@@ -74,7 +74,7 @@ export const eventsActions = {
       offset: options?.offset,
       active: options?.active ?? true,
       closed: options?.closed,
-      order: options?.order ?? 'volume24hr',
+      order: options?.order ?? "volume24hr",
       ascending: options?.ascending ?? false,
     }),
 } as const;

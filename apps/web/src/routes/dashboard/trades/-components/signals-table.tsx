@@ -1,5 +1,5 @@
-import * as React from 'react';
-import { useQuery } from '@tanstack/react-query';
+import * as React from "react";
+import { useQuery } from "@tanstack/react-query";
 import {
   type ColumnFiltersState,
   type SortingState,
@@ -10,8 +10,8 @@ import {
   getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
-} from '@tanstack/react-table';
-import { useNavigate } from '@tanstack/react-router';
+} from "@tanstack/react-table";
+import { useNavigate } from "@tanstack/react-router";
 
 import {
   Table,
@@ -20,27 +20,27 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Skeleton } from '@/components/ui/skeleton';
+} from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { signalsQueries } from '@/lib/queries';
-import { signalColumns, type Signal } from './signal-columns';
-import { DataEmpty, DataError } from '@/components/ui/data-states';
-import { Activity03Icon } from '@hugeicons/core-free-icons';
+} from "@/components/ui/select";
+import { signalsQueries } from "@/lib/queries";
+import { signalColumns, type Signal } from "./signal-columns";
+import { DataEmpty, DataError } from "@/components/ui/data-states";
+import { Activity03Icon } from "@hugeicons/core-free-icons";
 
 interface SearchFilters {
-  decision: 'YES' | 'NO' | 'NO_TRADE' | 'all';
-  confidence: 'high' | 'medium' | 'low' | 'all';
-  sort: 'timestamp' | 'confidence' | 'consensusPercentage';
-  order: 'asc' | 'desc';
+  decision: "YES" | "NO" | "NO_TRADE" | "all";
+  confidence: "high" | "medium" | "low" | "all";
+  sort: "timestamp" | "confidence" | "consensusPercentage";
+  order: "asc" | "desc";
   page: number;
 }
 
@@ -57,7 +57,7 @@ export function SignalsTable({ filters, onRowClick }: SignalsTableProps) {
   );
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({});
-  const [globalFilter, setGlobalFilter] = React.useState('');
+  const [globalFilter, setGlobalFilter] = React.useState("");
 
   const {
     data: signalsData,
@@ -67,15 +67,15 @@ export function SignalsTable({ filters, onRowClick }: SignalsTableProps) {
   } = useQuery(
     signalsQueries.paginated({
       limit: 50,
-      onlyHighConfidence: filters.confidence === 'high',
-      decision: filters.decision !== 'all' ? filters.decision : undefined,
+      onlyHighConfidence: filters.confidence === "high",
+      decision: filters.decision !== "all" ? filters.decision : undefined,
     }),
   );
 
   const data = React.useMemo(() => {
     const items = signalsData?.items ?? [];
     // Client-side filtering for confidence levels other than 'high'
-    if (filters.confidence !== 'all' && filters.confidence !== 'high') {
+    if (filters.confidence !== "all" && filters.confidence !== "high") {
       return items.filter(
         (s: Signal) => s.confidenceLevel === filters.confidence,
       );
@@ -94,7 +94,7 @@ export function SignalsTable({ filters, onRowClick }: SignalsTableProps) {
     getFilteredRowModel: getFilteredRowModel(),
     onColumnVisibilityChange: setColumnVisibility,
     onGlobalFilterChange: setGlobalFilter,
-    globalFilterFn: 'includesString',
+    globalFilterFn: "includesString",
     state: {
       sorting,
       columnFilters,
@@ -111,8 +111,8 @@ export function SignalsTable({ filters, onRowClick }: SignalsTableProps) {
   const handleDecisionChange = (value: string | null) => {
     if (value) {
       navigate({
-        to: '/dashboard/trades',
-        search: { ...filters, decision: value as SearchFilters['decision'] },
+        to: "/dashboard/trades",
+        search: { ...filters, decision: value as SearchFilters["decision"] },
       });
     }
   };
@@ -120,10 +120,10 @@ export function SignalsTable({ filters, onRowClick }: SignalsTableProps) {
   const handleConfidenceChange = (value: string | null) => {
     if (value) {
       navigate({
-        to: '/dashboard/trades',
+        to: "/dashboard/trades",
         search: {
           ...filters,
-          confidence: value as SearchFilters['confidence'],
+          confidence: value as SearchFilters["confidence"],
         },
       });
     }
@@ -131,16 +131,16 @@ export function SignalsTable({ filters, onRowClick }: SignalsTableProps) {
 
   if (isLoading) {
     return (
-      <div className='space-y-4'>
-        <div className='flex items-center gap-4'>
-          <Skeleton className='h-10 w-64' />
-          <Skeleton className='h-10 w-32' />
-          <Skeleton className='h-10 w-32' />
+      <div className="space-y-4">
+        <div className="flex items-center gap-4">
+          <Skeleton className="h-10 w-64" />
+          <Skeleton className="h-10 w-32" />
+          <Skeleton className="h-10 w-32" />
         </div>
-        <div className='rounded-lg border border-border overflow-hidden'>
-          <div className='space-y-2 p-4'>
+        <div className="rounded-lg border border-border overflow-hidden">
+          <div className="space-y-2 p-4">
             {Array.from({ length: 8 }).map((_, i) => (
-              <Skeleton key={i} className='h-14 w-full' />
+              <Skeleton key={i} className="h-14 w-full" />
             ))}
           </div>
         </div>
@@ -150,81 +150,81 @@ export function SignalsTable({ filters, onRowClick }: SignalsTableProps) {
 
   if (error) {
     return (
-      <DataError message='Failed to load signals' onRetry={() => refetch()} />
+      <DataError message="Failed to load signals" onRetry={() => refetch()} />
     );
   }
 
   if (!data.length) {
     return (
       <DataEmpty
-        title='No signals yet'
-        description='AI signals will appear here when whale trades trigger analysis.'
+        title="No signals yet"
+        description="AI signals will appear here when whale trades trigger analysis."
         icon={Activity03Icon}
       />
     );
   }
 
   return (
-    <div className='space-y-4'>
-      <div className='flex items-center gap-4 flex-wrap'>
+    <div className="space-y-4">
+      <div className="flex items-center gap-4 flex-wrap">
         <Input
-          placeholder='Search markets...'
+          placeholder="Search markets..."
           value={globalFilter}
           onChange={(e) => setGlobalFilter(e.target.value)}
-          className='max-w-sm bg-card border-border'
+          className="max-w-sm bg-card border-border"
         />
         <Select
           value={filters.decision}
           onValueChange={handleDecisionChange}
           items={{
-            all: 'All Decisions',
-            YES: 'YES',
-            NO: 'NO',
-            NO_TRADE: 'NO TRADE',
+            all: "All Decisions",
+            YES: "YES",
+            NO: "NO",
+            NO_TRADE: "NO TRADE",
           }}
         >
-          <SelectTrigger className='w-[140px] bg-card border-border'>
+          <SelectTrigger className="w-[140px] bg-card border-border">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value='all'>All Decisions</SelectItem>
-            <SelectItem value='YES'>YES</SelectItem>
-            <SelectItem value='NO'>NO</SelectItem>
-            <SelectItem value='NO_TRADE'>NO TRADE</SelectItem>
+            <SelectItem value="all">All Decisions</SelectItem>
+            <SelectItem value="YES">YES</SelectItem>
+            <SelectItem value="NO">NO</SelectItem>
+            <SelectItem value="NO_TRADE">NO TRADE</SelectItem>
           </SelectContent>
         </Select>
         <Select
           value={filters.confidence}
           onValueChange={handleConfidenceChange}
           items={{
-            all: 'All Confidence',
-            high: 'High',
-            medium: 'Medium',
-            low: 'Low',
+            all: "All Confidence",
+            high: "High",
+            medium: "Medium",
+            low: "Low",
           }}
         >
-          <SelectTrigger className='w-[140px] bg-card border-border'>
+          <SelectTrigger className="w-[140px] bg-card border-border">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value='all'>All Confidence</SelectItem>
-            <SelectItem value='high'>High</SelectItem>
-            <SelectItem value='medium'>Medium</SelectItem>
-            <SelectItem value='low'>Low</SelectItem>
+            <SelectItem value="all">All Confidence</SelectItem>
+            <SelectItem value="high">High</SelectItem>
+            <SelectItem value="medium">Medium</SelectItem>
+            <SelectItem value="low">Low</SelectItem>
           </SelectContent>
         </Select>
       </div>
 
-      <div className='rounded-lg border border-border overflow-hidden'>
+      <div className="rounded-lg border border-border overflow-hidden">
         <Table>
-          <TableHeader className='bg-muted/50'>
+          <TableHeader className="bg-muted/50">
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow
                 key={headerGroup.id}
-                className='border-border hover:bg-transparent'
+                className="border-border hover:bg-transparent"
               >
                 {headerGroup.headers.map((header) => (
-                  <TableHead key={header.id} className='text-muted-foreground'>
+                  <TableHead key={header.id} className="text-muted-foreground">
                     {header.isPlaceholder
                       ? null
                       : flexRender(
@@ -241,8 +241,8 @@ export function SignalsTable({ filters, onRowClick }: SignalsTableProps) {
               table.getRowModel().rows.map((row) => (
                 <TableRow
                   key={row.id}
-                  data-state={row.getIsSelected() && 'selected'}
-                  className='border-border hover:bg-muted/50 cursor-pointer'
+                  data-state={row.getIsSelected() && "selected"}
+                  className="border-border hover:bg-muted/50 cursor-pointer"
                   onClick={() => onRowClick(row.original._id)}
                 >
                   {row.getVisibleCells().map((cell) => (
@@ -259,7 +259,7 @@ export function SignalsTable({ filters, onRowClick }: SignalsTableProps) {
               <TableRow>
                 <TableCell
                   colSpan={signalColumns.length}
-                  className='h-24 text-center text-muted-foreground'
+                  className="h-24 text-center text-muted-foreground"
                 >
                   No signals found matching your filters.
                 </TableCell>
@@ -269,22 +269,22 @@ export function SignalsTable({ filters, onRowClick }: SignalsTableProps) {
         </Table>
       </div>
 
-      <div className='flex items-center justify-between'>
-        <p className='text-sm text-muted-foreground'>
+      <div className="flex items-center justify-between">
+        <p className="text-sm text-muted-foreground">
           Showing {table.getRowModel().rows.length} of {data.length} signals
         </p>
-        <div className='flex items-center gap-2'>
+        <div className="flex items-center gap-2">
           <Button
-            variant='outline'
-            size='sm'
+            variant="outline"
+            size="sm"
             onClick={() => table.previousPage()}
             disabled={!table.getCanPreviousPage()}
           >
             Previous
           </Button>
           <Button
-            variant='outline'
-            size='sm'
+            variant="outline"
+            size="sm"
             onClick={() => table.nextPage()}
             disabled={!table.getCanNextPage()}
           >

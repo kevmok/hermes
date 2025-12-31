@@ -1,6 +1,6 @@
-import { useState } from 'react';
-import { Link, useLocation, useRouter } from '@tanstack/react-router';
-import { HugeiconsIcon } from '@hugeicons/react';
+import { useState } from "react";
+import { Link, useLocation, useRouter } from "@tanstack/react-router";
+import { HugeiconsIcon } from "@hugeicons/react";
 import {
   Activity03Icon,
   Calendar03Icon,
@@ -12,49 +12,54 @@ import {
   Sun01Icon,
   Moon01Icon,
   Menu01Icon,
-} from '@hugeicons/core-free-icons';
-import { authClient } from '@/lib/auth/client';
-import { useTheme } from '@/lib/theme';
-import { Button } from '@/components/ui/button';
+} from "@hugeicons/core-free-icons";
+import { authClient } from "@/lib/auth/client";
+import { useTheme } from "@/lib/theme";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+} from "@/components/ui/dropdown-menu";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 
 const navItems = [
   {
-    title: 'Signals',
-    href: '/dashboard/trades',
+    title: "Signals",
+    href: "/dashboard/trades",
     icon: Activity03Icon,
-    description: 'Trade-triggered signals',
+    description: "Trade-triggered signals",
   },
   {
-    title: 'Events',
-    href: '/dashboard/events',
+    title: "Events",
+    href: "/dashboard/events",
     icon: Calendar03Icon,
-    description: 'Tracked market events',
+    description: "Tracked market events",
   },
   {
-    title: 'Performance',
-    href: '/dashboard/performance',
+    title: "Performance",
+    href: "/dashboard/performance",
     icon: Award01Icon,
-    description: 'Signal accuracy metrics',
+    description: "Signal accuracy metrics",
   },
   {
-    title: 'Portfolio',
-    href: '/dashboard/portfolio',
+    title: "Portfolio",
+    href: "/dashboard/portfolio",
     icon: Wallet01Icon,
-    description: 'Your tracked positions',
+    description: "Your tracked positions",
   },
   {
-    title: 'Whales',
-    href: '/dashboard/whales',
+    title: "Whales",
+    href: "/dashboard/whales",
     icon: UserMultiple02Icon,
-    description: 'Smart money tracking',
+    description: "Smart money tracking",
   },
 ];
 
@@ -78,10 +83,7 @@ export function Navbar() {
     <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="flex h-14 items-center px-4 md:px-6">
         {/* Logo */}
-        <Link 
-          to="/dashboard" 
-          className="flex items-center gap-2 mr-6 shrink-0"
-        >
+        <Link to="/dashboard" className="flex items-center gap-2 mr-6 shrink-0">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 border border-primary/20">
             <span className="text-lg font-bold text-primary">H</span>
           </div>
@@ -101,9 +103,10 @@ export function Navbar() {
                 className={`
                   flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium
                   transition-colors relative
-                  ${isActive 
-                    ? 'text-foreground bg-muted' 
-                    : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+                  ${
+                    isActive
+                      ? "text-foreground bg-muted"
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                   }
                 `}
               >
@@ -144,17 +147,23 @@ export function Navbar() {
             <DropdownMenuContent align="end">
               <DropdownMenuRadioGroup
                 value={theme}
-                onValueChange={(value) => setTheme(value as 'light' | 'dark' | 'system')}
+                onValueChange={(value) =>
+                  setTheme(value as "light" | "dark" | "system")
+                }
               >
-                <DropdownMenuRadioItem value="light">Light</DropdownMenuRadioItem>
+                <DropdownMenuRadioItem value="light">
+                  Light
+                </DropdownMenuRadioItem>
                 <DropdownMenuRadioItem value="dark">Dark</DropdownMenuRadioItem>
-                <DropdownMenuRadioItem value="system">System</DropdownMenuRadioItem>
+                <DropdownMenuRadioItem value="system">
+                  System
+                </DropdownMenuRadioItem>
               </DropdownMenuRadioGroup>
             </DropdownMenuContent>
           </DropdownMenu>
 
           {/* Settings */}
-          <Link 
+          <Link
             to="/dashboard/settings"
             className="inline-flex items-center justify-center h-9 w-9 rounded-md text-sm font-medium transition-colors hover:bg-muted text-muted-foreground hover:text-foreground"
           >
@@ -163,9 +172,9 @@ export function Navbar() {
           </Link>
 
           {/* Sign Out */}
-          <Button 
-            variant="ghost" 
-            size="icon" 
+          <Button
+            variant="ghost"
+            size="icon"
             className="h-9 w-9 text-muted-foreground hover:text-foreground"
             onClick={handleSignOut}
           >
@@ -197,7 +206,7 @@ export function Navbar() {
               Hermes
             </SheetTitle>
           </SheetHeader>
-          
+
           <nav className="flex flex-col p-4 gap-1">
             {navItems.map((item) => {
               const isActive = location.pathname.startsWith(item.href);
@@ -209,9 +218,10 @@ export function Navbar() {
                   className={`
                     flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium
                     transition-colors
-                    ${isActive 
-                      ? 'text-foreground bg-muted' 
-                      : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+                    ${
+                      isActive
+                        ? "text-foreground bg-muted"
+                        : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                     }
                   `}
                 >
@@ -233,17 +243,21 @@ export function Navbar() {
               <span className="text-sm text-muted-foreground">Theme</span>
               <div className="flex items-center gap-1 bg-muted rounded-lg p-1">
                 <button
-                  onClick={() => setTheme('light')}
+                  onClick={() => setTheme("light")}
                   className={`p-2 rounded-md transition-colors ${
-                    theme === 'light' ? 'bg-background shadow-sm' : 'hover:bg-background/50'
+                    theme === "light"
+                      ? "bg-background shadow-sm"
+                      : "hover:bg-background/50"
                   }`}
                 >
                   <HugeiconsIcon icon={Sun01Icon} size={16} />
                 </button>
                 <button
-                  onClick={() => setTheme('dark')}
+                  onClick={() => setTheme("dark")}
                   className={`p-2 rounded-md transition-colors ${
-                    theme === 'dark' ? 'bg-background shadow-sm' : 'hover:bg-background/50'
+                    theme === "dark"
+                      ? "bg-background shadow-sm"
+                      : "hover:bg-background/50"
                   }`}
                 >
                   <HugeiconsIcon icon={Moon01Icon} size={16} />

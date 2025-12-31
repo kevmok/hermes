@@ -4,9 +4,9 @@
  * Provides type-safe query options for Convex signals queries.
  * Use with useQuery() in components or ensureQueryData() in loaders.
  */
-import { convexQuery } from '@convex-dev/react-query';
-import { api } from 'backend/convex/_generated/api';
-import type { Id } from 'backend/convex/_generated/dataModel';
+import { convexQuery } from "@convex-dev/react-query";
+import { api } from "backend/convex/_generated/api";
+import type { Id } from "backend/convex/_generated/dataModel";
 
 // Default stale time for signals (30 seconds for real-time feel)
 const SIGNALS_STALE_TIME = 1000 * 30;
@@ -26,8 +26,8 @@ export const signalsQueries = {
   paginated: (options?: {
     limit?: number;
     onlyHighConfidence?: boolean;
-    decision?: 'YES' | 'NO' | 'NO_TRADE';
-    cursor?: Id<'signals'>;
+    decision?: "YES" | "NO" | "NO_TRADE";
+    cursor?: Id<"signals">;
   }) =>
     convexQuery(api.signals.getSignalsWithPagination, {
       limit: options?.limit ?? 20,
@@ -37,7 +37,7 @@ export const signalsQueries = {
     }),
 
   /** Get signals for a specific market */
-  byMarket: (marketId: Id<'markets'> | null, limit?: number) =>
+  byMarket: (marketId: Id<"markets"> | null, limit?: number) =>
     convexQuery(api.signals.getSignalsByMarket, {
       marketId,
       limit: limit ?? 50,
@@ -47,7 +47,7 @@ export const signalsQueries = {
   stats: () => convexQuery(api.signals.getSignalStats, {}),
 
   /** Get signal with related predictions */
-  withPredictions: (signalId: Id<'signals'> | null) =>
+  withPredictions: (signalId: Id<"signals"> | null) =>
     convexQuery(api.signals.getSignalWithPredictions, { signalId }),
 
   /** Get signals since a timestamp (for notifications) */

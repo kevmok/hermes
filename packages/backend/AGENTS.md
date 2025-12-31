@@ -29,26 +29,26 @@ convex/
 
 ## WHERE TO LOOK
 
-| Task | Location |
-|------|----------|
-| Add table | `schema.ts` - defineTable + indexes |
-| Add query | Feature file (e.g., `signals.ts`) - export query |
-| Add mutation | Feature file - export mutation |
-| Add external API call | Use `action` not mutation |
-| Modify AI consensus | `ai/swarm.ts` |
-| Add scheduled job | `crons.ts` + `scheduledJobs.ts` |
-| Fetch Polymarket data | `polymarket/` directory |
+| Task                  | Location                                         |
+| --------------------- | ------------------------------------------------ |
+| Add table             | `schema.ts` - defineTable + indexes              |
+| Add query             | Feature file (e.g., `signals.ts`) - export query |
+| Add mutation          | Feature file - export mutation                   |
+| Add external API call | Use `action` not mutation                        |
+| Modify AI consensus   | `ai/swarm.ts`                                    |
+| Add scheduled job     | `crons.ts` + `scheduledJobs.ts`                  |
+| Fetch Polymarket data | `polymarket/` directory                          |
 
 ## SCHEMA (Key Tables)
 
-| Table | Purpose | Key Indexes |
-|-------|---------|-------------|
-| `trades` | Raw WebSocket trades | `by_condition_id`, `by_whale`, `by_timestamp` |
-| `signals` | AI consensus results | `by_market`, `by_high_confidence` |
-| `markets` | Market metadata | `by_polymarket_id`, `by_slug` |
-| `events` | Event aggregations | `by_event_slug`, `by_volume` |
-| `insights` | Batch analysis results | `by_market`, `by_confidence_level` |
-| `globalFilters` | Singleton config | - |
+| Table           | Purpose                | Key Indexes                                   |
+| --------------- | ---------------------- | --------------------------------------------- |
+| `trades`        | Raw WebSocket trades   | `by_condition_id`, `by_whale`, `by_timestamp` |
+| `signals`       | AI consensus results   | `by_market`, `by_high_confidence`             |
+| `markets`       | Market metadata        | `by_polymarket_id`, `by_slug`                 |
+| `events`        | Event aggregations     | `by_event_slug`, `by_volume`                  |
+| `insights`      | Batch analysis results | `by_market`, `by_confidence_level`            |
+| `globalFilters` | Singleton config       | -                                             |
 
 ## FUNCTION TYPES
 

@@ -1,13 +1,13 @@
-import { createFileRoute } from '@tanstack/react-router';
-import { useQuery } from '@tanstack/react-query';
-import { convexQuery } from '@convex-dev/react-query';
-import { api } from 'backend/convex/_generated/api';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
-import { Skeleton } from '@/components/ui/skeleton';
-import { StatCard } from '../-components/stat-card';
-import { HugeiconsIcon } from '@hugeicons/react';
+import { createFileRoute } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
+import { convexQuery } from "@convex-dev/react-query";
+import { api } from "backend/convex/_generated/api";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import { Skeleton } from "@/components/ui/skeleton";
+import { StatCard } from "../-components/stat-card";
+import { HugeiconsIcon } from "@hugeicons/react";
 import {
   Award01Icon,
   ChartLineData01Icon,
@@ -18,9 +18,9 @@ import {
   MinusSignIcon,
   CheckmarkCircle01Icon,
   CancelCircleIcon,
-} from '@hugeicons/core-free-icons';
+} from "@hugeicons/core-free-icons";
 
-export const Route = createFileRoute('/dashboard/performance/')({
+export const Route = createFileRoute("/dashboard/performance/")({
   component: PerformancePage,
 });
 
@@ -58,10 +58,14 @@ function PerformancePage() {
               value={`${stats?.winRate ?? 0}%`}
               icon={Award01Icon}
               variant="success"
-              trend={stats?.predictionsEvaluated ? {
-                value: `${stats.correctPredictions}/${stats.predictionsEvaluated}`,
-                positive: (stats?.winRate ?? 0) >= 50,
-              } : undefined}
+              trend={
+                stats?.predictionsEvaluated
+                  ? {
+                      value: `${stats.correctPredictions}/${stats.predictionsEvaluated}`,
+                      positive: (stats?.winRate ?? 0) >= 50,
+                    }
+                  : undefined
+              }
               isLoading={statsLoading}
             />
             <StatCard
@@ -72,14 +76,14 @@ function PerformancePage() {
             />
             <StatCard
               label="Simulated ROI"
-              value={`${(stats?.simulatedROI ?? 0) >= 0 ? '+' : ''}${stats?.simulatedROI ?? 0}%`}
+              value={`${(stats?.simulatedROI ?? 0) >= 0 ? "+" : ""}${stats?.simulatedROI ?? 0}%`}
               icon={Dollar01Icon}
-              variant={(stats?.simulatedROI ?? 0) >= 0 ? 'success' : 'danger'}
+              variant={(stats?.simulatedROI ?? 0) >= 0 ? "success" : "danger"}
               isLoading={statsLoading}
             />
             <StatCard
               label="Total Signals"
-              value={stats?.totalSignals?.toLocaleString() ?? '0'}
+              value={stats?.totalSignals?.toLocaleString() ?? "0"}
               icon={ChartLineData01Icon}
               trend={{
                 value: `${stats?.signalsLast7d ?? 0} this week`,
@@ -110,7 +114,10 @@ function PerformancePage() {
               {breakdownLoading ? (
                 <Skeleton className="h-20" />
               ) : (
-                <DecisionBreakdownCard data={accuracyBreakdown?.YES} color="green" />
+                <DecisionBreakdownCard
+                  data={accuracyBreakdown?.YES}
+                  color="green"
+                />
               )}
             </CardContent>
           </Card>
@@ -130,7 +137,10 @@ function PerformancePage() {
               {breakdownLoading ? (
                 <Skeleton className="h-20" />
               ) : (
-                <DecisionBreakdownCard data={accuracyBreakdown?.NO} color="red" />
+                <DecisionBreakdownCard
+                  data={accuracyBreakdown?.NO}
+                  color="red"
+                />
               )}
             </CardContent>
           </Card>
@@ -213,7 +223,9 @@ function PerformancePage() {
             ) : (
               <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                 <div className="space-y-1">
-                  <span className="text-xs text-muted-foreground">Last 24h</span>
+                  <span className="text-xs text-muted-foreground">
+                    Last 24h
+                  </span>
                   <div className="font-mono-data text-2xl font-bold">
                     {stats?.signalsLast24h ?? 0}
                   </div>
@@ -225,13 +237,17 @@ function PerformancePage() {
                   </div>
                 </div>
                 <div className="space-y-1">
-                  <span className="text-xs text-muted-foreground">Evaluated</span>
+                  <span className="text-xs text-muted-foreground">
+                    Evaluated
+                  </span>
                   <div className="font-mono-data text-2xl font-bold">
                     {stats?.predictionsEvaluated ?? 0}
                   </div>
                 </div>
                 <div className="space-y-1">
-                  <span className="text-xs text-muted-foreground">Avg Consensus (Wins)</span>
+                  <span className="text-xs text-muted-foreground">
+                    Avg Consensus (Wins)
+                  </span>
                   <div className="font-mono-data text-2xl font-bold">
                     {stats?.avgConsensusOnWins ?? 0}%
                   </div>
@@ -249,7 +265,7 @@ function PerformancePage() {
 
 interface DecisionBreakdownProps {
   data?: { total: number; evaluated: number; correct: number; winRate: number };
-  color: 'green' | 'red';
+  color: "green" | "red";
 }
 
 function DecisionBreakdownCard({ data, color }: DecisionBreakdownProps) {
@@ -257,14 +273,14 @@ function DecisionBreakdownCard({ data, color }: DecisionBreakdownProps) {
 
   const colorClasses = {
     green: {
-      text: 'text-green-600 dark:text-green-400',
-      bg: 'bg-green-500',
-      badge: 'badge-success',
+      text: "text-green-600 dark:text-green-400",
+      bg: "bg-green-500",
+      badge: "badge-success",
     },
     red: {
-      text: 'text-red-600 dark:text-red-400',
-      bg: 'bg-red-500',
-      badge: 'badge-danger',
+      text: "text-red-600 dark:text-red-400",
+      bg: "bg-red-500",
+      badge: "badge-danger",
     },
   };
 
@@ -317,7 +333,11 @@ function CalibrationRow({ bracket }: CalibrationRowProps) {
           <HugeiconsIcon
             icon={isCalibrated ? CheckmarkCircle01Icon : CancelCircleIcon}
             size={14}
-            className={isCalibrated ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}
+            className={
+              isCalibrated
+                ? "text-green-600 dark:text-green-400"
+                : "text-red-600 dark:text-red-400"
+            }
           />
         )}
       </div>

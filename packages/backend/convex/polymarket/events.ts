@@ -4,10 +4,10 @@
  * Internal actions fetch from the API directly.
  * Public actions use ActionCache for TTL-based caching.
  */
-import { action, internalAction } from '../_generated/server';
-import { v } from 'convex/values';
-import { api as polymarketApi } from './client';
-import { eventBySlugCache, eventByIdCache } from './cache';
+import { action, internalAction } from "../_generated/server";
+import { v } from "convex/values";
+import { api as polymarketApi } from "./client";
+import { eventBySlugCache, eventByIdCache } from "./cache";
 
 // ============ INTERNAL ACTIONS (used by cache) ============
 
@@ -36,7 +36,7 @@ export const getEventBySlug = action({
     try {
       return await eventBySlugCache.fetch(ctx, { slug: args.slug });
     } catch (error) {
-      console.error('Polymarket getEventBySlug error:', error);
+      console.error("Polymarket getEventBySlug error:", error);
       return null;
     }
   },
@@ -49,7 +49,7 @@ export const getEventById = action({
     try {
       return await eventByIdCache.fetch(ctx, { id: args.id });
     } catch (error) {
-      console.error('Polymarket getEventById error:', error);
+      console.error("Polymarket getEventById error:", error);
       return null;
     }
   },
@@ -77,7 +77,7 @@ export const listEvents = action({
         ascending: args.ascending,
       });
     } catch (error) {
-      console.error('Polymarket listEvents error:', error);
+      console.error("Polymarket listEvents error:", error);
       // Return empty array on error to allow graceful degradation
       return [];
     }

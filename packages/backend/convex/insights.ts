@@ -1,7 +1,7 @@
-import { v } from 'convex/values';
-import { internalQuery, query } from './_generated/server';
-import type { Doc } from './_generated/dataModel';
-import type { QueryCtx } from './_generated/server';
+import { v } from "convex/values";
+import { internalQuery, query } from "./_generated/server";
+import type { Doc } from "./_generated/dataModel";
+import type { QueryCtx } from "./_generated/server";
 
 export const getLatestInsights = query({
   args: {
@@ -13,18 +13,18 @@ export const getLatestInsights = query({
 
     if (args.onlyHighConfidence) {
       const insights = await ctx.db
-        .query('insights')
-        .withIndex('by_high_confidence', (q) => q.eq('isHighConfidence', true))
-        .order('desc')
+        .query("insights")
+        .withIndex("by_high_confidence", (q) => q.eq("isHighConfidence", true))
+        .order("desc")
         .take(limit);
 
       return enrichInsightsWithMarkets(ctx, insights);
     }
 
     const insights = await ctx.db
-      .query('insights')
-      .withIndex('by_timestamp')
-      .order('desc')
+      .query("insights")
+      .withIndex("by_timestamp")
+      .order("desc")
       .take(limit);
 
     return enrichInsightsWithMarkets(ctx, insights);
@@ -33,20 +33,20 @@ export const getLatestInsights = query({
 
 export const getMarketInsights = query({
   args: {
-    marketId: v.id('markets'),
+    marketId: v.id("markets"),
     limit: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
     return await ctx.db
-      .query('insights')
-      .withIndex('by_market', (q) => q.eq('marketId', args.marketId))
-      .order('desc')
+      .query("insights")
+      .withIndex("by_market", (q) => q.eq("marketId", args.marketId))
+      .order("desc")
       .take(args.limit ?? 10);
   },
 });
 
 export const getInsightWithPredictions = query({
-  args: { insightId: v.id('insights') },
+  args: { insightId: v.id("insights") },
   handler: async (ctx, args) => {
     const insight = await ctx.db.get(args.insightId);
     if (!insight) return null;
@@ -54,9 +54,9 @@ export const getInsightWithPredictions = query({
     // Only fetch predictions if analysisRunId exists
     const predictions = insight.analysisRunId
       ? await ctx.db
-          .query('modelPredictions')
-          .withIndex('by_run', (q) =>
-            q.eq('analysisRunId', insight.analysisRunId!),
+          .query("modelPredictions")
+          .withIndex("by_run", (q) =>
+            q.eq("analysisRunId", insight.analysisRunId!),
           )
           .collect()
       : [];
@@ -76,19 +76,19 @@ export const getInsightWithPredictions = query({
 });
 
 export const getInsight = query({
-  args: { insightId: v.id('insights') },
+  args: { insightId: v.id("insights") },
   handler: async (ctx, args) => {
     return await ctx.db.get(args.insightId);
   },
 });
 
 export const getLatestMarketInsight = query({
-  args: { marketId: v.id('markets') },
+  args: { marketId: v.id("markets") },
   handler: async (ctx, args) => {
     const insight = await ctx.db
-      .query('insights')
-      .withIndex('by_market', (q) => q.eq('marketId', args.marketId))
-      .order('desc')
+      .query("insights")
+      .withIndex("by_market", (q) => q.eq("marketId", args.marketId))
+      .order("desc")
       .first();
 
     if (!insight) return null;
@@ -100,16 +100,16 @@ export const getLatestMarketInsight = query({
 
 export const getInsightsByConfidenceLevel = query({
   args: {
-    level: v.union(v.literal('high'), v.literal('medium'), v.literal('low')),
+    level: v.union(v.literal("high"), v.literal("medium"), v.literal("low")),
     limit: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
     const insights = await ctx.db
-      .query('insights')
-      .withIndex('by_confidence_level', (q) =>
-        q.eq('confidenceLevel', args.level),
+      .query("insights")
+      .withIndex("by_confidence_level", (q) =>
+        q.eq("confidenceLevel", args.level),
       )
-      .order('desc')
+      .order("desc")
       .take(args.limit ?? 20);
 
     return enrichInsightsWithMarkets(ctx, insights);
@@ -124,22 +124,22 @@ export const getInsightsSince = internalQuery({
   handler: async (ctx, args) => {
     if (args.onlyHighConfidence) {
       return await ctx.db
-        .query('insights')
-        .withIndex('by_high_confidence', (q) => q.eq('isHighConfidence', true))
-        .filter((q) => q.gte(q.field('timestamp'), args.since))
+        .query("insights")
+        .withIndex("by_high_confidence", (q) => q.eq("isHighConfidence", true))
+        .filter((q) => q.gte(q.field("timestamp"), args.since))
         .collect();
     }
 
     return await ctx.db
-      .query('insights')
-      .withIndex('by_timestamp')
-      .filter((q) => q.gte(q.field('timestamp'), args.since))
+      .query("insights")
+      .withIndex("by_timestamp")
+      .filter((q) => q.gte(q.field("timestamp"), args.since))
       .collect();
   },
 });
 
 export const getAnalysisRequest = query({
-  args: { requestId: v.id('analysisRequests') },
+  args: { requestId: v.id("analysisRequests") },
   handler: async (ctx, args) => {
     const request = await ctx.db.get(args.requestId);
     if (!request) return null;
@@ -157,9 +157,9 @@ export const getPendingAnalysisRequests = query({
   args: { limit: v.optional(v.number()) },
   handler: async (ctx, args) => {
     const requests = await ctx.db
-      .query('analysisRequests')
-      .withIndex('by_status', (q) => q.eq('status', 'pending'))
-      .order('desc')
+      .query("analysisRequests")
+      .withIndex("by_status", (q) => q.eq("status", "pending"))
+      .order("desc")
       .take(args.limit ?? 50);
 
     const results = await Promise.allSettled(
@@ -174,8 +174,8 @@ export const getPendingAnalysisRequests = query({
         (
           r,
         ): r is PromiseFulfilledResult<
-          (typeof requests)[0] & { market: Doc<'markets'> | null }
-        > => r.status === 'fulfilled',
+          (typeof requests)[0] & { market: Doc<"markets"> | null }
+        > => r.status === "fulfilled",
       )
       .map((r) => r.value);
   },
@@ -184,8 +184,8 @@ export const getPendingAnalysisRequests = query({
 // Helper to enrich insights with market data
 async function enrichInsightsWithMarkets(
   ctx: QueryCtx,
-  insights: Doc<'insights'>[],
-): Promise<(Doc<'insights'> & { market: Doc<'markets'> | null })[]> {
+  insights: Doc<"insights">[],
+): Promise<(Doc<"insights"> & { market: Doc<"markets"> | null })[]> {
   const results = await Promise.allSettled(
     insights.map(async (insight) => {
       const market = await ctx.db.get(insight.marketId);
@@ -198,8 +198,8 @@ async function enrichInsightsWithMarkets(
       (
         r,
       ): r is PromiseFulfilledResult<
-        Doc<'insights'> & { market: Doc<'markets'> | null }
-      > => r.status === 'fulfilled',
+        Doc<"insights"> & { market: Doc<"markets"> | null }
+      > => r.status === "fulfilled",
     )
     .map((r) => r.value);
 }

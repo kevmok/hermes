@@ -1,4 +1,4 @@
-import { ScriptOnce } from '@tanstack/react-router';
+import { ScriptOnce } from "@tanstack/react-router";
 import {
   createContext,
   use,
@@ -6,11 +6,11 @@ import {
   useEffect,
   useMemo,
   useState,
-} from 'react';
+} from "react";
 
-type Theme = 'dark' | 'light' | 'system';
-const MEDIA = '(prefers-color-scheme: dark)';
-const STORAGE_KEY = 'hermes-theme';
+type Theme = "dark" | "light" | "system";
+const MEDIA = "(prefers-color-scheme: dark)";
+const STORAGE_KEY = "hermes-theme";
 
 type ThemeProviderProps = {
   children: React.ReactNode;
@@ -23,7 +23,7 @@ type ThemeProviderState = {
 };
 
 const initialState: ThemeProviderState = {
-  theme: 'system',
+  theme: "system",
   setTheme: () => null,
 };
 
@@ -31,22 +31,22 @@ const ThemeProviderContext = createContext<ThemeProviderState>(initialState);
 
 export function ThemeProvider({
   children,
-  defaultTheme = 'system',
+  defaultTheme = "system",
 }: ThemeProviderProps) {
   const [theme, setTheme] = useState<Theme>(
     () =>
-      (typeof window !== 'undefined'
+      (typeof window !== "undefined"
         ? (localStorage.getItem(STORAGE_KEY) as Theme)
         : null) || defaultTheme,
   );
 
   const handleMediaQuery = useCallback(
     (e: MediaQueryListEvent | MediaQueryList) => {
-      if (theme !== 'system') return;
+      if (theme !== "system") return;
       const root = window.document.documentElement;
-      const targetTheme = e.matches ? 'dark' : 'light';
+      const targetTheme = e.matches ? "dark" : "light";
       if (!root.classList.contains(targetTheme)) {
-        root.classList.remove('light', 'dark');
+        root.classList.remove("light", "dark");
         root.classList.add(targetTheme);
       }
     },
@@ -57,10 +57,10 @@ export function ThemeProvider({
   useEffect(() => {
     const media = window.matchMedia(MEDIA);
 
-    media.addEventListener('change', handleMediaQuery);
+    media.addEventListener("change", handleMediaQuery);
     handleMediaQuery(media);
 
-    return () => media.removeEventListener('change', handleMediaQuery);
+    return () => media.removeEventListener("change", handleMediaQuery);
   }, [handleMediaQuery]);
 
   useEffect(() => {
@@ -68,9 +68,9 @@ export function ThemeProvider({
 
     let targetTheme: string;
 
-    if (theme === 'system') {
+    if (theme === "system") {
       localStorage.removeItem(STORAGE_KEY);
-      targetTheme = window.matchMedia(MEDIA).matches ? 'dark' : 'light';
+      targetTheme = window.matchMedia(MEDIA).matches ? "dark" : "light";
     } else {
       localStorage.setItem(STORAGE_KEY, theme);
       targetTheme = theme;
@@ -78,7 +78,7 @@ export function ThemeProvider({
 
     // Only update if the target theme is not already applied
     if (!root.classList.contains(targetTheme)) {
-      root.classList.remove('light', 'dark');
+      root.classList.remove("light", "dark");
       root.classList.add(targetTheme);
     }
   }, [theme]);
@@ -109,7 +109,7 @@ export function useTheme() {
   const context = use(ThemeProviderContext);
 
   if (context === undefined)
-    throw new Error('useTheme must be used within a ThemeProvider');
+    throw new Error("useTheme must be used within a ThemeProvider");
 
   return context;
 }

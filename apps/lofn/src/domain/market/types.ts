@@ -1,4 +1,4 @@
-import { Schema } from 'effect';
+import { Schema } from "effect";
 
 // WebSocket trade payload schema - all fields optional, we validate required ones in processing
 const TradePayloadFields = Schema.Struct({
@@ -67,7 +67,7 @@ export const HistoricalTradesResponseSchema = Schema.Array(
 
 export type HistoricalTrade = Schema.Schema.Type<typeof HistoricalTradeSchema>;
 
-export class MarketRow extends Schema.Class<MarketRow>('MarketRow')({
+export class MarketRow extends Schema.Class<MarketRow>("MarketRow")({
   market_id: Schema.String,
   event_slug: Schema.String,
   title: Schema.String,

@@ -1,7 +1,7 @@
-@import 'tailwindcss';
-@import 'tw-animate-css';
-@import 'shadcn/tailwind.css';
-@import '@fontsource-variable/figtree';
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+@import "@fontsource-variable/figtree";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -30,22 +30,22 @@
   --border: rgba(0, 0, 0, 0.08);
   --input: rgba(0, 0, 0, 0.08);
   --ring: #0d9488;
-  
+
   /* Chart colors */
   --chart-1: #2dd4bf;
   --chart-2: #14b8a6;
   --chart-3: #0d9488;
   --chart-4: #0f766e;
   --chart-5: #115e59;
-  
+
   /* Radius */
   --radius: 0.5rem;
-  
+
   /* Semantic colors */
   --success: #22c55e;
   --warning: #f59e0b;
   --danger: #ef4444;
-  
+
   /* Surface variations */
   --surface: #ffffff;
   --surface-hover: #f9fafb;
@@ -72,19 +72,19 @@
   --border: rgba(255, 255, 255, 0.08);
   --input: rgba(255, 255, 255, 0.1);
   --ring: #2dd4bf;
-  
+
   /* Chart colors - brighter for dark mode */
   --chart-1: #5eead4;
   --chart-2: #2dd4bf;
   --chart-3: #14b8a6;
   --chart-4: #0d9488;
   --chart-5: #0f766e;
-  
+
   /* Semantic colors */
   --success: #4ade80;
   --warning: #fbbf24;
   --danger: #f87171;
-  
+
   /* Surface variations */
   --surface: #161b22;
   --surface-hover: #1c2128;
@@ -92,9 +92,9 @@
 }
 
 @theme inline {
-  --font-sans: 'Figtree Variable', 'DM Sans', system-ui, sans-serif;
-  --font-mono: 'JetBrains Mono', 'SF Mono', 'Fira Code', monospace;
-  
+  --font-sans: "Figtree Variable", "DM Sans", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", "SF Mono", "Fira Code", monospace;
+
   --color-ring: var(--ring);
   --color-input: var(--input);
   --color-border: var(--border);
@@ -113,14 +113,14 @@
   --color-card: var(--card);
   --color-foreground: var(--foreground);
   --color-background: var(--background);
-  
+
   --color-success: var(--success);
   --color-warning: var(--warning);
   --color-danger: var(--danger);
   --color-surface: var(--surface);
   --color-surface-hover: var(--surface-hover);
   --color-surface-elevated: var(--surface-elevated);
-  
+
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -134,7 +134,9 @@
   }
   body {
     @apply font-sans bg-background text-foreground antialiased;
-    transition: background-color 0.2s ease, color 0.2s ease;
+    transition:
+      background-color 0.2s ease,
+      color 0.2s ease;
   }
   html {
     @apply font-sans;
@@ -187,7 +189,9 @@
 
 /* Subtle card hover effect */
 .hover-lift {
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .hover-lift:hover {
@@ -237,8 +241,12 @@
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes slideInRight {
@@ -253,23 +261,42 @@
 }
 
 @keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
 }
 
 @keyframes pulse-dot {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
 }
 
 @keyframes pulse-glow {
-  0%, 100% { box-shadow: 0 0 20px rgba(45, 212, 191, 0.1); }
-  50% { box-shadow: 0 0 30px rgba(45, 212, 191, 0.25); }
+  0%,
+  100% {
+    box-shadow: 0 0 20px rgba(45, 212, 191, 0.1);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(45, 212, 191, 0.25);
+  }
 }
 
 @keyframes gradient-shift {
-  0%, 100% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
 }
 
 .animate-fadeInUp {
@@ -305,10 +332,18 @@
 }
 
 /* Staggered animation delays */
-.animate-delay-1 { animation-delay: 50ms; }
-.animate-delay-2 { animation-delay: 100ms; }
-.animate-delay-3 { animation-delay: 150ms; }
-.animate-delay-4 { animation-delay: 200ms; }
+.animate-delay-1 {
+  animation-delay: 50ms;
+}
+.animate-delay-2 {
+  animation-delay: 100ms;
+}
+.animate-delay-3 {
+  animation-delay: 150ms;
+}
+.animate-delay-4 {
+  animation-delay: 200ms;
+}
 
 /* ============================================
    COMPONENT OVERRIDES
@@ -356,7 +391,7 @@
 }
 
 .card-accent::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: 0;

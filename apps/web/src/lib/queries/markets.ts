@@ -4,9 +4,9 @@
  * Provides type-safe query options for Convex markets queries.
  * Use with useQuery() in components or ensureQueryData() in loaders.
  */
-import { convexQuery, convexAction } from '@convex-dev/react-query';
-import { api } from 'backend/convex/_generated/api';
-import type { Id } from 'backend/convex/_generated/dataModel';
+import { convexQuery, convexAction } from "@convex-dev/react-query";
+import { api } from "backend/convex/_generated/api";
+import type { Id } from "backend/convex/_generated/dataModel";
 
 // Default stale time for markets (1 minute)
 const MARKETS_STALE_TIME = 1000 * 60;
@@ -21,7 +21,7 @@ export const marketsQueries = {
   active: (options?: {
     limit?: number;
     eventSlug?: string;
-    sortBy?: 'recent' | 'analyzed' | 'volume';
+    sortBy?: "recent" | "analyzed" | "volume";
   }) =>
     convexQuery(api.markets.listActiveMarkets, {
       limit: options?.limit ?? 20,
@@ -30,7 +30,7 @@ export const marketsQueries = {
     }),
 
   /** Get a single market by ID */
-  byId: (marketId: Id<'markets'> | null) =>
+  byId: (marketId: Id<"markets"> | null) =>
     convexQuery(api.markets.getMarket, { marketId }),
 
   /** Get market by Polymarket ID */
@@ -46,7 +46,7 @@ export const marketsQueries = {
 
   /** Get market snapshots for charting */
   snapshots: (
-    marketId: Id<'markets'>,
+    marketId: Id<"markets">,
     options?: { since?: number; limit?: number },
   ) =>
     convexQuery(api.markets.getMarketSnapshots, {

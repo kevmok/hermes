@@ -4,7 +4,7 @@
  * Uses native fetch wrapped in Effect for compatibility with Convex runtime.
  * Provides type-safe access to Polymarket's Gamma and Data APIs.
  */
-import { Effect, Schedule, Duration } from 'effect';
+import { Effect, Schedule, Duration } from "effect";
 import type {
   Event,
   Market,
@@ -21,23 +21,23 @@ import type {
   ActivityParams,
   ClosedPositionsParams,
   LeaderboardParams,
-} from './schemas';
+} from "./schemas";
 
 // ============ BASE URLS ============
 
-const GAMMA_API = 'https://gamma-api.polymarket.com';
-const DATA_API = 'https://data-api.polymarket.com';
+const GAMMA_API = "https://gamma-api.polymarket.com";
+const DATA_API = "https://data-api.polymarket.com";
 
 // ============ ERROR TYPE ============
 
 export class PolymarketApiError extends Error {
-  readonly _tag = 'PolymarketApiError';
+  readonly _tag = "PolymarketApiError";
   readonly statusCode?: number;
   readonly endpoint: string;
 
   constructor(message: string, endpoint: string, statusCode?: number) {
     super(message);
-    this.name = 'PolymarketApiError';
+    this.name = "PolymarketApiError";
     this.endpoint = endpoint;
     this.statusCode = statusCode;
   }
@@ -92,7 +92,7 @@ const fetchJsonArray = <T>(
       const json = await response.json();
 
       if (!Array.isArray(json)) {
-        throw new PolymarketApiError('Expected array response', url);
+        throw new PolymarketApiError("Expected array response", url);
       }
 
       return json as T[];
@@ -119,13 +119,13 @@ export const listEvents = (
   params: ListEventsParams = {},
 ): Effect.Effect<Event[], PolymarketApiError> => {
   const query = new URLSearchParams();
-  query.set('limit', String(params.limit ?? 50));
-  query.set('offset', String(params.offset ?? 0));
-  if (params.active !== undefined) query.set('active', String(params.active));
-  if (params.closed !== undefined) query.set('closed', String(params.closed));
-  if (params.order) query.set('order', params.order);
+  query.set("limit", String(params.limit ?? 50));
+  query.set("offset", String(params.offset ?? 0));
+  if (params.active !== undefined) query.set("active", String(params.active));
+  if (params.closed !== undefined) query.set("closed", String(params.closed));
+  if (params.order) query.set("order", params.order);
   if (params.ascending !== undefined)
-    query.set('ascending', String(params.ascending));
+    query.set("ascending", String(params.ascending));
 
   return fetchJsonArray<Event>(`${GAMMA_API}/events?${query}`);
 };
@@ -138,9 +138,9 @@ export const getEventsBySlugs = (
   // Polymarket API requires repeating the param for each value
   const query = new URLSearchParams();
   for (const slug of slugs) {
-    query.append('slug', slug);
+    query.append("slug", slug);
   }
-  query.set('limit', String(slugs.length));
+  query.set("limit", String(slugs.length));
 
   return fetchJsonArray<Event>(`${GAMMA_API}/events?${query}`);
 };
@@ -161,10 +161,10 @@ export const listMarkets = (
   params: ListMarketsParams = {},
 ): Effect.Effect<Market[], PolymarketApiError> => {
   const query = new URLSearchParams();
-  query.set('limit', String(params.limit ?? 50));
-  query.set('offset', String(params.offset ?? 0));
-  if (params.active !== undefined) query.set('active', String(params.active));
-  if (params.closed !== undefined) query.set('closed', String(params.closed));
+  query.set("limit", String(params.limit ?? 50));
+  query.set("offset", String(params.offset ?? 0));
+  if (params.active !== undefined) query.set("active", String(params.active));
+  if (params.closed !== undefined) query.set("closed", String(params.closed));
 
   return fetchJsonArray<Market>(`${GAMMA_API}/markets?${query}`);
 };
@@ -177,9 +177,9 @@ export const getMarketsByConditionIds = (
   // Polymarket API requires repeating the param for each value
   const query = new URLSearchParams();
   for (const id of conditionIds) {
-    query.append('condition_ids', id);
+    query.append("condition_ids", id);
   }
-  query.set('limit', String(conditionIds.length));
+  query.set("limit", String(conditionIds.length));
 
   return fetchJsonArray<Market>(`${GAMMA_API}/markets?${query}`);
 };
@@ -191,12 +191,12 @@ export const getUserPositions = (
   params: PositionsParams = {},
 ): Effect.Effect<Position[], PolymarketApiError> => {
   const query = new URLSearchParams({ user });
-  if (params.limit) query.set('limit', String(params.limit));
-  if (params.offset) query.set('offset', String(params.offset));
+  if (params.limit) query.set("limit", String(params.limit));
+  if (params.offset) query.set("offset", String(params.offset));
   if (params.sizeThreshold)
-    query.set('sizeThreshold', String(params.sizeThreshold));
-  if (params.sortBy) query.set('sortBy', params.sortBy);
-  if (params.sortDirection) query.set('sortDirection', params.sortDirection);
+    query.set("sizeThreshold", String(params.sizeThreshold));
+  if (params.sortBy) query.set("sortBy", params.sortBy);
+  if (params.sortDirection) query.set("sortDirection", params.sortDirection);
 
   return fetchJsonArray<Position>(`${DATA_API}/positions?${query}`);
 };
@@ -208,9 +208,9 @@ export const getUserTrades = (
   params: TradesParams = {},
 ): Effect.Effect<UserTrade[], PolymarketApiError> => {
   const query = new URLSearchParams({ user });
-  if (params.limit) query.set('limit', String(params.limit));
-  if (params.offset) query.set('offset', String(params.offset));
-  if (params.side) query.set('side', params.side);
+  if (params.limit) query.set("limit", String(params.limit));
+  if (params.offset) query.set("offset", String(params.offset));
+  if (params.side) query.set("side", params.side);
 
   return fetchJsonArray<UserTrade>(`${DATA_API}/trades?${query}`);
 };
@@ -222,11 +222,11 @@ export const getUserActivity = (
   params: ActivityParams = {},
 ): Effect.Effect<Activity[], PolymarketApiError> => {
   const query = new URLSearchParams({ user });
-  if (params.limit) query.set('limit', String(params.limit));
-  if (params.offset) query.set('offset', String(params.offset));
-  if (params.type) query.set('type', params.type);
-  if (params.start) query.set('start', String(params.start));
-  if (params.end) query.set('end', String(params.end));
+  if (params.limit) query.set("limit", String(params.limit));
+  if (params.offset) query.set("offset", String(params.offset));
+  if (params.type) query.set("type", params.type);
+  if (params.start) query.set("start", String(params.start));
+  if (params.end) query.set("end", String(params.end));
 
   return fetchJsonArray<Activity>(`${DATA_API}/activity?${query}`);
 };
@@ -250,10 +250,10 @@ export const getClosedPositions = (
   params: ClosedPositionsParams = {},
 ): Effect.Effect<ClosedPosition[], PolymarketApiError> => {
   const query = new URLSearchParams({ user });
-  if (params.limit) query.set('limit', String(params.limit));
-  if (params.offset) query.set('offset', String(params.offset));
-  if (params.sortBy) query.set('sortBy', params.sortBy);
-  if (params.sortDirection) query.set('sortDirection', params.sortDirection);
+  if (params.limit) query.set("limit", String(params.limit));
+  if (params.offset) query.set("offset", String(params.offset));
+  if (params.sortBy) query.set("sortBy", params.sortBy);
+  if (params.sortDirection) query.set("sortDirection", params.sortDirection);
 
   return fetchJsonArray<ClosedPosition>(
     `${DATA_API}/closed-positions?${query}`,
@@ -266,11 +266,11 @@ export const getLeaderboard = (
   params: LeaderboardParams = {},
 ): Effect.Effect<LeaderboardEntry[], PolymarketApiError> => {
   const query = new URLSearchParams();
-  if (params.category) query.set('category', params.category);
-  if (params.timePeriod) query.set('timePeriod', params.timePeriod);
-  if (params.orderBy) query.set('orderBy', params.orderBy);
-  if (params.limit) query.set('limit', String(params.limit));
-  if (params.offset) query.set('offset', String(params.offset));
+  if (params.category) query.set("category", params.category);
+  if (params.timePeriod) query.set("timePeriod", params.timePeriod);
+  if (params.orderBy) query.set("orderBy", params.orderBy);
+  if (params.limit) query.set("limit", String(params.limit));
+  if (params.offset) query.set("offset", String(params.offset));
 
   return fetchJsonArray<LeaderboardEntry>(
     `${DATA_API}/v1/leaderboard?${query}`,

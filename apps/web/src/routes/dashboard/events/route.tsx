@@ -3,32 +3,32 @@ import {
   Outlet,
   useNavigate,
   useMatch,
-} from '@tanstack/react-router';
-import { useQuery } from '@tanstack/react-query';
-import { z } from 'zod';
-import { Sheet, SheetContent } from '@/components/ui/sheet';
-import { eventsQueries } from '@/lib/queries';
-import { queryClient } from '@/lib/providers/query';
-import { EventsTable } from './-components/events-table';
-import { StatCard } from '../-components/stat-card';
+} from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
+import { z } from "zod";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
+import { eventsQueries } from "@/lib/queries";
+import { queryClient } from "@/lib/providers/query";
+import { EventsTable } from "./-components/events-table";
+import { StatCard } from "../-components/stat-card";
 import {
   Calendar03Icon,
   Activity03Icon,
   ChartLineData01Icon,
   MoneyBag02Icon,
-} from '@hugeicons/core-free-icons';
+} from "@hugeicons/core-free-icons";
 
 // Search params schema with zod validation
 const searchSchema = z.object({
   sortBy: z
-    .enum(['recent', 'volume', 'signals'])
-    .default('recent')
-    .catch('recent'),
+    .enum(["recent", "volume", "signals"])
+    .default("recent")
+    .catch("recent"),
   activeOnly: z.boolean().default(false).catch(false),
   page: z.coerce.number().default(1).catch(1),
 });
 
-export const Route = createFileRoute('/dashboard/events')({
+export const Route = createFileRoute("/dashboard/events")({
   validateSearch: searchSchema,
   loaderDeps: ({ search }) => search,
   loader: async () => {
@@ -54,7 +54,7 @@ function EventsLayout() {
 
   // Check if child route (drawer) is active
   const childMatch = useMatch({
-    from: '/dashboard/events/$eventId',
+    from: "/dashboard/events/$eventId",
     shouldThrow: false,
   });
 
@@ -63,12 +63,12 @@ function EventsLayout() {
   );
 
   const handleDrawerClose = () => {
-    navigate({ to: '/dashboard/events', search });
+    navigate({ to: "/dashboard/events", search });
   };
 
   const handleRowClick = (eventSlug: string) => {
     navigate({
-      to: '/dashboard/events/$eventId',
+      to: "/dashboard/events/$eventId",
       params: { eventId: eventSlug },
       search,
     });
@@ -86,8 +86,8 @@ function EventsLayout() {
                 Events
               </h1>
               <p className="text-sm text-muted-foreground max-w-lg">
-                Events with whale trades captured from our WebSocket feed. 
-                Click to see markets and signals.
+                Events with whale trades captured from our WebSocket feed. Click
+                to see markets and signals.
               </p>
             </div>
           </div>
@@ -96,20 +96,20 @@ function EventsLayout() {
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
             <StatCard
               label="Total Events"
-              value={stats?.totalEvents?.toLocaleString() ?? '0'}
+              value={stats?.totalEvents?.toLocaleString() ?? "0"}
               icon={Calendar03Icon}
               variant="warning"
               isLoading={statsLoading}
             />
             <StatCard
               label="Active Events"
-              value={stats?.activeEvents?.toLocaleString() ?? '0'}
+              value={stats?.activeEvents?.toLocaleString() ?? "0"}
               icon={Activity03Icon}
               isLoading={statsLoading}
             />
             <StatCard
               label="Total Trades"
-              value={stats?.totalTrades?.toLocaleString() ?? '0'}
+              value={stats?.totalTrades?.toLocaleString() ?? "0"}
               icon={ChartLineData01Icon}
               isLoading={statsLoading}
             />
@@ -143,7 +143,7 @@ function EventsLayout() {
 }
 
 function formatVolume(volume: number | undefined | null): string {
-  if (volume == null || Number.isNaN(volume)) return '$0';
+  if (volume == null || Number.isNaN(volume)) return "$0";
   if (volume >= 1_000_000) return `$${(volume / 1_000_000).toFixed(1)}M`;
   if (volume >= 1_000) return `$${(volume / 1_000).toFixed(1)}K`;
   return `$${volume.toFixed(0)}`;

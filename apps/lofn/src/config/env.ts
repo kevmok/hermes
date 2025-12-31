@@ -1,5 +1,5 @@
-import { Effect } from 'effect';
-import { env } from 'bun';
+import { Effect } from "effect";
+import { env } from "bun";
 
 export interface EnvConfig {
   OPENAI_KEY: string | undefined;
@@ -27,12 +27,12 @@ export const validateEnv = Effect.gen(function* () {
   if (configured.length === 0) {
     yield* Effect.fail(
       new Error(
-        'No AI API keys configured. Set at least one of: OPENAI_KEY, ANTHROPIC_KEY, GEMINI_KEY',
+        "No AI API keys configured. Set at least one of: OPENAI_KEY, ANTHROPIC_KEY, GEMINI_KEY",
       ),
     );
   }
 
-  console.log(`Configured AI providers: ${configured.join(', ')}`);
+  console.log(`Configured AI providers: ${configured.join(", ")}`);
   return keys;
 });
 

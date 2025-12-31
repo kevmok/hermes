@@ -1,28 +1,28 @@
-import { useForm } from '@tanstack/react-form';
-import { z } from 'zod';
-import { useState } from 'react';
-import { useNavigate } from '@tanstack/react-router';
-import { motion } from 'motion/react';
-import { authClient } from '@/lib/auth/client';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Field, FieldLabel, FieldError } from '@/components/ui/field';
+import { useForm } from "@tanstack/react-form";
+import { z } from "zod";
+import { useState } from "react";
+import { useNavigate } from "@tanstack/react-router";
+import { motion } from "motion/react";
+import { authClient } from "@/lib/auth/client";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Field, FieldLabel, FieldError } from "@/components/ui/field";
 
 const colors = {
-  surface: '#111827',
-  border: 'rgba(34, 211, 238, 0.15)',
-  borderBright: 'rgba(34, 211, 238, 0.4)',
-  text: '#f8fafc',
-  textMuted: '#94a3b8',
-  cyan: '#22d3ee',
-  cyanGlow: 'rgba(34, 211, 238, 0.4)',
-  emerald: '#10b981',
-  red: '#ef4444',
+  surface: "#111827",
+  border: "rgba(34, 211, 238, 0.15)",
+  borderBright: "rgba(34, 211, 238, 0.4)",
+  text: "#f8fafc",
+  textMuted: "#94a3b8",
+  cyan: "#22d3ee",
+  cyanGlow: "rgba(34, 211, 238, 0.4)",
+  emerald: "#10b981",
+  red: "#ef4444",
 };
 
 const signInSchema = z.object({
-  email: z.email('Please enter a valid email address'),
-  password: z.string().min(1, 'Password is required'),
+  email: z.email("Please enter a valid email address"),
+  password: z.string().min(1, "Password is required"),
 });
 
 interface SignInFormProps {
@@ -35,8 +35,8 @@ export function SignInForm({ onForgotPassword }: SignInFormProps) {
 
   const form = useForm({
     defaultValues: {
-      email: '',
-      password: '',
+      email: "",
+      password: "",
     },
     validators: {
       onSubmit: signInSchema,
@@ -50,14 +50,14 @@ export function SignInForm({ onForgotPassword }: SignInFormProps) {
         });
 
         if (result.error) {
-          setError(result.error.message || 'Invalid credentials');
+          setError(result.error.message || "Invalid credentials");
           return;
         }
 
-        navigate({ to: '/' });
+        navigate({ to: "/" });
       } catch (err) {
         console.warn(err);
-        setError('An unexpected error occurred. Please try again.');
+        setError("An unexpected error occurred. Please try again.");
       }
     },
   });
@@ -68,14 +68,14 @@ export function SignInForm({ onForgotPassword }: SignInFormProps) {
         e.preventDefault();
         form.handleSubmit();
       }}
-      className='space-y-5'
+      className="space-y-5"
     >
       {/* Global Error */}
       {error && (
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className='p-3 rounded-lg text-sm'
+          className="p-3 rounded-lg text-sm"
           style={{
             background: `${colors.red}15`,
             border: `1px solid ${colors.red}40`,
@@ -88,7 +88,7 @@ export function SignInForm({ onForgotPassword }: SignInFormProps) {
 
       {/* Email Field */}
       <form.Field
-        name='email'
+        name="email"
         children={(field) => {
           const isInvalid =
             field.state.meta.isTouched && field.state.meta.errors.length > 0;
@@ -103,13 +103,13 @@ export function SignInForm({ onForgotPassword }: SignInFormProps) {
               <Input
                 id={field.name}
                 name={field.name}
-                type='email'
-                placeholder='you@example.com'
+                type="email"
+                placeholder="you@example.com"
                 value={field.state.value}
                 onBlur={field.handleBlur}
                 onChange={(e) => field.handleChange(e.target.value)}
                 aria-invalid={isInvalid || undefined}
-                className='h-11'
+                className="h-11"
                 style={{
                   background: colors.surface,
                   borderColor: isInvalid ? colors.red : colors.border,
@@ -130,13 +130,13 @@ export function SignInForm({ onForgotPassword }: SignInFormProps) {
 
       {/* Password Field */}
       <form.Field
-        name='password'
+        name="password"
         children={(field) => {
           const isInvalid =
             field.state.meta.isTouched && field.state.meta.errors.length > 0;
           return (
             <Field data-invalid={isInvalid || undefined}>
-              <div className='flex items-center justify-between'>
+              <div className="flex items-center justify-between">
                 <FieldLabel
                   htmlFor={field.name}
                   style={{ color: colors.textMuted }}
@@ -144,9 +144,9 @@ export function SignInForm({ onForgotPassword }: SignInFormProps) {
                   Password
                 </FieldLabel>
                 <button
-                  type='button'
+                  type="button"
                   onClick={onForgotPassword}
-                  className='text-sm hover:underline transition-colors'
+                  className="text-sm hover:underline transition-colors"
                   style={{ color: colors.cyan }}
                 >
                   Forgot password?
@@ -155,13 +155,13 @@ export function SignInForm({ onForgotPassword }: SignInFormProps) {
               <Input
                 id={field.name}
                 name={field.name}
-                type='password'
-                placeholder='••••••••'
+                type="password"
+                placeholder="••••••••"
                 value={field.state.value}
                 onBlur={field.handleBlur}
                 onChange={(e) => field.handleChange(e.target.value)}
                 aria-invalid={isInvalid || undefined}
-                className='h-11'
+                className="h-11"
                 style={{
                   background: colors.surface,
                   borderColor: isInvalid ? colors.red : colors.border,
@@ -186,41 +186,41 @@ export function SignInForm({ onForgotPassword }: SignInFormProps) {
         children={([canSubmit, isSubmitting]) => (
           <motion.div whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
             <Button
-              type='submit'
+              type="submit"
               disabled={!canSubmit || isSubmitting}
-              className='w-full h-11 font-semibold text-base'
+              className="w-full h-11 font-semibold text-base"
               style={{
                 background: `linear-gradient(135deg, ${colors.cyan}, ${colors.emerald})`,
-                color: '#030712',
+                color: "#030712",
                 boxShadow: `0 0 20px ${colors.cyanGlow}`,
               }}
             >
               {isSubmitting ? (
-                <span className='flex items-center gap-2'>
+                <span className="flex items-center gap-2">
                   <svg
-                    className='animate-spin h-4 w-4'
-                    xmlns='http://www.w3.org/2000/svg'
-                    fill='none'
-                    viewBox='0 0 24 24'
+                    className="animate-spin h-4 w-4"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
                   >
                     <circle
-                      className='opacity-25'
-                      cx='12'
-                      cy='12'
-                      r='10'
-                      stroke='currentColor'
-                      strokeWidth='4'
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
                     />
                     <path
-                      className='opacity-75'
-                      fill='currentColor'
-                      d='M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z'
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                     />
                   </svg>
                   Signing in...
                 </span>
               ) : (
-                'Sign in'
+                "Sign in"
               )}
             </Button>
           </motion.div>

@@ -1,8 +1,8 @@
-import { ConvexError, v } from 'convex/values';
-import { query, mutation, action } from './_generated/server';
-import { internal } from './_generated/api';
-import { api as polymarketApi } from './polymarket/client';
-import type { Id } from './_generated/dataModel';
+import { ConvexError, v } from "convex/values";
+import { query, mutation, action } from "./_generated/server";
+import { internal } from "./_generated/api";
+import { api as polymarketApi } from "./polymarket/client";
+import type { Id } from "./_generated/dataModel";
 
 async function getAuthenticatedUser(ctx: {
   auth: { getUserIdentity: () => Promise<{ subject: string } | null> };
@@ -12,8 +12,8 @@ async function getAuthenticatedUser(ctx: {
   if (!identity) return null;
 
   const user = await ctx.db
-    .query('user')
-    .withIndex('userId', (q: any) => q.eq('userId', identity.subject))
+    .query("user")
+    .withIndex("userId", (q: any) => q.eq("userId", identity.subject))
     .first();
 
   return user;
@@ -24,28 +24,28 @@ export const addPortfolio = mutation({
     polymarketAddress: v.string(),
     nickname: v.optional(v.string()),
   },
-  returns: v.id('userPortfolio'),
-  handler: async (ctx, args): Promise<Id<'userPortfolio'>> => {
+  returns: v.id("userPortfolio"),
+  handler: async (ctx, args): Promise<Id<"userPortfolio">> => {
     const user = await getAuthenticatedUser(ctx);
-    if (!user) throw new ConvexError('Not authenticated');
+    if (!user) throw new ConvexError("Not authenticated");
 
     if (!/^0x[a-fA-F0-9]{40}$/.test(args.polymarketAddress)) {
-      throw new ConvexError('Invalid Ethereum address format');
+      throw new ConvexError("Invalid Ethereum address format");
     }
 
     const normalizedAddress = args.polymarketAddress.toLowerCase();
 
     const existing = await ctx.db
-      .query('userPortfolio')
-      .withIndex('by_user', (q) => q.eq('userId', user._id))
-      .filter((q) => q.eq(q.field('polymarketAddress'), normalizedAddress))
+      .query("userPortfolio")
+      .withIndex("by_user", (q) => q.eq("userId", user._id))
+      .filter((q) => q.eq(q.field("polymarketAddress"), normalizedAddress))
       .first();
 
     if (existing) {
-      throw new ConvexError('This address is already added to your portfolio');
+      throw new ConvexError("This address is already added to your portfolio");
     }
 
-    return await ctx.db.insert('userPortfolio', {
+    return await ctx.db.insert("userPortfolio", {
       userId: user._id,
       polymarketAddress: normalizedAddress,
       nickname: args.nickname,
@@ -56,19 +56,19 @@ export const addPortfolio = mutation({
 
 export const updatePortfolioNickname = mutation({
   args: {
-    portfolioId: v.id('userPortfolio'),
+    portfolioId: v.id("userPortfolio"),
     nickname: v.optional(v.string()),
   },
   returns: v.null(),
   handler: async (ctx, args): Promise<null> => {
     const user = await getAuthenticatedUser(ctx);
-    if (!user) throw new ConvexError('Not authenticated');
+    if (!user) throw new ConvexError("Not authenticated");
 
     const portfolio = await ctx.db.get(args.portfolioId);
-    if (!portfolio) throw new ConvexError('Portfolio not found');
+    if (!portfolio) throw new ConvexError("Portfolio not found");
 
     if (portfolio.userId !== user._id) {
-      throw new ConvexError('Not authorized');
+      throw new ConvexError("Not authorized");
     }
 
     await ctx.db.patch(args.portfolioId, { nickname: args.nickname });
@@ -78,18 +78,18 @@ export const updatePortfolioNickname = mutation({
 
 export const removePortfolio = mutation({
   args: {
-    portfolioId: v.id('userPortfolio'),
+    portfolioId: v.id("userPortfolio"),
   },
   returns: v.null(),
   handler: async (ctx, args): Promise<null> => {
     const user = await getAuthenticatedUser(ctx);
-    if (!user) throw new ConvexError('Not authenticated');
+    if (!user) throw new ConvexError("Not authenticated");
 
     const portfolio = await ctx.db.get(args.portfolioId);
-    if (!portfolio) throw new ConvexError('Portfolio not found');
+    if (!portfolio) throw new ConvexError("Portfolio not found");
 
     if (portfolio.userId !== user._id) {
-      throw new ConvexError('Not authorized');
+      throw new ConvexError("Not authorized");
     }
 
     await ctx.db.delete(args.portfolioId);
@@ -98,18 +98,18 @@ export const removePortfolio = mutation({
 });
 
 const portfolioValidator = v.object({
-  _id: v.id('userPortfolio'),
+  _id: v.id("userPortfolio"),
   _creationTime: v.number(),
-  userId: v.id('user'),
+  userId: v.id("user"),
   polymarketAddress: v.string(),
   nickname: v.optional(v.string()),
   addedAt: v.number(),
   lastSyncedAt: v.optional(v.number()),
   lastSyncStatus: v.optional(
     v.union(
-      v.literal('success'),
-      v.literal('failed'),
-      v.literal('no_positions'),
+      v.literal("success"),
+      v.literal("failed"),
+      v.literal("no_positions"),
     ),
   ),
 });
@@ -122,8 +122,8 @@ export const getMyPortfolios = query({
     if (!user) return [];
 
     return await ctx.db
-      .query('userPortfolio')
-      .withIndex('by_user', (q) => q.eq('userId', user._id))
+      .query("userPortfolio")
+      .withIndex("by_user", (q) => q.eq("userId", user._id))
       .collect();
   },
 });
@@ -137,12 +137,12 @@ export const fetchPositions = action({
     try {
       const positions = await polymarketApi.getUserPositions(args.address, {
         limit: 100,
-        sortBy: 'CURRENT',
-        sortDirection: 'DESC',
+        sortBy: "CURRENT",
+        sortDirection: "DESC",
       });
       return positions;
     } catch (error) {
-      console.error('Failed to fetch positions:', error);
+      console.error("Failed to fetch positions:", error);
       return [];
     }
   },
@@ -151,7 +151,7 @@ export const fetchPositions = action({
 type PositionResult = {
   position: any;
   signal: any | undefined;
-  alignment: 'aligned' | 'opposed' | 'no_signal';
+  alignment: "aligned" | "opposed" | "no_signal";
 };
 
 export const syncPortfolioWithSignals = action({
@@ -163,9 +163,9 @@ export const syncPortfolioWithSignals = action({
       position: v.any(),
       signal: v.optional(v.any()),
       alignment: v.union(
-        v.literal('aligned'),
-        v.literal('opposed'),
-        v.literal('no_signal'),
+        v.literal("aligned"),
+        v.literal("opposed"),
+        v.literal("no_signal"),
       ),
     }),
   ),
@@ -176,7 +176,7 @@ export const syncPortfolioWithSignals = action({
         limit: 100,
       });
     } catch (error) {
-      console.error('Failed to fetch positions:', error);
+      console.error("Failed to fetch positions:", error);
       return [];
     }
 
@@ -188,15 +188,15 @@ export const syncPortfolioWithSignals = action({
 
     if (conditionIds.length === 0) return [];
 
-    const markets: Array<{ _id: Id<'markets'>; conditionId?: string }> =
+    const markets: Array<{ _id: Id<"markets">; conditionId?: string }> =
       await ctx.runQuery(internal.markets.getMarketsByConditionIdsInternal, {
         conditionIds,
       });
 
     const marketMap = new Map<
       string,
-      { _id: Id<'markets'>; conditionId?: string }
-    >(markets.map((m) => [m.conditionId ?? '', m]));
+      { _id: Id<"markets">; conditionId?: string }
+    >(markets.map((m) => [m.conditionId ?? "", m]));
 
     const results: PositionResult[] = await Promise.all(
       positions.map(async (position): Promise<PositionResult> => {
@@ -205,7 +205,7 @@ export const syncPortfolioWithSignals = action({
           return {
             position,
             signal: undefined,
-            alignment: 'no_signal',
+            alignment: "no_signal",
           };
         }
 
@@ -218,18 +218,18 @@ export const syncPortfolioWithSignals = action({
           return {
             position,
             signal: undefined,
-            alignment: 'no_signal',
+            alignment: "no_signal",
           };
         }
 
         const positionSide =
-          position.outcome?.toUpperCase() === 'YES' ? 'YES' : 'NO';
-        const alignment: 'aligned' | 'opposed' | 'no_signal' =
+          position.outcome?.toUpperCase() === "YES" ? "YES" : "NO";
+        const alignment: "aligned" | "opposed" | "no_signal" =
           signal.consensusDecision === positionSide
-            ? 'aligned'
-            : signal.consensusDecision === 'NO_TRADE'
-              ? 'no_signal'
-              : 'opposed';
+            ? "aligned"
+            : signal.consensusDecision === "NO_TRADE"
+              ? "no_signal"
+              : "opposed";
 
         return { position, signal, alignment };
       }),

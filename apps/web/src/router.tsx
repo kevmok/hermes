@@ -1,8 +1,8 @@
 // Import the generated route tree
-import { routeTree } from './routeTree.gen';
-import { createRouter } from '@tanstack/react-router';
-import { queryClient, convexQueryClient } from '@/lib/providers/query';
-import { setupRouterSsrQueryIntegration } from '@tanstack/react-router-ssr-query';
+import { routeTree } from "./routeTree.gen";
+import { createRouter } from "@tanstack/react-router";
+import { queryClient, convexQueryClient } from "@/lib/providers/query";
+import { setupRouterSsrQueryIntegration } from "@tanstack/react-router-ssr-query";
 
 // Create a new router instance
 export const getRouter = () => {
@@ -11,7 +11,7 @@ export const getRouter = () => {
     context: { queryClient, convexQueryClient },
     // defaultPendingComponent: () => <Loader />,
     defaultNotFoundComponent: () => <div>Not Found</div>,
-    defaultPreload: 'intent',
+    defaultPreload: "intent",
     scrollRestoration: true,
     defaultPreloadStaleTime: 0,
   });

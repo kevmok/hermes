@@ -12,13 +12,13 @@ This document outlines the technical specifications for transforming Hermes from
 
 ### Key Decisions
 
-| Decision | Choice | Rationale |
-|----------|--------|-----------|
-| Email Provider | Resend via `@convex-dev/resend` | Official Convex component, exactly-once delivery |
-| Deep Dive AI | Perplexity `sonar-reasoning-pro` | Best cost/quality for web research |
-| Trial Length | 7 days | Creates urgency, sufficient to demonstrate value |
-| Free Tier | None | AI costs prohibitive; trial-based model |
-| Whale Addresses | Not anonymized | Full transparency for power users |
+| Decision        | Choice                           | Rationale                                        |
+| --------------- | -------------------------------- | ------------------------------------------------ |
+| Email Provider  | Resend via `@convex-dev/resend`  | Official Convex component, exactly-once delivery |
+| Deep Dive AI    | Perplexity `sonar-reasoning-pro` | Best cost/quality for web research               |
+| Trial Length    | 7 days                           | Creates urgency, sufficient to demonstrate value |
+| Free Tier       | None                             | AI costs prohibitive; trial-based model          |
+| Whale Addresses | Not anonymized                   | Full transparency for power users                |
 
 ---
 
@@ -27,6 +27,7 @@ This document outlines the technical specifications for transforming Hermes from
 ### 1.1 Email Alert System
 
 #### Overview
+
 Implement real-time email alerts for high-confidence signals using Resend with the official Convex component.
 
 #### Schema Additions
@@ -37,7 +38,7 @@ Implement real-time email alerts for high-confidence signals using Resend with t
 // User notification preferences
 userPreferences: defineTable({
   userId: v.id('user'),
-  
+
   // Email settings
   emailAlerts: v.boolean(),
   alertThreshold: v.union(
@@ -46,7 +47,7 @@ userPreferences: defineTable({
     v.literal('all')        // All signals
   ),
   categories: v.array(v.string()), // Empty = all categories
-  
+
   // Digest settings
   digestFrequency: v.union(
     v.literal('instant'),   // Real-time alerts
@@ -55,7 +56,7 @@ userPreferences: defineTable({
   ),
   digestHourUTC: v.number(), // 0-23, hour to send daily digest
   timezone: v.string(),      // e.g., 'America/New_York'
-  
+
   // Timestamps
   createdAt: v.number(),
   updatedAt: v.number(),
@@ -102,9 +103,9 @@ export const sendSignalAlert = internalAction({
     const signal = await ctx.runQuery(internal.signals.getSignalWithPredictions, {
       signalId: args.signalId,
     });
-    
+
     if (!signal) return { sent: 0, skipped: 0 };
-    
+
     // Get users who want instant alerts for this signal type
     const eligibleUsers = await ctx.runQuery(
       internal.notifications.email.getEligibleUsersForAlert,
@@ -113,22 +114,22 @@ export const sendSignalAlert = internalAction({
         category: signal.market?.eventSlug?.split('-')[0] ?? 'general',
       }
     );
-    
+
     let sent = 0;
     let skipped = 0;
-    
+
     for (const user of eligibleUsers) {
       // Check if already sent
       const alreadySent = await ctx.runQuery(
         internal.notifications.email.hasAlertBeenSent,
         { userId: user._id, signalId: args.signalId }
       );
-      
+
       if (alreadySent) {
         skipped++;
         continue;
       }
-      
+
       // Send email
       try {
         await resend.send(ctx, {
@@ -137,20 +138,20 @@ export const sendSignalAlert = internalAction({
           subject: `${signal.consensusDecision} Signal: ${signal.market?.title?.slice(0, 50)}...`,
           html: buildSignalAlertHtml(signal),
         });
-        
+
         // Log the alert
         await ctx.runMutation(internal.notifications.email.logAlert, {
           userId: user._id,
           signalId: args.signalId,
           channel: 'email',
         });
-        
+
         sent++;
       } catch (error) {
         console.error(`Failed to send alert to ${user.email}:`, error);
       }
     }
-    
+
     return { sent, skipped };
   },
 });
@@ -168,21 +169,21 @@ export const sendDailyDigest = internalAction({
       internal.notifications.email.getUsersForDigest,
       { frequency: 'daily', hourUTC: args.hourUTC }
     );
-    
+
     // Get signals from last 24 hours
     const oneDayAgo = Date.now() - 24 * 60 * 60 * 1000;
     const signals = await ctx.runQuery(internal.signals.getSignalsSince, {
       since: oneDayAgo,
       limit: 10,
     });
-    
+
     if (signals.length === 0) return { sent: 0 };
-    
+
     // Get platform stats
     const stats = await ctx.runQuery(internal.performanceMetrics.getPerformanceStats, {});
-    
+
     let sent = 0;
-    
+
     for (const user of users) {
       try {
         await resend.send(ctx, {
@@ -196,7 +197,7 @@ export const sendDailyDigest = internalAction({
         console.error(`Failed to send digest to ${user.email}:`, error);
       }
     }
-    
+
     return { sent };
   },
 });
@@ -210,30 +211,30 @@ export const getEligibleUsersForAlert = internalQuery({
   },
   handler: async (ctx, args) => {
     const prefs = await ctx.db.query('userPreferences')
-      .filter((q) => 
+      .filter((q) =>
         q.and(
           q.eq(q.field('emailAlerts'), true),
           q.eq(q.field('digestFrequency'), 'instant')
         )
       )
       .collect();
-    
+
     // Filter by threshold and category
     const eligiblePrefs = prefs.filter((pref) => {
       // Check threshold
-      const meetsThreshold = 
+      const meetsThreshold =
         pref.alertThreshold === 'all' ||
         (pref.alertThreshold === 'medium' && args.consensusPercentage >= 60) ||
         (pref.alertThreshold === 'high' && args.consensusPercentage >= 80);
-      
+
       // Check category (empty = all)
-      const meetsCategory = 
+      const meetsCategory =
         pref.categories.length === 0 ||
         pref.categories.includes(args.category);
-      
+
       return meetsThreshold && meetsCategory;
     });
-    
+
     // Get user emails
     const users = await Promise.all(
       eligiblePrefs.map(async (pref) => {
@@ -241,7 +242,7 @@ export const getEligibleUsersForAlert = internalQuery({
         return user ? { ...pref, email: user.email, _id: pref.userId } : null;
       })
     );
-    
+
     return users.filter((u): u is NonNullable<typeof u> => u !== null);
   },
 });
@@ -253,7 +254,7 @@ export const hasAlertBeenSent = internalQuery({
   },
   handler: async (ctx, args) => {
     const existing = await ctx.db.query('alertLog')
-      .withIndex('by_user_signal', (q) => 
+      .withIndex('by_user_signal', (q) =>
         q.eq('userId', args.userId).eq('signalId', args.signalId)
       )
       .first();
@@ -280,9 +281,9 @@ export const logAlert = internalMutation({
 // ============ HTML BUILDERS ============
 
 function buildSignalAlertHtml(signal: any): string {
-  const decisionColor = signal.consensusDecision === 'YES' ? '#10b981' : 
+  const decisionColor = signal.consensusDecision === 'YES' ? '#10b981' :
                         signal.consensusDecision === 'NO' ? '#ef4444' : '#f59e0b';
-  
+
   return `
     <!DOCTYPE html>
     <html>
@@ -303,7 +304,7 @@ function buildSignalAlertHtml(signal: any): string {
         </div>
         <div class="content">
           <h2 style="margin-top: 0;">${signal.market?.title ?? 'Unknown Market'}</h2>
-          
+
           <p>
             <span class="decision" style="background: ${decisionColor};">
               ${signal.consensusDecision}
@@ -312,20 +313,20 @@ function buildSignalAlertHtml(signal: any): string {
               ${signal.consensusPercentage.toFixed(0)}% consensus
             </span>
           </p>
-          
+
           <p style="color: #475569;">${signal.aggregatedReasoning?.slice(0, 200)}...</p>
-          
+
           ${signal.aggregatedKeyFactors?.length ? `
             <h4 style="margin-bottom: 8px;">Key Factors:</h4>
             <ul style="color: #475569; margin-top: 0;">
               ${signal.aggregatedKeyFactors.slice(0, 3).map((f: string) => `<li>${f}</li>`).join('')}
             </ul>
           ` : ''}
-          
+
           <a href="https://hermes.trading/dashboard/trades/${signal._id}" class="cta">
             View Full Analysis
           </a>
-          
+
           <p style="color: #94a3b8; font-size: 12px; margin-top: 24px;">
             You're receiving this because you enabled instant alerts for ${signal.confidenceLevel} confidence signals.
             <a href="https://hermes.trading/dashboard/settings">Manage preferences</a>
@@ -379,11 +380,11 @@ Add notification preferences section:
 function NotificationSettings() {
   const preferences = useQuery(convexQuery(api.userPreferences.get, {}));
   const updatePreferences = useMutation(api.userPreferences.update);
-  
+
   const [emailAlerts, setEmailAlerts] = useState(preferences?.emailAlerts ?? true);
   const [threshold, setThreshold] = useState(preferences?.alertThreshold ?? 'high');
   const [frequency, setFrequency] = useState(preferences?.digestFrequency ?? 'instant');
-  
+
   const handleSave = async () => {
     await updatePreferences({
       emailAlerts,
@@ -392,7 +393,7 @@ function NotificationSettings() {
     });
     toast.success('Preferences saved');
   };
-  
+
   return (
     <Card>
       <CardHeader>
@@ -409,7 +410,7 @@ function NotificationSettings() {
           </div>
           <Switch checked={emailAlerts} onCheckedChange={setEmailAlerts} />
         </div>
-        
+
         {/* Threshold selector */}
         <div className="space-y-2">
           <Label>Alert Threshold</Label>
@@ -424,7 +425,7 @@ function NotificationSettings() {
             </SelectContent>
           </Select>
         </div>
-        
+
         {/* Frequency selector */}
         <div className="space-y-2">
           <Label>Notification Frequency</Label>
@@ -439,7 +440,7 @@ function NotificationSettings() {
             </SelectContent>
           </Select>
         </div>
-        
+
         <Button onClick={handleSave}>Save Preferences</Button>
       </CardContent>
     </Card>
@@ -450,6 +451,7 @@ function NotificationSettings() {
 #### Environment Variables
 
 Add to Convex dashboard:
+
 ```
 RESEND_API_KEY=re_xxxxxxxxxxxx
 ```
@@ -462,6 +464,7 @@ bun add @convex-dev/resend
 ```
 
 Update `convex/convex.config.ts`:
+
 ```typescript
 import { defineApp } from "convex/server";
 import resend from "@convex-dev/resend/convex.config";
@@ -482,12 +485,12 @@ export default app;
 
 signals: defineTable({
   // ... existing fields ...
-  
+
   // NEW: Quality metrics
   edgeScore: v.optional(v.number()),        // (AI_prob - market_price) * consensus%
   marketCategory: v.optional(v.string()),    // politics, crypto, sports, etc.
   estimatedResolutionDate: v.optional(v.number()), // Unix timestamp
-  
+
   // NEW: Price movement tracking
   priceAtSignal: v.number(),                // Same as priceAtTrigger, renamed for clarity
   currentPrice: v.optional(v.number()),      // Updated periodically
@@ -507,16 +510,16 @@ export const createSignal = internalMutation({
   handler: async (ctx, args): Promise<Id<'signals'>> => {
     // Calculate edge score
     // Edge = (predicted probability - market price) * consensus strength
-    const predictedProbability = args.consensusDecision === 'YES' 
+    const predictedProbability = args.consensusDecision === 'YES'
       ? (100 - args.priceAtTrigger * 100) / 100  // If YES, edge is how underpriced YES is
       : args.priceAtTrigger;                      // If NO, edge is how overpriced YES is
-    
-    const edgeScore = Math.abs(predictedProbability - args.priceAtTrigger) 
+
+    const edgeScore = Math.abs(predictedProbability - args.priceAtTrigger)
                       * (args.consensusPercentage / 100);
-    
+
     // Derive category from event slug
     const marketCategory = deriveCategory(args.eventSlug);
-    
+
     return await ctx.db.insert('signals', {
       // ... existing fields ...
       edgeScore,
@@ -527,8 +530,8 @@ export const createSignal = internalMutation({
 
 function deriveCategory(eventSlug: string): string {
   const slug = eventSlug.toLowerCase();
-  
-  if (slug.includes('trump') || slug.includes('biden') || slug.includes('election') || 
+
+  if (slug.includes('trump') || slug.includes('biden') || slug.includes('election') ||
       slug.includes('congress') || slug.includes('senate')) {
     return 'politics';
   }
@@ -548,7 +551,7 @@ function deriveCategory(eventSlug: string): string {
       slug.includes('google') || slug.includes('meta')) {
     return 'tech';
   }
-  
+
   return 'general';
 }
 ```
@@ -570,31 +573,31 @@ export const getEquityCurve = query({
   handler: async (ctx, args) => {
     const startingCapital = args.startingCapital ?? 1000;
     const betSize = args.betSize ?? 100;
-    
+
     // Get all signals with outcomes, ordered by time
     const signals = await ctx.db
       .query('signals')
       .withIndex('by_timestamp')
       .order('asc')
       .collect();
-    
+
     // Get resolved markets
     const resolvedMarkets = await ctx.db
       .query('markets')
       .withIndex('by_resolved')
       .filter((q) => q.neq(q.field('outcome'), undefined))
       .collect();
-    
+
     const resolvedMap = new Map<string, { outcome: string; resolvedAt: number }>();
     for (const market of resolvedMarkets) {
       if (market.outcome) {
-        resolvedMap.set(market._id, { 
-          outcome: market.outcome, 
-          resolvedAt: market.resolvedAt ?? Date.now() 
+        resolvedMap.set(market._id, {
+          outcome: market.outcome,
+          resolvedAt: market.resolvedAt ?? Date.now()
         });
       }
     }
-    
+
     // Build equity curve
     let balance = startingCapital;
     const curve: Array<{
@@ -603,17 +606,17 @@ export const getEquityCurve = query({
       signal: string;
       result: 'win' | 'loss' | 'pending';
     }> = [{ date: new Date().toISOString().split('T')[0], balance: startingCapital, signal: 'start', result: 'pending' }];
-    
+
     for (const signal of signals) {
       if (signal.consensusDecision === 'NO_TRADE') continue;
-      
+
       const resolved = resolvedMap.get(signal.marketId);
       if (!resolved || resolved.outcome === 'INVALID') continue;
-      
+
       const isWin = signal.consensusDecision === resolved.outcome;
       const pnl = isWin ? betSize : -betSize;
       balance += pnl;
-      
+
       curve.push({
         date: new Date(resolved.resolvedAt).toISOString().split('T')[0],
         balance,
@@ -621,7 +624,7 @@ export const getEquityCurve = query({
         result: isWin ? 'win' : 'loss',
       });
     }
-    
+
     return {
       curve,
       finalBalance: balance,
@@ -634,13 +637,13 @@ export const getEquityCurve = query({
 function calculateMaxDrawdown(balances: number[]): number {
   let maxDrawdown = 0;
   let peak = balances[0];
-  
+
   for (const balance of balances) {
     if (balance > peak) peak = balance;
     const drawdown = (peak - balance) / peak;
     if (drawdown > maxDrawdown) maxDrawdown = drawdown;
   }
-  
+
   return maxDrawdown * 100;
 }
 
@@ -648,34 +651,34 @@ export const getCategoryAccuracy = query({
   args: {},
   handler: async (ctx) => {
     const signals = await ctx.db.query('signals').collect();
-    
+
     const resolvedMarkets = await ctx.db
       .query('markets')
       .withIndex('by_resolved')
       .filter((q) => q.neq(q.field('outcome'), undefined))
       .collect();
-    
+
     const resolvedMap = new Map<string, string>();
     for (const market of resolvedMarkets) {
       if (market.outcome && market.outcome !== 'INVALID') {
         resolvedMap.set(market._id, market.outcome);
       }
     }
-    
+
     const categoryStats = new Map<string, { total: number; correct: number }>();
-    
+
     for (const signal of signals) {
       if (signal.consensusDecision === 'NO_TRADE') continue;
-      
+
       const category = signal.marketCategory ?? 'general';
       const outcome = resolvedMap.get(signal.marketId);
-      
+
       if (!categoryStats.has(category)) {
         categoryStats.set(category, { total: 0, correct: 0 });
       }
-      
+
       const stats = categoryStats.get(category)!;
-      
+
       if (outcome) {
         stats.total++;
         if (signal.consensusDecision === outcome) {
@@ -683,7 +686,7 @@ export const getCategoryAccuracy = query({
         }
       }
     }
-    
+
     return Array.from(categoryStats.entries()).map(([category, stats]) => ({
       category,
       total: stats.total,
@@ -743,30 +746,30 @@ export const addPortfolio = mutation({
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) throw new Error('Not authenticated');
-    
+
     const user = await ctx.db
       .query('user')
       .withIndex('userId', (q) => q.eq('userId', identity.subject))
       .first();
-    
+
     if (!user) throw new Error('User not found');
-    
+
     // Validate address format
     if (!/^0x[a-fA-F0-9]{40}$/.test(args.polymarketAddress)) {
       throw new Error('Invalid Ethereum address format');
     }
-    
+
     // Check if already added
     const existing = await ctx.db
       .query('userPortfolio')
       .withIndex('by_user', (q) => q.eq('userId', user._id))
       .filter((q) => q.eq(q.field('polymarketAddress'), args.polymarketAddress.toLowerCase()))
       .first();
-    
+
     if (existing) {
       throw new Error('This address is already added to your portfolio');
     }
-    
+
     return await ctx.db.insert('userPortfolio', {
       userId: user._id,
       polymarketAddress: args.polymarketAddress.toLowerCase(),
@@ -783,19 +786,19 @@ export const removePortfolio = mutation({
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) throw new Error('Not authenticated');
-    
+
     const portfolio = await ctx.db.get(args.portfolioId);
     if (!portfolio) throw new Error('Portfolio not found');
-    
+
     const user = await ctx.db
       .query('user')
       .withIndex('userId', (q) => q.eq('userId', identity.subject))
       .first();
-    
+
     if (!user || portfolio.userId !== user._id) {
       throw new Error('Not authorized');
     }
-    
+
     await ctx.db.delete(args.portfolioId);
   },
 });
@@ -807,14 +810,14 @@ export const getMyPortfolios = query({
   handler: async (ctx) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) return [];
-    
+
     const user = await ctx.db
       .query('user')
       .withIndex('userId', (q) => q.eq('userId', identity.subject))
       .first();
-    
+
     if (!user) return [];
-    
+
     return await ctx.db
       .query('userPortfolio')
       .withIndex('by_user', (q) => q.eq('userId', user._id))
@@ -851,19 +854,19 @@ export const getPositionsWithSignalAlignment = query({
   handler: async (ctx) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) return { positions: [], portfolios: [] };
-    
+
     const user = await ctx.db
       .query('user')
       .withIndex('userId', (q) => q.eq('userId', identity.subject))
       .first();
-    
+
     if (!user) return { positions: [], portfolios: [] };
-    
+
     const portfolios = await ctx.db
       .query('userPortfolio')
       .withIndex('by_user', (q) => q.eq('userId', user._id))
       .collect();
-    
+
     // Note: Actual position fetching must be done via action, not query
     // This query returns portfolio metadata; frontend calls action for live positions
     return { portfolios };
@@ -893,41 +896,41 @@ export const syncPortfolioWithSignals = internalAction({
     const positions = await polymarketApi.getUserPositions(args.address, {
       limit: 100,
     });
-    
+
     // Get our signals for these markets
     const conditionIds = positions.map(p => p.conditionId);
     const markets = await ctx.runQuery(internal.markets.getMarketsByConditionIds, {
       conditionIds,
     });
-    
+
     const marketMap = new Map(markets.map(m => [m.conditionId, m]));
-    
+
     const results = await Promise.all(positions.map(async (position) => {
       const market = marketMap.get(position.conditionId);
       if (!market) {
         return { position, signal: undefined, alignment: 'no_signal' as const };
       }
-      
+
       // Get latest signal for this market
       const signal = await ctx.runQuery(internal.signals.getLatestSignalForMarket, {
         marketId: market._id,
       });
-      
+
       if (!signal) {
         return { position, signal: undefined, alignment: 'no_signal' as const };
       }
-      
+
       // Determine alignment
       const positionSide = position.outcome.toUpperCase() === 'YES' ? 'YES' : 'NO';
-      const alignment = signal.consensusDecision === positionSide 
-        ? 'aligned' as const 
+      const alignment = signal.consensusDecision === positionSide
+        ? 'aligned' as const
         : signal.consensusDecision === 'NO_TRADE'
           ? 'no_signal' as const
           : 'opposed' as const;
-      
+
       return { position, signal, alignment };
     }));
-    
+
     return results;
   },
 });
@@ -950,9 +953,9 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { HugeiconsIcon } from '@hugeicons/react';
-import { 
-  Wallet01Icon, 
-  Add01Icon, 
+import {
+  Wallet01Icon,
+  Add01Icon,
   RefreshIcon,
   CheckmarkCircle01Icon,
   AlertCircleIcon,
@@ -969,11 +972,11 @@ function PortfolioPage() {
   );
   const addPortfolio = useMutation(api.portfolio.addPortfolio);
   const syncPositions = useAction(api.portfolio.syncPortfolioWithSignals);
-  
+
   const [newAddress, setNewAddress] = useState('');
   const [positions, setPositions] = useState<any[]>([]);
   const [syncing, setSyncing] = useState(false);
-  
+
   const handleAddAddress = async () => {
     if (!newAddress) return;
     try {
@@ -983,7 +986,7 @@ function PortfolioPage() {
       console.error(error);
     }
   };
-  
+
   const handleSync = async (address: string) => {
     setSyncing(true);
     try {
@@ -993,7 +996,7 @@ function PortfolioPage() {
       setSyncing(false);
     }
   };
-  
+
   return (
     <div className="min-h-full">
       {/* Header */}
@@ -1009,7 +1012,7 @@ function PortfolioPage() {
               </p>
             </div>
           </div>
-          
+
           {/* Add wallet form */}
           <div className="flex gap-2 max-w-md">
             <Input
@@ -1025,7 +1028,7 @@ function PortfolioPage() {
           </div>
         </div>
       </div>
-      
+
       {/* Content */}
       <div className="p-4 md:p-6 space-y-6">
         {/* Wallet selector */}
@@ -1046,7 +1049,7 @@ function PortfolioPage() {
             ))}
           </div>
         )}
-        
+
         {/* Positions */}
         {positions.length > 0 ? (
           <div className="space-y-4">
@@ -1064,11 +1067,11 @@ function PortfolioPage() {
             </CardContent>
           </Card>
         )}
-        
+
         {/* Disclaimer */}
         <p className="text-xs text-muted-foreground">
-          Note: We can only see your current positions. We cannot track if you followed our signals 
-          or calculate attributed P&L. Position alignment shows whether your holdings match our latest 
+          Note: We can only see your current positions. We cannot track if you followed our signals
+          or calculate attributed P&L. Position alignment shows whether your holdings match our latest
           AI consensus.
         </p>
       </div>
@@ -1078,30 +1081,30 @@ function PortfolioPage() {
 
 function PositionCard({ position, signal, alignment }: any) {
   const alignmentConfig = {
-    aligned: { 
-      icon: CheckmarkCircle01Icon, 
+    aligned: {
+      icon: CheckmarkCircle01Icon,
       color: 'text-green-600 dark:text-green-400',
       bg: 'bg-green-500/10',
       label: 'Aligned with Signal'
     },
-    opposed: { 
-      icon: AlertCircleIcon, 
+    opposed: {
+      icon: AlertCircleIcon,
       color: 'text-red-600 dark:text-red-400',
       bg: 'bg-red-500/10',
       label: 'Opposes Signal'
     },
-    no_signal: { 
-      icon: MinusSignIcon, 
+    no_signal: {
+      icon: MinusSignIcon,
       color: 'text-muted-foreground',
       bg: 'bg-muted',
       label: 'No Signal'
     },
   }[alignment];
-  
-  const pnlColor = position.percentPnl >= 0 
-    ? 'text-green-600 dark:text-green-400' 
+
+  const pnlColor = position.percentPnl >= 0
+    ? 'text-green-600 dark:text-green-400'
     : 'text-red-600 dark:text-red-400';
-  
+
   return (
     <Card>
       <CardContent className="p-4">
@@ -1117,7 +1120,7 @@ function PositionCard({ position, signal, alignment }: any) {
               </span>
             </div>
           </div>
-          
+
           <div className="text-right">
             <div className={`font-mono font-bold ${pnlColor}`}>
               {position.percentPnl >= 0 ? '+' : ''}{position.percentPnl.toFixed(1)}%
@@ -1127,7 +1130,7 @@ function PositionCard({ position, signal, alignment }: any) {
             </div>
           </div>
         </div>
-        
+
         {/* Signal alignment */}
         <div className={`mt-3 p-2 rounded-md ${alignmentConfig.bg} flex items-center gap-2`}>
           <HugeiconsIcon icon={alignmentConfig.icon} size={16} className={alignmentConfig.color} />
@@ -1180,7 +1183,7 @@ deepDiveRequests: defineTable({
   requestedAt: v.number(),
   completedAt: v.optional(v.number()),
   creditsCharged: v.number(),
-  
+
   // Result data (populated when completed)
   result: v.optional(v.object({
     newsItems: v.array(v.object({
@@ -1205,7 +1208,7 @@ deepDiveRequests: defineTable({
     updatedAnalysis: v.string(),
     citations: v.array(v.string()),
   })),
-  
+
   errorMessage: v.optional(v.string()),
 })
   .index('by_user', ['userId', 'requestedAt'])
@@ -1230,23 +1233,23 @@ export const getCredits = query({
   handler: async (ctx) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) return null;
-    
+
     const user = await ctx.db
       .query('user')
       .withIndex('userId', (q) => q.eq('userId', identity.subject))
       .first();
-    
+
     if (!user) return null;
-    
+
     const credits = await ctx.db
       .query('userCredits')
       .withIndex('by_user', (q) => q.eq('userId', user._id))
       .first();
-    
-    return credits ?? { 
-      deepDiveCredits: 0, 
-      monthlyAllocation: 0, 
-      totalUsed: 0 
+
+    return credits ?? {
+      deepDiveCredits: 0,
+      monthlyAllocation: 0,
+      totalUsed: 0
     };
   },
 });
@@ -1261,11 +1264,11 @@ export const deductCredit = internalMutation({
       .query('userCredits')
       .withIndex('by_user', (q) => q.eq('userId', args.userId))
       .first();
-    
+
     if (!credits || credits.deepDiveCredits < args.amount) {
       throw new Error('Insufficient credits');
     }
-    
+
     await ctx.db.patch(credits._id, {
       deepDiveCredits: credits.deepDiveCredits - args.amount,
       totalUsed: credits.totalUsed + args.amount,
@@ -1283,42 +1286,42 @@ export const requestDeepDive = mutation({
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) throw new Error('Not authenticated');
-    
+
     const user = await ctx.db
       .query('user')
       .withIndex('userId', (q) => q.eq('userId', identity.subject))
       .first();
-    
+
     if (!user) throw new Error('User not found');
-    
+
     // Check for recent cached result (within 6 hours)
     const sixHoursAgo = Date.now() - 6 * 60 * 60 * 1000;
     const cachedRequest = await ctx.db
       .query('deepDiveRequests')
       .withIndex('by_market', (q) => q.eq('marketId', args.marketId))
-      .filter((q) => 
+      .filter((q) =>
         q.and(
           q.eq(q.field('status'), 'completed'),
           q.gt(q.field('completedAt'), sixHoursAgo)
         )
       )
       .first();
-    
+
     if (cachedRequest) {
       // Return cached result without charging credits
       return cachedRequest._id;
     }
-    
+
     // Check credits
     const credits = await ctx.db
       .query('userCredits')
       .withIndex('by_user', (q) => q.eq('userId', user._id))
       .first();
-    
+
     if (!credits || credits.deepDiveCredits < 1) {
       throw new Error('Insufficient credits. Upgrade your plan for more deep dives.');
     }
-    
+
     // Create request
     const requestId = await ctx.db.insert('deepDiveRequests', {
       userId: user._id,
@@ -1327,18 +1330,18 @@ export const requestDeepDive = mutation({
       requestedAt: Date.now(),
       creditsCharged: 1,
     });
-    
+
     // Deduct credit
     await ctx.db.patch(credits._id, {
       deepDiveCredits: credits.deepDiveCredits - 1,
       totalUsed: credits.totalUsed + 1,
     });
-    
+
     // Schedule the analysis
     await ctx.scheduler.runAfter(0, internal.deepDive.runDeepDiveAnalysis, {
       requestId,
     });
-    
+
     return requestId;
   },
 });
@@ -1364,25 +1367,25 @@ export const runDeepDiveAnalysis = internalAction({
       requestId: args.requestId,
       status: 'processing',
     });
-    
+
     try {
       // Get market data
       const request = await ctx.runQuery(internal.deepDive.getRequest, {
         requestId: args.requestId,
       });
-      
+
       if (!request) throw new Error('Request not found');
-      
+
       const market = await ctx.runQuery(internal.markets.getMarket, {
         marketId: request.marketId,
       });
-      
+
       if (!market) throw new Error('Market not found');
-      
+
       // Call Perplexity API
       const apiKey = process.env.PERPLEXITY_API_KEY;
       if (!apiKey) throw new Error('Perplexity API key not configured');
-      
+
       const response = await fetch('https://api.perplexity.ai/chat/completions', {
         method: 'POST',
         headers: {
@@ -1419,24 +1422,24 @@ Provide a comprehensive analysis with recent news, sentiment, and updated probab
           return_citations: true,
         }),
       });
-      
+
       if (!response.ok) {
         throw new Error(`Perplexity API error: ${response.status}`);
       }
-      
+
       const data = await response.json();
       const content = data.choices?.[0]?.message?.content ?? '';
       const citations = data.citations ?? [];
-      
+
       // Parse the response into structured data
       const result = parseDeepDiveResponse(content, citations);
-      
+
       // Update request with result
       await ctx.runMutation(internal.deepDive.completeRequest, {
         requestId: args.requestId,
         result,
       });
-      
+
     } catch (error) {
       console.error('Deep dive failed:', error);
       await ctx.runMutation(internal.deepDive.failRequest, {
@@ -1471,7 +1474,7 @@ export const updateRequestStatus = internalMutation({
     status: v.string(),
   },
   handler: async (ctx, args) => {
-    await ctx.db.patch(args.requestId, { 
+    await ctx.db.patch(args.requestId, {
       status: args.status as any,
     });
   },
@@ -1524,21 +1527,21 @@ whaleProfiles: defineTable({
   address: v.string(),                    // Wallet address
   firstSeenAt: v.number(),
   lastSeenAt: v.number(),
-  
+
   // Activity stats
   totalTrades: v.number(),
   totalVolume: v.number(),
   avgTradeSize: v.number(),
-  
+
   // Performance (on resolved markets)
   resolvedTrades: v.number(),
   correctPredictions: v.number(),
   winRate: v.optional(v.number()),        // Only calculated with 10+ resolved
-  
+
   // Classification
   isSmartMoney: v.boolean(),              // winRate > 60% with 10+ resolved
   preferredCategories: v.array(v.string()),
-  
+
   // Metadata (from Polymarket if available)
   username: v.optional(v.string()),
   profileImage: v.optional(v.string()),
@@ -1570,17 +1573,17 @@ export const upsertWhaleProfile = internalMutation({
       .query('whaleProfiles')
       .withIndex('by_address', (q) => q.eq('address', args.address.toLowerCase()))
       .first();
-    
+
     if (existing) {
       // Update existing profile
       const newTotalTrades = existing.totalTrades + 1;
       const newTotalVolume = existing.totalVolume + args.tradeSize;
       const newAvgTradeSize = newTotalVolume / newTotalTrades;
-      
+
       // Update categories
       const categories = new Set(existing.preferredCategories);
       categories.add(args.category);
-      
+
       await ctx.db.patch(existing._id, {
         lastSeenAt: Date.now(),
         totalTrades: newTotalTrades,
@@ -1617,14 +1620,14 @@ export const updateWhaleAccuracy = internalMutation({
       .query('whaleProfiles')
       .withIndex('by_address', (q) => q.eq('address', args.address.toLowerCase()))
       .first();
-    
+
     if (!profile) return;
-    
+
     const newResolved = profile.resolvedTrades + 1;
     const newCorrect = profile.correctPredictions + (args.wasCorrect ? 1 : 0);
     const winRate = newResolved >= 10 ? (newCorrect / newResolved) * 100 : undefined;
     const isSmartMoney = winRate !== undefined && winRate > 60 && newResolved >= 10;
-    
+
     await ctx.db.patch(profile._id, {
       resolvedTrades: newResolved,
       correctPredictions: newCorrect,
@@ -1671,9 +1674,9 @@ export const getRecentSmartMoneyTrades = query({
       .query('whaleProfiles')
       .withIndex('by_smart_money', (q) => q.eq('isSmartMoney', true))
       .take(50);
-    
+
     const smartAddresses = new Set(smartWhales.map(w => w.address));
-    
+
     // Get recent whale trades
     const oneDayAgo = Date.now() / 1000 - 24 * 60 * 60;
     const trades = await ctx.db
@@ -1682,12 +1685,12 @@ export const getRecentSmartMoneyTrades = query({
       .filter((q) => q.gt(q.field('timestamp'), oneDayAgo))
       .order('desc')
       .take(100);
-    
+
     // Filter to smart money and enrich with profile
     const smartTrades = trades
       .filter(t => smartAddresses.has(t.proxyWallet.toLowerCase()))
       .slice(0, args.limit ?? 20);
-    
+
     return Promise.all(smartTrades.map(async (trade) => {
       const profile = smartWhales.find(w => w.address === trade.proxyWallet.toLowerCase());
       return { ...trade, whaleProfile: profile };
@@ -1699,13 +1702,13 @@ export const getWhaleStats = query({
   args: {},
   handler: async (ctx) => {
     const allWhales = await ctx.db.query('whaleProfiles').collect();
-    
+
     const smartMoney = allWhales.filter(w => w.isSmartMoney);
     const totalVolume = allWhales.reduce((sum, w) => sum + w.totalVolume, 0);
     const avgWinRate = smartMoney.length > 0
       ? smartMoney.reduce((sum, w) => sum + (w.winRate ?? 0), 0) / smartMoney.length
       : 0;
-    
+
     return {
       totalWhales: allWhales.length,
       smartMoneyCount: smartMoney.length,
@@ -1723,6 +1726,7 @@ export const getWhaleStats = query({
 ### 4.1 Weekly Digest Email
 
 Add to cron jobs and implement weekly summary email with:
+
 - Week's top signals
 - Platform accuracy stats
 - User's viewed signals
@@ -1754,11 +1758,11 @@ Key factors:
 ${signal.aggregatedKeyFactors?.slice(0, 2).map(f => `- ${f}`).join('\n') ?? ''}
 
 Try Hermes: https://hermes.trading`;
-    
+
     const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`;
     window.open(twitterUrl, '_blank');
   };
-  
+
   return (
     <Button variant="outline" size="sm" onClick={handleShare}>
       <HugeiconsIcon icon={Share01Icon} size={14} className="mr-2" />
@@ -1771,6 +1775,7 @@ Try Hermes: https://hermes.trading`;
 ### 4.3 Activity Tracking & Badges
 
 **Schema:**
+
 ```typescript
 userActivity: defineTable({
   userId: v.id('user'),
@@ -1787,6 +1792,7 @@ userActivity: defineTable({
 ```
 
 **Badges (engagement-based only):**
+
 - `early_adopter` - Joined during beta
 - `research_pro` - Used 10 deep dives
 - `signal_hunter` - Viewed 100 signals
@@ -1833,6 +1839,7 @@ Add public performance dashboard route that doesn't require auth:
 ## Environment Variables Summary
 
 Add to Convex dashboard:
+
 ```
 # Email
 RESEND_API_KEY=re_xxxxxxxxxxxx
@@ -1866,6 +1873,7 @@ bun add recharts
 ## Testing Checklist
 
 ### Phase 1
+
 - [ ] Email alerts send for high-confidence signals
 - [ ] Daily digest sends at correct time
 - [ ] User preferences save and load correctly
@@ -1873,12 +1881,14 @@ bun add recharts
 - [ ] Category derivation works for major categories
 
 ### Phase 2
+
 - [ ] Wallet addresses validate correctly
 - [ ] Polymarket positions fetch successfully
 - [ ] Signal alignment displays correctly
 - [ ] Multiple wallets supported per user
 
 ### Phase 3
+
 - [ ] Deep dive credits deduct correctly
 - [ ] Cached results return without charging
 - [ ] Perplexity API integration works
@@ -1886,6 +1896,7 @@ bun add recharts
 - [ ] Smart money classification triggers at 10+ resolved trades
 
 ### Phase 4
+
 - [ ] Social share generates correct tweet
 - [ ] Activity tracking increments correctly
 - [ ] Badges award at correct thresholds
@@ -1895,13 +1906,13 @@ bun add recharts
 
 ## Success Metrics
 
-| Metric | Week 2 | Week 4 | Week 8 |
-|--------|--------|--------|--------|
-| Email open rate | 30%+ | 35%+ | 40%+ |
-| Daily active users | 50 | 200 | 500 |
-| Trial conversion | - | 10% | 15% |
-| Deep dive usage | - | 30% of Pro | 50% of Pro |
-| Signal accuracy | Baseline | Maintain | Maintain |
+| Metric             | Week 2   | Week 4     | Week 8     |
+| ------------------ | -------- | ---------- | ---------- |
+| Email open rate    | 30%+     | 35%+       | 40%+       |
+| Daily active users | 50       | 200        | 500        |
+| Trial conversion   | -        | 10%        | 15%        |
+| Deep dive usage    | -        | 30% of Pro | 50% of Pro |
+| Signal accuracy    | Baseline | Maintain   | Maintain   |
 
 ---
 

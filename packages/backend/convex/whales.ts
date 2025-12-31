@@ -1,8 +1,8 @@
-import { v } from 'convex/values';
-import { query, internalMutation } from './_generated/server';
-import type { Doc } from './_generated/dataModel';
+import { v } from "convex/values";
+import { query, internalMutation } from "./_generated/server";
+import type { Doc } from "./_generated/dataModel";
 
-type WhaleProfile = Doc<'whaleProfiles'>;
+type WhaleProfile = Doc<"whaleProfiles">;
 
 export const upsertWhaleProfile = internalMutation({
   args: {
@@ -15,8 +15,8 @@ export const upsertWhaleProfile = internalMutation({
     const normalizedAddress = args.address.toLowerCase();
 
     const existing = await ctx.db
-      .query('whaleProfiles')
-      .withIndex('by_address', (q) => q.eq('address', normalizedAddress))
+      .query("whaleProfiles")
+      .withIndex("by_address", (q) => q.eq("address", normalizedAddress))
       .first();
 
     if (existing) {
@@ -35,7 +35,7 @@ export const upsertWhaleProfile = internalMutation({
         preferredCategories: Array.from(categories).slice(0, 5),
       });
     } else {
-      await ctx.db.insert('whaleProfiles', {
+      await ctx.db.insert("whaleProfiles", {
         address: normalizedAddress,
         firstSeenAt: Date.now(),
         lastSeenAt: Date.now(),
@@ -61,15 +61,16 @@ export const updateWhaleAccuracy = internalMutation({
   returns: v.null(),
   handler: async (ctx, args): Promise<null> => {
     const profile = await ctx.db
-      .query('whaleProfiles')
-      .withIndex('by_address', (q) => q.eq('address', args.address.toLowerCase()))
+      .query("whaleProfiles")
+      .withIndex("by_address", (q) =>
+        q.eq("address", args.address.toLowerCase()),
+      )
       .first();
 
     if (!profile) return null;
 
     const newResolved = profile.resolvedTrades + 1;
-    const newCorrect =
-      profile.correctPredictions + (args.wasCorrect ? 1 : 0);
+    const newCorrect = profile.correctPredictions + (args.wasCorrect ? 1 : 0);
     const winRate =
       newResolved >= 10 ? (newCorrect / newResolved) * 100 : undefined;
     const isSmartMoney =
@@ -87,7 +88,7 @@ export const updateWhaleAccuracy = internalMutation({
 });
 
 const whaleProfileValidator = v.object({
-  _id: v.id('whaleProfiles'),
+  _id: v.id("whaleProfiles"),
   _creationTime: v.number(),
   address: v.string(),
   firstSeenAt: v.number(),
@@ -111,9 +112,9 @@ export const getSmartMoneyWhales = query({
   returns: v.array(whaleProfileValidator),
   handler: async (ctx, args): Promise<WhaleProfile[]> => {
     return await ctx.db
-      .query('whaleProfiles')
-      .withIndex('by_smart_money', (q) => q.eq('isSmartMoney', true))
-      .order('desc')
+      .query("whaleProfiles")
+      .withIndex("by_smart_money", (q) => q.eq("isSmartMoney", true))
+      .order("desc")
       .take(args.limit ?? 20);
   },
 });
@@ -125,9 +126,9 @@ export const getTopWhalesByVolume = query({
   returns: v.array(whaleProfileValidator),
   handler: async (ctx, args): Promise<WhaleProfile[]> => {
     return await ctx.db
-      .query('whaleProfiles')
-      .withIndex('by_volume')
-      .order('desc')
+      .query("whaleProfiles")
+      .withIndex("by_volume")
+      .order("desc")
       .take(args.limit ?? 20);
   },
 });
@@ -139,8 +140,10 @@ export const getWhaleProfile = query({
   returns: v.union(whaleProfileValidator, v.null()),
   handler: async (ctx, args): Promise<WhaleProfile | null> => {
     return await ctx.db
-      .query('whaleProfiles')
-      .withIndex('by_address', (q) => q.eq('address', args.address.toLowerCase()))
+      .query("whaleProfiles")
+      .withIndex("by_address", (q) =>
+        q.eq("address", args.address.toLowerCase()),
+      )
       .first();
   },
 });
@@ -152,18 +155,18 @@ export const getRecentSmartMoneyTrades = query({
   returns: v.array(v.any()),
   handler: async (ctx, args) => {
     const smartWhales = await ctx.db
-      .query('whaleProfiles')
-      .withIndex('by_smart_money', (q) => q.eq('isSmartMoney', true))
+      .query("whaleProfiles")
+      .withIndex("by_smart_money", (q) => q.eq("isSmartMoney", true))
       .take(50);
 
     const smartAddresses = new Set(smartWhales.map((w) => w.address));
 
     const oneDayAgo = Date.now() / 1000 - 24 * 60 * 60;
     const trades = await ctx.db
-      .query('trades')
-      .withIndex('by_whale', (q) => q.eq('isWhale', true))
-      .filter((q) => q.gt(q.field('timestamp'), oneDayAgo))
-      .order('desc')
+      .query("trades")
+      .withIndex("by_whale", (q) => q.eq("isWhale", true))
+      .filter((q) => q.gt(q.field("timestamp"), oneDayAgo))
+      .order("desc")
       .take(100);
 
     const smartTrades = trades
@@ -195,7 +198,7 @@ export const getWhaleStats = query({
     totalVolume: number;
     avgSmartMoneyWinRate: number;
   }> => {
-    const allWhales = await ctx.db.query('whaleProfiles').collect();
+    const allWhales = await ctx.db.query("whaleProfiles").collect();
 
     const smartMoney = allWhales.filter((w) => w.isSmartMoney);
     const totalVolume = allWhales.reduce((sum, w) => sum + w.totalVolume, 0);
@@ -223,16 +226,16 @@ export const getAllWhales = query({
   handler: async (ctx, args): Promise<WhaleProfile[]> => {
     if (args.onlySmartMoney) {
       return await ctx.db
-        .query('whaleProfiles')
-        .withIndex('by_smart_money', (q) => q.eq('isSmartMoney', true))
-        .order('desc')
+        .query("whaleProfiles")
+        .withIndex("by_smart_money", (q) => q.eq("isSmartMoney", true))
+        .order("desc")
         .take(args.limit ?? 50);
     }
 
     return await ctx.db
-      .query('whaleProfiles')
-      .withIndex('by_volume')
-      .order('desc')
+      .query("whaleProfiles")
+      .withIndex("by_volume")
+      .order("desc")
       .take(args.limit ?? 50);
   },
 });

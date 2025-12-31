@@ -1,22 +1,22 @@
-import { ConvexError, v } from 'convex/values';
-import { mutation, query } from './_generated/server';
-import type { Id } from './_generated/dataModel';
+import { ConvexError, v } from "convex/values";
+import { mutation, query } from "./_generated/server";
+import type { Id } from "./_generated/dataModel";
 
 const preferencesValidator = v.object({
-  _id: v.id('userPreferences'),
+  _id: v.id("userPreferences"),
   _creationTime: v.number(),
-  userId: v.id('user'),
+  userId: v.id("user"),
   emailAlerts: v.boolean(),
   alertThreshold: v.union(
-    v.literal('high'),
-    v.literal('medium'),
-    v.literal('all'),
+    v.literal("high"),
+    v.literal("medium"),
+    v.literal("all"),
   ),
   categories: v.array(v.string()),
   digestFrequency: v.union(
-    v.literal('instant'),
-    v.literal('daily'),
-    v.literal('weekly'),
+    v.literal("instant"),
+    v.literal("daily"),
+    v.literal("weekly"),
   ),
   digestHourUTC: v.number(),
   timezone: v.string(),
@@ -24,13 +24,16 @@ const preferencesValidator = v.object({
   updatedAt: v.number(),
 });
 
-async function getAuthenticatedUser(ctx: { auth: { getUserIdentity: () => Promise<{ subject: string } | null> }; db: any }) {
+async function getAuthenticatedUser(ctx: {
+  auth: { getUserIdentity: () => Promise<{ subject: string } | null> };
+  db: any;
+}) {
   const identity = await ctx.auth.getUserIdentity();
   if (!identity) return null;
 
   const user = await ctx.db
-    .query('user')
-    .withIndex('userId', (q: any) => q.eq('userId', identity.subject))
+    .query("user")
+    .withIndex("userId", (q: any) => q.eq("userId", identity.subject))
     .first();
 
   return user;
@@ -44,8 +47,8 @@ export const getMyPreferences = query({
     if (!user) return null;
 
     return await ctx.db
-      .query('userPreferences')
-      .withIndex('by_user', (q) => q.eq('userId', user._id))
+      .query("userPreferences")
+      .withIndex("by_user", (q) => q.eq("userId", user._id))
       .unique();
   },
 });
@@ -58,15 +61,15 @@ export const getMyPreferencesWithDefaults = query({
     defaults: v.object({
       emailAlerts: v.boolean(),
       alertThreshold: v.union(
-        v.literal('high'),
-        v.literal('medium'),
-        v.literal('all'),
+        v.literal("high"),
+        v.literal("medium"),
+        v.literal("all"),
       ),
       categories: v.array(v.string()),
       digestFrequency: v.union(
-        v.literal('instant'),
-        v.literal('daily'),
-        v.literal('weekly'),
+        v.literal("instant"),
+        v.literal("daily"),
+        v.literal("weekly"),
       ),
       digestHourUTC: v.number(),
       timezone: v.string(),
@@ -75,11 +78,11 @@ export const getMyPreferencesWithDefaults = query({
   handler: async (ctx) => {
     const defaults = {
       emailAlerts: false,
-      alertThreshold: 'high' as const,
+      alertThreshold: "high" as const,
       categories: [] as string[],
-      digestFrequency: 'daily' as const,
+      digestFrequency: "daily" as const,
       digestHourUTC: 9,
-      timezone: 'UTC',
+      timezone: "UTC",
     };
 
     const user = await getAuthenticatedUser(ctx);
@@ -88,8 +91,8 @@ export const getMyPreferencesWithDefaults = query({
     }
 
     const existing = await ctx.db
-      .query('userPreferences')
-      .withIndex('by_user', (q) => q.eq('userId', user._id))
+      .query("userPreferences")
+      .withIndex("by_user", (q) => q.eq("userId", user._id))
       .unique();
 
     if (existing) {
@@ -104,34 +107,34 @@ export const updateMyPreferences = mutation({
   args: {
     emailAlerts: v.optional(v.boolean()),
     alertThreshold: v.optional(
-      v.union(v.literal('high'), v.literal('medium'), v.literal('all')),
+      v.union(v.literal("high"), v.literal("medium"), v.literal("all")),
     ),
     categories: v.optional(v.array(v.string())),
     digestFrequency: v.optional(
-      v.union(v.literal('instant'), v.literal('daily'), v.literal('weekly')),
+      v.union(v.literal("instant"), v.literal("daily"), v.literal("weekly")),
     ),
     digestHourUTC: v.optional(v.number()),
     timezone: v.optional(v.string()),
   },
-  returns: v.id('userPreferences'),
-  handler: async (ctx, args): Promise<Id<'userPreferences'>> => {
+  returns: v.id("userPreferences"),
+  handler: async (ctx, args): Promise<Id<"userPreferences">> => {
     const user = await getAuthenticatedUser(ctx);
-    if (!user) throw new ConvexError('Not authenticated');
+    if (!user) throw new ConvexError("Not authenticated");
 
     const existing = await ctx.db
-      .query('userPreferences')
-      .withIndex('by_user', (q) => q.eq('userId', user._id))
+      .query("userPreferences")
+      .withIndex("by_user", (q) => q.eq("userId", user._id))
       .unique();
 
     if (!existing) {
-      return await ctx.db.insert('userPreferences', {
+      return await ctx.db.insert("userPreferences", {
         userId: user._id,
         emailAlerts: args.emailAlerts ?? false,
-        alertThreshold: args.alertThreshold ?? 'high',
+        alertThreshold: args.alertThreshold ?? "high",
         categories: args.categories ?? [],
-        digestFrequency: args.digestFrequency ?? 'daily',
+        digestFrequency: args.digestFrequency ?? "daily",
         digestHourUTC: args.digestHourUTC ?? 9,
-        timezone: args.timezone ?? 'UTC',
+        timezone: args.timezone ?? "UTC",
         createdAt: Date.now(),
         updatedAt: Date.now(),
       });
@@ -139,9 +142,9 @@ export const updateMyPreferences = mutation({
 
     const updates: Partial<{
       emailAlerts: boolean;
-      alertThreshold: 'high' | 'medium' | 'all';
+      alertThreshold: "high" | "medium" | "all";
       categories: string[];
-      digestFrequency: 'instant' | 'daily' | 'weekly';
+      digestFrequency: "instant" | "daily" | "weekly";
       digestHourUTC: number;
       timezone: string;
       updatedAt: number;
@@ -167,11 +170,11 @@ export const deleteMyPreferences = mutation({
   returns: v.boolean(),
   handler: async (ctx): Promise<boolean> => {
     const user = await getAuthenticatedUser(ctx);
-    if (!user) throw new ConvexError('Not authenticated');
+    if (!user) throw new ConvexError("Not authenticated");
 
     const existing = await ctx.db
-      .query('userPreferences')
-      .withIndex('by_user', (q) => q.eq('userId', user._id))
+      .query("userPreferences")
+      .withIndex("by_user", (q) => q.eq("userId", user._id))
       .unique();
 
     if (!existing) return false;

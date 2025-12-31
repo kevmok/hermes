@@ -1,5 +1,5 @@
-import { v } from 'convex/values';
-import { internalMutation } from './_generated/server';
+import { v } from "convex/values";
+import { internalMutation } from "./_generated/server";
 
 export const cleanupOldData = internalMutation({
   args: {},
@@ -16,9 +16,9 @@ export const cleanupOldData = internalMutation({
 
     // Delete old market snapshots (keep 7 days)
     const oldSnapshots = await ctx.db
-      .query('marketSnapshots')
-      .withIndex('by_timestamp')
-      .filter((q) => q.lt(q.field('timestamp'), snapshotCutoff))
+      .query("marketSnapshots")
+      .withIndex("by_timestamp")
+      .filter((q) => q.lt(q.field("timestamp"), snapshotCutoff))
       .take(1000);
 
     for (const snapshot of oldSnapshots) {
@@ -27,9 +27,9 @@ export const cleanupOldData = internalMutation({
 
     // Delete old model predictions (keep 30 days)
     const oldPredictions = await ctx.db
-      .query('modelPredictions')
-      .withIndex('by_timestamp')
-      .filter((q) => q.lt(q.field('timestamp'), predictionCutoff))
+      .query("modelPredictions")
+      .withIndex("by_timestamp")
+      .filter((q) => q.lt(q.field("timestamp"), predictionCutoff))
       .take(1000);
 
     for (const prediction of oldPredictions) {
@@ -38,14 +38,14 @@ export const cleanupOldData = internalMutation({
 
     // Delete completed/failed analysis requests older than 7 days
     const oldRequests = await ctx.db
-      .query('analysisRequests')
-      .withIndex('by_requested_at')
+      .query("analysisRequests")
+      .withIndex("by_requested_at")
       .filter((q) =>
         q.and(
-          q.lt(q.field('requestedAt'), snapshotCutoff),
+          q.lt(q.field("requestedAt"), snapshotCutoff),
           q.or(
-            q.eq(q.field('status'), 'completed'),
-            q.eq(q.field('status'), 'failed'),
+            q.eq(q.field("status"), "completed"),
+            q.eq(q.field("status"), "failed"),
           ),
         ),
       )

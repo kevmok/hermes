@@ -1,14 +1,14 @@
-import { Effect, Schedule, Layer, Duration } from 'effect';
-import { BunRuntime } from '@effect/platform-bun';
-import { FetchHttpClient } from '@effect/platform';
-import { CONFIG } from './config';
+import { Effect, Schedule, Layer, Duration } from "effect";
+import { BunRuntime } from "@effect/platform-bun";
+import { FetchHttpClient } from "@effect/platform";
+import { CONFIG } from "./config";
 import {
   DataService,
   DataLayer,
   websocketEffect,
   fetchHistoricalTrades,
-} from './services';
-import { ConvexDataLayer } from './services/data/ConvexDataService';
+} from "./services";
+import { ConvexDataLayer } from "./services/data/ConvexDataService";
 
 const program = Effect.gen(function* () {
   const data = yield* DataService;
@@ -16,9 +16,9 @@ const program = Effect.gen(function* () {
   // Load existing data
   yield* data.loadData;
 
-  console.log('Starting Polymarket Collector...');
+  console.log("Starting Polymarket Collector...");
   console.log(`Min trade size: $${CONFIG.MIN_TRADE_SIZE_USD}`);
-  console.log('Analysis now handled by Convex backend');
+  console.log("Analysis now handled by Convex backend");
 
   // Fetch historical trades before starting WebSocket
   yield* fetchHistoricalTrades;
@@ -42,22 +42,22 @@ const program = Effect.gen(function* () {
   // Graceful shutdown handler
   yield* Effect.async<void, never>(() => {
     const shutdown = async () => {
-      console.log('\nShutting down gracefully...');
+      console.log("\nShutting down gracefully...");
 
       // Save data before exit
       Effect.runPromise(data.saveAll)
         .then(() => {
-          console.log('Data saved. Goodbye!');
+          console.log("Data saved. Goodbye!");
           process.exit(0);
         })
         .catch((e) => {
-          console.error('Failed to save data:', e);
+          console.error("Failed to save data:", e);
           process.exit(1);
         });
     };
 
-    process.on('SIGINT', shutdown);
-    process.on('SIGTERM', shutdown);
+    process.on("SIGINT", shutdown);
+    process.on("SIGTERM", shutdown);
   });
 
   // Keep process alive
@@ -78,7 +78,7 @@ BunRuntime.runMain(
   program.pipe(
     Effect.provide(AppLayer),
     Effect.catchAllDefect((defect) => {
-      console.error('Unhandled defect:', defect);
+      console.error("Unhandled defect:", defect);
       return Effect.die(defect);
     }),
   ),

@@ -1,10 +1,10 @@
-import { createFileRoute } from '@tanstack/react-router';
-import { useQuery } from '@tanstack/react-query';
-import { convexQuery } from '@convex-dev/react-query';
-import { api } from 'backend/convex/_generated/api';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { HugeiconsIcon } from '@hugeicons/react';
+import { createFileRoute } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
+import { convexQuery } from "@convex-dev/react-query";
+import { api } from "backend/convex/_generated/api";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { HugeiconsIcon } from "@hugeicons/react";
 import {
   UserMultiple02Icon,
   Loading03Icon,
@@ -13,9 +13,9 @@ import {
   ArrowDown01Icon,
   Dollar01Icon,
   ChartLineData01Icon,
-} from '@hugeicons/core-free-icons';
+} from "@hugeicons/core-free-icons";
 
-export const Route = createFileRoute('/dashboard/whales/')({
+export const Route = createFileRoute("/dashboard/whales/")({
   component: WhalesPage,
 });
 
@@ -210,7 +210,7 @@ function StatCard({
   title,
   value,
   icon,
-  iconColor = 'text-muted-foreground',
+  iconColor = "text-muted-foreground",
 }: {
   title: string;
   value: string;
@@ -297,8 +297,8 @@ function WhaleRow({
 }
 
 function SmartMoneyTradeRow({ trade }: { trade: any }) {
-  const isYes = trade.outcome?.toUpperCase() === 'YES';
-  const isBuy = trade.side === 'BUY';
+  const isYes = trade.outcome?.toUpperCase() === "YES";
+  const isBuy = trade.side === "BUY";
 
   return (
     <div className="p-3 flex items-center justify-between gap-3 hover:bg-muted/50 transition-colors">
@@ -306,7 +306,7 @@ function SmartMoneyTradeRow({ trade }: { trade: any }) {
         <p className="text-sm font-medium truncate">{trade.title}</p>
         <div className="flex items-center gap-2 mt-1">
           <Badge
-            variant={isBuy ? 'default' : 'secondary'}
+            variant={isBuy ? "default" : "secondary"}
             className="text-[10px]"
           >
             {trade.side} {trade.outcome}
@@ -325,7 +325,7 @@ function SmartMoneyTradeRow({ trade }: { trade: any }) {
         <HugeiconsIcon
           icon={isYes ? ArrowUp01Icon : ArrowDown01Icon}
           size={16}
-          className={isYes ? 'text-green-500' : 'text-red-500'}
+          className={isYes ? "text-green-500" : "text-red-500"}
         />
         <span className="font-mono text-sm">
           {(trade.price * 100).toFixed(0)}¢

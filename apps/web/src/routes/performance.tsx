@@ -1,10 +1,10 @@
-import { createFileRoute, Link } from '@tanstack/react-router';
-import { useQuery } from '@tanstack/react-query';
-import { convexQuery } from '@convex-dev/react-query';
-import { api } from 'backend/convex/_generated/api';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { HugeiconsIcon } from '@hugeicons/react';
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
+import { convexQuery } from "@convex-dev/react-query";
+import { api } from "backend/convex/_generated/api";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { HugeiconsIcon } from "@hugeicons/react";
 import {
   Award01Icon,
   ChartLineData01Icon,
@@ -12,9 +12,9 @@ import {
   Cancel01Icon,
   Loading03Icon,
   ArrowRight01Icon,
-} from '@hugeicons/core-free-icons';
+} from "@hugeicons/core-free-icons";
 
-export const Route = createFileRoute('/performance')({
+export const Route = createFileRoute("/performance")({
   component: PublicPerformancePage,
 });
 
@@ -116,7 +116,9 @@ function PublicPerformancePage() {
 
               <Card>
                 <CardContent className="p-6">
-                  <h3 className="font-semibold mb-4">High Confidence Signals</h3>
+                  <h3 className="font-semibold mb-4">
+                    High Confidence Signals
+                  </h3>
                   <div className="flex items-center gap-6">
                     <div className="flex-1">
                       <div className="text-3xl font-bold text-primary">
@@ -188,7 +190,9 @@ function PublicPerformancePage() {
             <div className="grid gap-4 sm:grid-cols-2 mb-8">
               <Card>
                 <CardContent className="p-6">
-                  <div className="text-3xl font-bold">{stats.signalsLast24h}</div>
+                  <div className="text-3xl font-bold">
+                    {stats.signalsLast24h}
+                  </div>
                   <div className="text-sm text-muted-foreground">
                     Signals in last 24 hours
                   </div>
@@ -196,7 +200,9 @@ function PublicPerformancePage() {
               </Card>
               <Card>
                 <CardContent className="p-6">
-                  <div className="text-3xl font-bold">{stats.signalsLast7d}</div>
+                  <div className="text-3xl font-bold">
+                    {stats.signalsLast7d}
+                  </div>
                   <div className="text-sm text-muted-foreground">
                     Signals in last 7 days
                   </div>
@@ -217,7 +223,11 @@ function PublicPerformancePage() {
           <Link to="/">
             <Button size="lg">
               Get Started
-              <HugeiconsIcon icon={ArrowRight01Icon} size={18} className="ml-2" />
+              <HugeiconsIcon
+                icon={ArrowRight01Icon}
+                size={18}
+                className="ml-2"
+              />
             </Button>
           </Link>
         </div>
@@ -238,7 +248,7 @@ function StatCard({
   value,
   subtitle,
   icon,
-  iconColor = 'text-muted-foreground',
+  iconColor = "text-muted-foreground",
 }: {
   title: string;
   value: string;

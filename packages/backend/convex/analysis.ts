@@ -1,20 +1,20 @@
-import { ConvexError, v } from 'convex/values';
+import { ConvexError, v } from "convex/values";
 import {
   internalAction,
   internalMutation,
   mutation,
   query,
-} from './_generated/server';
-import { api, internal } from './_generated/api';
-import type { Id } from './_generated/dataModel';
-import { Effect } from 'effect';
-import { querySwarm, buildPrompt, type SwarmResponse } from './ai/swarm';
+} from "./_generated/server";
+import { api, internal } from "./_generated/api";
+import type { Id } from "./_generated/dataModel";
+import { Effect } from "effect";
+import { querySwarm, buildPrompt, type SwarmResponse } from "./ai/swarm";
 
 // Trade context validator for signal creation
 const tradeContextValidator = v.object({
   size: v.number(),
   price: v.number(),
-  side: v.union(v.literal('YES'), v.literal('NO')),
+  side: v.union(v.literal("YES"), v.literal("NO")),
   taker: v.optional(v.string()),
   timestamp: v.number(),
 });
@@ -25,18 +25,18 @@ const tradeContextValidator = v.object({
 export const createAnalysisRun = mutation({
   args: {
     triggerType: v.union(
-      v.literal('scheduled'),
-      v.literal('on_demand'),
-      v.literal('system'),
+      v.literal("scheduled"),
+      v.literal("on_demand"),
+      v.literal("system"),
     ),
   },
   handler: async (ctx, args) => {
     const runId = `run_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
 
-    return await ctx.db.insert('analysisRuns', {
+    return await ctx.db.insert("analysisRuns", {
       runId,
       triggerType: args.triggerType,
-      status: 'pending',
+      status: "pending",
       marketsAnalyzed: 0,
       startedAt: Date.now(),
     });
@@ -45,12 +45,12 @@ export const createAnalysisRun = mutation({
 
 export const updateAnalysisRun = mutation({
   args: {
-    runId: v.id('analysisRuns'),
+    runId: v.id("analysisRuns"),
     status: v.union(
-      v.literal('pending'),
-      v.literal('running'),
-      v.literal('completed'),
-      v.literal('failed'),
+      v.literal("pending"),
+      v.literal("running"),
+      v.literal("completed"),
+      v.literal("failed"),
     ),
     marketsAnalyzed: v.optional(v.number()),
     errorMessage: v.optional(v.string()),
@@ -64,7 +64,7 @@ export const updateAnalysisRun = mutation({
     if (args.errorMessage !== undefined) {
       updates.errorMessage = args.errorMessage;
     }
-    if (args.status === 'completed' || args.status === 'failed') {
+    if (args.status === "completed" || args.status === "failed") {
       updates.completedAt = Date.now();
     }
 
@@ -74,16 +74,16 @@ export const updateAnalysisRun = mutation({
 
 export const saveModelPrediction = mutation({
   args: {
-    analysisRunId: v.id('analysisRuns'),
-    marketId: v.id('markets'),
+    analysisRunId: v.id("analysisRuns"),
+    marketId: v.id("markets"),
     modelName: v.string(),
-    decision: v.union(v.literal('YES'), v.literal('NO'), v.literal('NO_TRADE')),
+    decision: v.union(v.literal("YES"), v.literal("NO"), v.literal("NO_TRADE")),
     reasoning: v.string(),
     responseTimeMs: v.number(),
     confidence: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    return await ctx.db.insert('modelPredictions', {
+    return await ctx.db.insert("modelPredictions", {
       ...args,
       timestamp: Date.now(),
     });
@@ -92,12 +92,12 @@ export const saveModelPrediction = mutation({
 
 export const saveInsight = mutation({
   args: {
-    analysisRunId: v.optional(v.id('analysisRuns')),
-    marketId: v.id('markets'),
+    analysisRunId: v.optional(v.id("analysisRuns")),
+    marketId: v.id("markets"),
     consensusDecision: v.union(
-      v.literal('YES'),
-      v.literal('NO'),
-      v.literal('NO_TRADE'),
+      v.literal("YES"),
+      v.literal("NO"),
+      v.literal("NO_TRADE"),
     ),
     consensusPercentage: v.number(),
     totalModels: v.number(),
@@ -108,12 +108,12 @@ export const saveInsight = mutation({
   handler: async (ctx, args) => {
     const confidenceLevel =
       args.consensusPercentage >= 80
-        ? ('high' as const)
+        ? ("high" as const)
         : args.consensusPercentage >= 60
-          ? ('medium' as const)
-          : ('low' as const);
+          ? ("medium" as const)
+          : ("low" as const);
 
-    const insightId = await ctx.db.insert('insights', {
+    const insightId = await ctx.db.insert("insights", {
       ...args,
       confidenceLevel,
       isHighConfidence: args.consensusPercentage >= 66,
@@ -130,11 +130,11 @@ export const saveInsight = mutation({
 });
 
 export const createAnalysisRequest = internalMutation({
-  args: { marketId: v.id('markets') },
+  args: { marketId: v.id("markets") },
   handler: async (ctx, args) => {
-    return await ctx.db.insert('analysisRequests', {
+    return await ctx.db.insert("analysisRequests", {
       marketId: args.marketId,
-      status: 'pending',
+      status: "pending",
       requestedAt: Date.now(),
     });
   },
@@ -142,13 +142,13 @@ export const createAnalysisRequest = internalMutation({
 
 export const updateAnalysisRequest = internalMutation({
   args: {
-    requestId: v.id('analysisRequests'),
+    requestId: v.id("analysisRequests"),
     status: v.union(
-      v.literal('processing'),
-      v.literal('completed'),
-      v.literal('failed'),
+      v.literal("processing"),
+      v.literal("completed"),
+      v.literal("failed"),
     ),
-    insightId: v.optional(v.id('insights')),
+    insightId: v.optional(v.id("insights")),
     errorMessage: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
@@ -164,7 +164,7 @@ export const updateAnalysisRequest = internalMutation({
 // ============ PUBLIC QUERIES ============
 
 export const getAnalysisRun = query({
-  args: { runId: v.id('analysisRuns') },
+  args: { runId: v.id("analysisRuns") },
   handler: async (ctx, args) => {
     return await ctx.db.get(args.runId);
   },
@@ -174,23 +174,23 @@ export const getRecentAnalysisRuns = query({
   args: { limit: v.optional(v.number()) },
   handler: async (ctx, args) => {
     return await ctx.db
-      .query('analysisRuns')
-      .withIndex('by_started_at')
-      .order('desc')
+      .query("analysisRuns")
+      .withIndex("by_started_at")
+      .order("desc")
       .take(args.limit ?? 20);
   },
 });
 
 export const getMarketPredictions = query({
   args: {
-    marketId: v.id('markets'),
+    marketId: v.id("markets"),
     limit: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
     return await ctx.db
-      .query('modelPredictions')
-      .withIndex('by_market', (q) => q.eq('marketId', args.marketId))
-      .order('desc')
+      .query("modelPredictions")
+      .withIndex("by_market", (q) => q.eq("marketId", args.marketId))
+      .order("desc")
       .take(args.limit ?? 50);
   },
 });
@@ -198,21 +198,21 @@ export const getMarketPredictions = query({
 // ============ PUBLIC MUTATIONS ============
 
 export const requestMarketAnalysis = mutation({
-  args: { marketId: v.id('markets') },
+  args: { marketId: v.id("markets") },
   handler: async (ctx, args) => {
     // Check for existing recent insight (within 1 hour)
     const recentInsight = await ctx.db
-      .query('insights')
-      .withIndex('by_market_time', (q) =>
+      .query("insights")
+      .withIndex("by_market_time", (q) =>
         q
-          .eq('marketId', args.marketId)
-          .gte('timestamp', Date.now() - 60 * 60 * 1000),
+          .eq("marketId", args.marketId)
+          .gte("timestamp", Date.now() - 60 * 60 * 1000),
       )
       .first();
 
     if (recentInsight) {
       return {
-        status: 'completed' as const,
+        status: "completed" as const,
         insightId: recentInsight._id,
         cached: true,
       };
@@ -220,28 +220,28 @@ export const requestMarketAnalysis = mutation({
 
     // Check for pending request
     const pendingRequest = await ctx.db
-      .query('analysisRequests')
-      .withIndex('by_market', (q) => q.eq('marketId', args.marketId))
+      .query("analysisRequests")
+      .withIndex("by_market", (q) => q.eq("marketId", args.marketId))
       .filter((q) =>
         q.or(
-          q.eq(q.field('status'), 'pending'),
-          q.eq(q.field('status'), 'processing'),
+          q.eq(q.field("status"), "pending"),
+          q.eq(q.field("status"), "processing"),
         ),
       )
       .first();
 
     if (pendingRequest) {
       return {
-        status: 'pending' as const,
+        status: "pending" as const,
         requestId: pendingRequest._id,
         cached: false,
       };
     }
 
     // Create new analysis request
-    const requestId = await ctx.db.insert('analysisRequests', {
+    const requestId = await ctx.db.insert("analysisRequests", {
       marketId: args.marketId,
-      status: 'pending',
+      status: "pending",
       requestedAt: Date.now(),
     });
 
@@ -257,24 +257,24 @@ export const requestMarketAnalysis = mutation({
       );
     } catch (error) {
       // If scheduling fails, mark request as failed
-      console.error('Failed to schedule market analysis:', {
+      console.error("Failed to schedule market analysis:", {
         marketId: args.marketId,
         error,
       });
       await ctx.db.patch(requestId, {
-        status: 'failed',
-        errorMessage: 'Failed to schedule analysis',
+        status: "failed",
+        errorMessage: "Failed to schedule analysis",
         completedAt: Date.now(),
       });
       return {
-        status: 'failed' as const,
+        status: "failed" as const,
         requestId,
         cached: false,
       };
     }
 
     return {
-      status: 'pending' as const,
+      status: "pending" as const,
       requestId,
       cached: false,
     };
@@ -287,13 +287,13 @@ export const requestMarketAnalysis = mutation({
 // Prices must be passed since markets table no longer stores volatile price data
 export const analyzeMarketWithSwarm = internalAction({
   args: {
-    marketId: v.id('markets'),
+    marketId: v.id("markets"),
     yesPrice: v.number(),
     noPrice: v.number(),
   },
   returns: v.object({
     success: v.boolean(),
-    insightId: v.optional(v.id('insights')),
+    insightId: v.optional(v.id("insights")),
     error: v.optional(v.string()),
   }),
   handler: async (
@@ -301,7 +301,7 @@ export const analyzeMarketWithSwarm = internalAction({
     args,
   ): Promise<{
     success: boolean;
-    insightId?: Id<'insights'>;
+    insightId?: Id<"insights">;
     error?: string;
   }> => {
     try {
@@ -311,7 +311,7 @@ export const analyzeMarketWithSwarm = internalAction({
       });
 
       if (!market) {
-        return { success: false, error: 'Market not found' };
+        return { success: false, error: "Market not found" };
       }
 
       // Build prompts and query swarm using Effect.ts
@@ -326,14 +326,14 @@ export const analyzeMarketWithSwarm = internalAction({
       // If no models responded, skip saving
       if (swarmResponse.totalModels === 0) {
         console.log(`No AI models configured for market ${market.title}`);
-        return { success: false, error: 'No AI models configured' };
+        return { success: false, error: "No AI models configured" };
       }
 
       // Use aggregated reasoning from structured response
       const aggregatedReasoning = swarmResponse.aggregatedReasoning;
 
       // Save insight directly (no analysisRun tracking for simplicity)
-      const insightId: Id<'insights'> = await ctx.runMutation(
+      const insightId: Id<"insights"> = await ctx.runMutation(
         api.analysis.saveInsight,
         {
           marketId: args.marketId,
@@ -367,37 +367,37 @@ export const analyzeMarketWithSwarm = internalAction({
 // Prices must be passed since markets table no longer stores volatile price data
 export const executeMarketAnalysis = internalAction({
   args: {
-    requestId: v.optional(v.id('analysisRequests')),
-    marketId: v.id('markets'),
+    requestId: v.optional(v.id("analysisRequests")),
+    marketId: v.id("markets"),
     yesPrice: v.number(),
     noPrice: v.number(),
   },
   returns: v.object({
     success: v.boolean(),
-    insightId: v.id('insights'),
+    insightId: v.id("insights"),
   }),
   handler: async (
     ctx,
     args,
-  ): Promise<{ success: boolean; insightId: Id<'insights'> }> => {
+  ): Promise<{ success: boolean; insightId: Id<"insights"> }> => {
     // Create analysis run for tracking
-    const runId: Id<'analysisRuns'> = await ctx.runMutation(
+    const runId: Id<"analysisRuns"> = await ctx.runMutation(
       api.analysis.createAnalysisRun,
       {
-        triggerType: args.requestId ? 'on_demand' : 'system',
+        triggerType: args.requestId ? "on_demand" : "system",
       },
     );
 
     try {
       await ctx.runMutation(api.analysis.updateAnalysisRun, {
         runId,
-        status: 'running',
+        status: "running",
       });
 
       if (args.requestId) {
         await ctx.runMutation(internal.analysis.updateAnalysisRequest, {
           requestId: args.requestId,
-          status: 'processing',
+          status: "processing",
         });
       }
 
@@ -406,7 +406,7 @@ export const executeMarketAnalysis = internalAction({
         marketId: args.marketId,
       });
 
-      if (!market) throw new ConvexError('Market not found');
+      if (!market) throw new ConvexError("Market not found");
 
       // Build prompts and query swarm
       const { systemPrompt, userPrompt } = buildPrompt(market, {
@@ -418,7 +418,7 @@ export const executeMarketAnalysis = internalAction({
       );
 
       if (swarmResponse.totalModels === 0) {
-        throw new ConvexError('No AI models configured');
+        throw new ConvexError("No AI models configured");
       }
 
       // Save individual predictions for tracking (with structured data)
@@ -440,7 +440,7 @@ export const executeMarketAnalysis = internalAction({
       const aggregatedReasoning = swarmResponse.aggregatedReasoning;
 
       // Save insight
-      const insightId: Id<'insights'> = await ctx.runMutation(
+      const insightId: Id<"insights"> = await ctx.runMutation(
         api.analysis.saveInsight,
         {
           analysisRunId: runId,
@@ -456,14 +456,14 @@ export const executeMarketAnalysis = internalAction({
 
       await ctx.runMutation(api.analysis.updateAnalysisRun, {
         runId,
-        status: 'completed',
+        status: "completed",
         marketsAnalyzed: 1,
       });
 
       if (args.requestId) {
         await ctx.runMutation(internal.analysis.updateAnalysisRequest, {
           requestId: args.requestId,
-          status: 'completed',
+          status: "completed",
           insightId,
         });
       }
@@ -475,14 +475,14 @@ export const executeMarketAnalysis = internalAction({
 
       await ctx.runMutation(api.analysis.updateAnalysisRun, {
         runId,
-        status: 'failed',
+        status: "failed",
         errorMessage,
       });
 
       if (args.requestId) {
         await ctx.runMutation(internal.analysis.updateAnalysisRequest, {
           requestId: args.requestId,
-          status: 'failed',
+          status: "failed",
           errorMessage,
         });
       }
@@ -496,12 +496,12 @@ export const executeMarketAnalysis = internalAction({
 // Used by requestMarketAnalysis when user requests analysis without trade context
 export const executeMarketAnalysisOnDemand = internalAction({
   args: {
-    requestId: v.id('analysisRequests'),
-    marketId: v.id('markets'),
+    requestId: v.id("analysisRequests"),
+    marketId: v.id("markets"),
   },
   returns: v.object({
     success: v.boolean(),
-    insightId: v.optional(v.id('insights')),
+    insightId: v.optional(v.id("insights")),
     error: v.optional(v.string()),
   }),
   handler: async (
@@ -509,7 +509,7 @@ export const executeMarketAnalysisOnDemand = internalAction({
     args,
   ): Promise<{
     success: boolean;
-    insightId?: Id<'insights'>;
+    insightId?: Id<"insights">;
     error?: string;
   }> => {
     try {
@@ -521,10 +521,10 @@ export const executeMarketAnalysisOnDemand = internalAction({
       if (!market) {
         await ctx.runMutation(internal.analysis.updateAnalysisRequest, {
           requestId: args.requestId,
-          status: 'failed',
-          errorMessage: 'Market not found',
+          status: "failed",
+          errorMessage: "Market not found",
         });
-        return { success: false, error: 'Market not found' };
+        return { success: false, error: "Market not found" };
       }
 
       // Fetch current prices from Polymarket API
@@ -538,15 +538,15 @@ export const executeMarketAnalysisOnDemand = internalAction({
       if (!marketData) {
         await ctx.runMutation(internal.analysis.updateAnalysisRequest, {
           requestId: args.requestId,
-          status: 'failed',
-          errorMessage: 'Could not fetch market prices from Polymarket API',
+          status: "failed",
+          errorMessage: "Could not fetch market prices from Polymarket API",
         });
-        return { success: false, error: 'Could not fetch market prices' };
+        return { success: false, error: "Could not fetch market prices" };
       }
 
       // Extract prices from API response
-      const yesPrice = parseFloat(marketData.outcomePrices?.[0] ?? '0.5');
-      const noPrice = parseFloat(marketData.outcomePrices?.[1] ?? '0.5');
+      const yesPrice = parseFloat(marketData.outcomePrices?.[0] ?? "0.5");
+      const noPrice = parseFloat(marketData.outcomePrices?.[1] ?? "0.5");
 
       // Now execute the full analysis with prices
       const result = await ctx.runAction(
@@ -566,7 +566,7 @@ export const executeMarketAnalysisOnDemand = internalAction({
 
       await ctx.runMutation(internal.analysis.updateAnalysisRequest, {
         requestId: args.requestId,
-        status: 'failed',
+        status: "failed",
         errorMessage,
       });
 
@@ -580,12 +580,12 @@ export const executeMarketAnalysisOnDemand = internalAction({
 // Analyze a whale trade and create a signal with trade context
 export const analyzeTradeForSignal = internalAction({
   args: {
-    marketId: v.id('markets'),
+    marketId: v.id("markets"),
     tradeContext: tradeContextValidator,
   },
   returns: v.object({
     success: v.boolean(),
-    signalId: v.optional(v.id('signals')),
+    signalId: v.optional(v.id("signals")),
     skipped: v.optional(v.boolean()),
     reason: v.optional(v.string()),
   }),
@@ -594,7 +594,7 @@ export const analyzeTradeForSignal = internalAction({
     args,
   ): Promise<{
     success: boolean;
-    signalId?: Id<'signals'>;
+    signalId?: Id<"signals">;
     skipped?: boolean;
     reason?: string;
   }> => {
@@ -610,7 +610,7 @@ export const analyzeTradeForSignal = internalAction({
         return {
           success: true,
           skipped: true,
-          reason: 'Signal generation disabled',
+          reason: "Signal generation disabled",
         };
       }
 
@@ -632,7 +632,7 @@ export const analyzeTradeForSignal = internalAction({
         return {
           success: true,
           skipped: true,
-          reason: 'Trade aggregated to existing signal',
+          reason: "Trade aggregated to existing signal",
           signalId: recentSignal._id,
         };
       }
@@ -643,14 +643,14 @@ export const analyzeTradeForSignal = internalAction({
       });
 
       if (!market) {
-        return { success: false, reason: 'Market not found' };
+        return { success: false, reason: "Market not found" };
       }
 
       // Use price from trade context - this is the price at the moment of the trade
       const tradePrice = args.tradeContext.price;
       // For binary markets: YES price is the trade price for YES side, or 1 - price for NO side
       const yesPrice =
-        args.tradeContext.side === 'YES' ? tradePrice : 1 - tradePrice;
+        args.tradeContext.side === "YES" ? tradePrice : 1 - tradePrice;
       const noPrice = 1 - yesPrice;
 
       // Build prompts and query swarm using Effect.ts
@@ -665,7 +665,7 @@ export const analyzeTradeForSignal = internalAction({
       // If no models responded, skip signal creation
       if (swarmResponse.totalModels === 0) {
         console.log(`No AI models configured for market ${market.title}`);
-        return { success: false, reason: 'No AI models configured' };
+        return { success: false, reason: "No AI models configured" };
       }
 
       // Check minimum consensus threshold per design decisions
@@ -684,7 +684,7 @@ export const analyzeTradeForSignal = internalAction({
       const aggregatedReasoning = swarmResponse.aggregatedReasoning;
 
       // Create signal with trade context and structured AI consensus data
-      const signalId: Id<'signals'> = await ctx.runMutation(
+      const signalId: Id<"signals"> = await ctx.runMutation(
         internal.signals.createSignal,
         {
           marketId: args.marketId,

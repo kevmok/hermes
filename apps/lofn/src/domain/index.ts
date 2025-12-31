@@ -1,2 +1,2 @@
-export * from './market';
-export * from './prediction';
+export * from "./market";
+export * from "./prediction";

@@ -1,16 +1,16 @@
-import { createFileRoute, useNavigate } from '@tanstack/react-router';
-import { useQuery } from '@tanstack/react-query';
-import { signalsQueries } from '@/lib/queries';
-import { SignalsTable } from './-components/signals-table';
-import { StatCard } from '../-components/stat-card';
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
+import { signalsQueries } from "@/lib/queries";
+import { SignalsTable } from "./-components/signals-table";
+import { StatCard } from "../-components/stat-card";
 import {
   Activity03Icon,
   FlashIcon,
   ChartLineData01Icon,
   PercentCircleIcon,
-} from '@hugeicons/core-free-icons';
+} from "@hugeicons/core-free-icons";
 
-export const Route = createFileRoute('/dashboard/trades/')({
+export const Route = createFileRoute("/dashboard/trades/")({
   component: SignalsPage,
 });
 
@@ -24,7 +24,7 @@ function SignalsPage() {
 
   const handleRowClick = (signalId: string) => {
     navigate({
-      to: '/dashboard/trades/$signalId',
+      to: "/dashboard/trades/$signalId",
       params: { signalId },
     });
   };
@@ -41,8 +41,10 @@ function SignalsPage() {
                 Signals
               </h1>
               <p className="text-sm text-muted-foreground max-w-lg">
-                Consensus signals generated from whale trades. High confidence signals have{' '}
-                <span className="text-primary font-medium">80%+</span> model agreement.
+                Consensus signals generated from whale trades. High confidence
+                signals have{" "}
+                <span className="text-primary font-medium">80%+</span> model
+                agreement.
               </p>
             </div>
           </div>
@@ -51,20 +53,22 @@ function SignalsPage() {
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
             <StatCard
               label="Total Signals"
-              value={signalStats?.totalSignals?.toLocaleString() ?? '0'}
+              value={signalStats?.totalSignals?.toLocaleString() ?? "0"}
               icon={Activity03Icon}
               isLoading={statsLoading}
             />
             <StatCard
               label="High Confidence"
-              value={signalStats?.highConfidenceSignals?.toLocaleString() ?? '0'}
+              value={
+                signalStats?.highConfidenceSignals?.toLocaleString() ?? "0"
+              }
               icon={FlashIcon}
               variant="success"
               isLoading={statsLoading}
             />
             <StatCard
               label="Last 24h"
-              value={signalStats?.signalsLast24h?.toString() ?? '0'}
+              value={signalStats?.signalsLast24h?.toString() ?? "0"}
               icon={ChartLineData01Icon}
               isLoading={statsLoading}
             />

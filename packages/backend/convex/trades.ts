@@ -10,17 +10,17 @@ import {
   mutation,
   internalMutation,
   internalQuery,
-} from './_generated/server';
-import { internal } from './_generated/api';
-import { v } from 'convex/values';
-import type { Id } from './_generated/dataModel';
+} from "./_generated/server";
+import { internal } from "./_generated/api";
+import { v } from "convex/values";
+import type { Id } from "./_generated/dataModel";
 
 // Input type for creating a trade
 const TradeInput = {
   conditionId: v.string(),
   slug: v.string(),
   eventSlug: v.string(),
-  side: v.union(v.literal('BUY'), v.literal('SELL')),
+  side: v.union(v.literal("BUY"), v.literal("SELL")),
   size: v.number(),
   price: v.number(),
   timestamp: v.number(),
@@ -40,20 +40,20 @@ function deriveEventTitle(slug: string, eventSlug: string): string {
   // Use eventSlug as base, convert kebab-case to Title Case
   const base = eventSlug || slug;
   return base
-    .split('-')
+    .split("-")
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ');
+    .join(" ");
 }
 
 // ============ INTERNAL MUTATIONS ============
 
 export const insertTrade = internalMutation({
   args: TradeInput,
-  returns: v.id('trades'),
-  handler: async (ctx, args): Promise<Id<'trades'>> => {
+  returns: v.id("trades"),
+  handler: async (ctx, args): Promise<Id<"trades">> => {
     // Insert the trade with title for display
     const title = args.title || deriveEventTitle(args.slug, args.eventSlug);
-    const tradeId = await ctx.db.insert('trades', {
+    const tradeId = await ctx.db.insert("trades", {
       conditionId: args.conditionId,
       slug: args.slug,
       eventSlug: args.eventSlug,
@@ -81,7 +81,7 @@ export const insertTrade = internalMutation({
       });
     } catch (error) {
       // Log but don't fail - trade insert succeeded
-      console.error('Failed to schedule event upsert:', {
+      console.error("Failed to schedule event upsert:", {
         eventSlug: args.eventSlug,
         error,
       });
@@ -94,13 +94,13 @@ export const insertTrade = internalMutation({
 export const insertTradeWithSignal = internalMutation({
   args: {
     ...TradeInput,
-    signalId: v.id('signals'),
+    signalId: v.id("signals"),
   },
-  returns: v.id('trades'),
-  handler: async (ctx, args): Promise<Id<'trades'>> => {
+  returns: v.id("trades"),
+  handler: async (ctx, args): Promise<Id<"trades">> => {
     // Insert the trade with title for display and signal reference
     const title = args.title || deriveEventTitle(args.slug, args.eventSlug);
-    const tradeId = await ctx.db.insert('trades', {
+    const tradeId = await ctx.db.insert("trades", {
       conditionId: args.conditionId,
       slug: args.slug,
       eventSlug: args.eventSlug,
@@ -129,7 +129,7 @@ export const insertTradeWithSignal = internalMutation({
       });
     } catch (error) {
       // Log but don't fail - trade insert succeeded
-      console.error('Failed to schedule event upsert:', {
+      console.error("Failed to schedule event upsert:", {
         eventSlug: args.eventSlug,
         error,
       });
@@ -141,8 +141,8 @@ export const insertTradeWithSignal = internalMutation({
 
 export const linkTradeToSignal = internalMutation({
   args: {
-    tradeId: v.id('trades'),
-    signalId: v.id('signals'),
+    tradeId: v.id("trades"),
+    signalId: v.id("signals"),
   },
   returns: v.null(),
   handler: async (ctx, args): Promise<null> => {
@@ -155,11 +155,11 @@ export const linkTradeToSignal = internalMutation({
 
 export const recordTrade = mutation({
   args: TradeInput,
-  returns: v.id('trades'),
-  handler: async (ctx, args): Promise<Id<'trades'>> => {
+  returns: v.id("trades"),
+  handler: async (ctx, args): Promise<Id<"trades">> => {
     // Insert the trade with title for display
     const title = args.title || deriveEventTitle(args.slug, args.eventSlug);
-    const tradeId = await ctx.db.insert('trades', {
+    const tradeId = await ctx.db.insert("trades", {
       conditionId: args.conditionId,
       slug: args.slug,
       eventSlug: args.eventSlug,
@@ -187,7 +187,7 @@ export const recordTrade = mutation({
       });
     } catch (error) {
       // Log but don't fail - trade insert succeeded
-      console.error('Failed to schedule event upsert:', {
+      console.error("Failed to schedule event upsert:", {
         eventSlug: args.eventSlug,
         error,
       });
@@ -211,21 +211,21 @@ export const getRecentTradesByCondition = internalQuery({
 
     if (sinceTs !== undefined) {
       const trades = await ctx.db
-        .query('trades')
-        .withIndex('by_condition_time', (q) =>
-          q.eq('conditionId', args.conditionId).gt('timestamp', sinceTs),
+        .query("trades")
+        .withIndex("by_condition_time", (q) =>
+          q.eq("conditionId", args.conditionId).gt("timestamp", sinceTs),
         )
-        .order('desc')
+        .order("desc")
         .take(args.limit ?? 50);
       return trades;
     }
 
     const trades = await ctx.db
-      .query('trades')
-      .withIndex('by_condition_time', (q) =>
-        q.eq('conditionId', args.conditionId),
+      .query("trades")
+      .withIndex("by_condition_time", (q) =>
+        q.eq("conditionId", args.conditionId),
       )
-      .order('desc')
+      .order("desc")
       .take(args.limit ?? 50);
     return trades;
   },
@@ -239,11 +239,11 @@ export const getWhaleTradesSince = internalQuery({
   returns: v.array(v.any()),
   handler: async (ctx, args) => {
     const trades = await ctx.db
-      .query('trades')
-      .withIndex('by_whale', (q) =>
-        q.eq('isWhale', true).gt('timestamp', args.sinceTimestamp),
+      .query("trades")
+      .withIndex("by_whale", (q) =>
+        q.eq("isWhale", true).gt("timestamp", args.sinceTimestamp),
       )
-      .order('desc')
+      .order("desc")
       .take(args.limit ?? 100);
     return trades;
   },
@@ -264,15 +264,15 @@ export const listTrades = query({
     const limit = args.limit ?? 50;
     const cursorTimestamp = args.cursor ? parseInt(args.cursor, 10) : undefined;
 
-    let tradesQuery = ctx.db.query('trades').withIndex('by_timestamp');
+    let tradesQuery = ctx.db.query("trades").withIndex("by_timestamp");
 
     if (cursorTimestamp !== undefined) {
       tradesQuery = tradesQuery.filter((q) =>
-        q.lt(q.field('timestamp'), cursorTimestamp),
+        q.lt(q.field("timestamp"), cursorTimestamp),
       );
     }
 
-    const trades = await tradesQuery.order('desc').take(limit + 1);
+    const trades = await tradesQuery.order("desc").take(limit + 1);
 
     const hasMore = trades.length > limit;
     const returnTrades = hasMore ? trades.slice(0, limit) : trades;
@@ -300,16 +300,16 @@ export const listWhaleTrades = query({
 
     // by_whale index is (isWhale, timestamp) so we can filter on timestamp within whale trades
     let tradesQuery = ctx.db
-      .query('trades')
-      .withIndex('by_whale', (q) => q.eq('isWhale', true));
+      .query("trades")
+      .withIndex("by_whale", (q) => q.eq("isWhale", true));
 
     if (cursorTimestamp !== undefined) {
       tradesQuery = tradesQuery.filter((q) =>
-        q.lt(q.field('timestamp'), cursorTimestamp),
+        q.lt(q.field("timestamp"), cursorTimestamp),
       );
     }
 
-    const trades = await tradesQuery.order('desc').take(limit + 1);
+    const trades = await tradesQuery.order("desc").take(limit + 1);
 
     const hasMore = trades.length > limit;
     const returnTrades = hasMore ? trades.slice(0, limit) : trades;
@@ -330,9 +330,9 @@ export const getTradesByMarket = query({
   returns: v.array(v.any()),
   handler: async (ctx, args) => {
     const trades = await ctx.db
-      .query('trades')
-      .withIndex('by_slug', (q) => q.eq('slug', args.slug))
-      .order('desc')
+      .query("trades")
+      .withIndex("by_slug", (q) => q.eq("slug", args.slug))
+      .order("desc")
       .take(args.limit ?? 50);
     return trades;
   },
@@ -346,9 +346,9 @@ export const getTradesByEvent = query({
   returns: v.array(v.any()),
   handler: async (ctx, args) => {
     const trades = await ctx.db
-      .query('trades')
-      .withIndex('by_event_slug', (q) => q.eq('eventSlug', args.eventSlug))
-      .order('desc')
+      .query("trades")
+      .withIndex("by_event_slug", (q) => q.eq("eventSlug", args.eventSlug))
+      .order("desc")
       .take(args.limit ?? 50);
     return trades;
   },
@@ -362,9 +362,9 @@ export const getTradesByWallet = query({
   returns: v.array(v.any()),
   handler: async (ctx, args) => {
     const trades = await ctx.db
-      .query('trades')
-      .withIndex('by_wallet', (q) => q.eq('proxyWallet', args.proxyWallet))
-      .order('desc')
+      .query("trades")
+      .withIndex("by_wallet", (q) => q.eq("proxyWallet", args.proxyWallet))
+      .order("desc")
       .take(args.limit ?? 50);
     return trades;
   },
@@ -372,13 +372,13 @@ export const getTradesByWallet = query({
 
 export const getTradesBySignal = query({
   args: {
-    signalId: v.id('signals'),
+    signalId: v.id("signals"),
   },
   returns: v.array(v.any()),
   handler: async (ctx, args) => {
     const trades = await ctx.db
-      .query('trades')
-      .withIndex('by_signal', (q) => q.eq('signalId', args.signalId))
+      .query("trades")
+      .withIndex("by_signal", (q) => q.eq("signalId", args.signalId))
       .collect();
     return trades;
   },
@@ -399,8 +399,8 @@ export const getTradeStats = query({
   handler: async (ctx, args) => {
     const since = args.sinceTimestamp ?? Date.now() / 1000 - 24 * 60 * 60;
     const trades = await ctx.db
-      .query('trades')
-      .withIndex('by_timestamp', (q) => q.gt('timestamp', since))
+      .query("trades")
+      .withIndex("by_timestamp", (q) => q.gt("timestamp", since))
       .collect();
 
     let totalVolume = 0;

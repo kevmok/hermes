@@ -1,14 +1,14 @@
-import { useState } from 'react';
-import { createFileRoute } from '@tanstack/react-router';
-import { useQuery } from '@tanstack/react-query';
-import { useAction } from 'convex/react';
-import { useConvexMutation, convexQuery } from '@convex-dev/react-query';
-import { api } from 'backend/convex/_generated/api';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { HugeiconsIcon } from '@hugeicons/react';
+import { useState } from "react";
+import { createFileRoute } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
+import { useAction } from "convex/react";
+import { useConvexMutation, convexQuery } from "@convex-dev/react-query";
+import { api } from "backend/convex/_generated/api";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { HugeiconsIcon } from "@hugeicons/react";
 import {
   Wallet01Icon,
   Add01Icon,
@@ -17,13 +17,13 @@ import {
   AlertCircleIcon,
   MinusSignIcon,
   Delete01Icon,
-} from '@hugeicons/core-free-icons';
+} from "@hugeicons/core-free-icons";
 
-export const Route = createFileRoute('/dashboard/portfolio/')({
+export const Route = createFileRoute("/dashboard/portfolio/")({
   component: PortfolioPage,
 });
 
-type Alignment = 'aligned' | 'opposed' | 'no_signal';
+type Alignment = "aligned" | "opposed" | "no_signal";
 
 interface PositionWithSignal {
   position: {
@@ -48,10 +48,12 @@ function PortfolioPage() {
   );
 
   const addPortfolioMutation = useConvexMutation(api.portfolio.addPortfolio);
-  const removePortfolioMutation = useConvexMutation(api.portfolio.removePortfolio);
+  const removePortfolioMutation = useConvexMutation(
+    api.portfolio.removePortfolio,
+  );
   const syncPositions = useAction(api.portfolio.syncPortfolioWithSignals);
 
-  const [newAddress, setNewAddress] = useState('');
+  const [newAddress, setNewAddress] = useState("");
   const [addError, setAddError] = useState<string | null>(null);
   const [positions, setPositions] = useState<PositionWithSignal[]>([]);
   const [syncing, setSyncing] = useState(false);
@@ -62,9 +64,11 @@ function PortfolioPage() {
     setAddError(null);
     try {
       await addPortfolioMutation({ polymarketAddress: newAddress });
-      setNewAddress('');
+      setNewAddress("");
     } catch (error) {
-      setAddError(error instanceof Error ? error.message : 'Failed to add wallet');
+      setAddError(
+        error instanceof Error ? error.message : "Failed to add wallet",
+      );
     }
   };
 
@@ -76,7 +80,7 @@ function PortfolioPage() {
         setSyncedAddress(null);
       }
     } catch (error) {
-      console.error('Failed to remove:', error);
+      console.error("Failed to remove:", error);
     }
   };
 
@@ -87,7 +91,7 @@ function PortfolioPage() {
       const result = await syncPositions({ address });
       setPositions(result as PositionWithSignal[]);
     } catch (error) {
-      console.error('Sync failed:', error);
+      console.error("Sync failed:", error);
       setPositions([]);
     } finally {
       setSyncing(false);
@@ -143,12 +147,20 @@ function PortfolioPage() {
               {portfolios.map((p) => (
                 <div key={p._id} className="flex items-center gap-1">
                   <Button
-                    variant={syncedAddress === p.polymarketAddress ? 'default' : 'outline'}
+                    variant={
+                      syncedAddress === p.polymarketAddress
+                        ? "default"
+                        : "outline"
+                    }
                     size="sm"
                     onClick={() => handleSync(p.polymarketAddress)}
                     disabled={syncing}
                   >
-                    <HugeiconsIcon icon={Wallet01Icon} size={14} className="mr-2" />
+                    <HugeiconsIcon
+                      icon={Wallet01Icon}
+                      size={14}
+                      className="mr-2"
+                    />
                     {p.nickname ||
                       `${p.polymarketAddress.slice(0, 6)}...${p.polymarketAddress.slice(-4)}`}
                     {syncing && syncedAddress === p.polymarketAddress && (
@@ -177,11 +189,17 @@ function PortfolioPage() {
                   <span>{positions.length} positions found</span>
                   <span className="flex items-center gap-1">
                     <span className="w-2 h-2 rounded-full bg-green-500" />
-                    {positions.filter((p) => p.alignment === 'aligned').length} aligned
+                    {
+                      positions.filter((p) => p.alignment === "aligned").length
+                    }{" "}
+                    aligned
                   </span>
                   <span className="flex items-center gap-1">
                     <span className="w-2 h-2 rounded-full bg-red-500" />
-                    {positions.filter((p) => p.alignment === 'opposed').length} opposed
+                    {
+                      positions.filter((p) => p.alignment === "opposed").length
+                    }{" "}
+                    opposed
                   </span>
                 </div>
 
@@ -227,37 +245,43 @@ function PositionCard({ position, signal, alignment }: PositionWithSignal) {
   const alignmentConfig = {
     aligned: {
       icon: CheckmarkCircle01Icon,
-      color: 'text-green-600 dark:text-green-400',
-      bg: 'bg-green-500/10',
-      label: 'Aligned with Signal',
+      color: "text-green-600 dark:text-green-400",
+      bg: "bg-green-500/10",
+      label: "Aligned with Signal",
     },
     opposed: {
       icon: AlertCircleIcon,
-      color: 'text-red-600 dark:text-red-400',
-      bg: 'bg-red-500/10',
-      label: 'Opposes Signal',
+      color: "text-red-600 dark:text-red-400",
+      bg: "bg-red-500/10",
+      label: "Opposes Signal",
     },
     no_signal: {
       icon: MinusSignIcon,
-      color: 'text-muted-foreground',
-      bg: 'bg-muted',
-      label: 'No Signal',
+      color: "text-muted-foreground",
+      bg: "bg-muted",
+      label: "No Signal",
     },
   }[alignment];
 
   const pnl = position.percentPnl ?? 0;
   const pnlColor =
-    pnl >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400';
+    pnl >= 0
+      ? "text-green-600 dark:text-green-400"
+      : "text-red-600 dark:text-red-400";
 
   return (
     <Card>
       <CardContent className="p-4">
         <div className="flex items-start justify-between gap-4">
           <div className="flex-1 min-w-0">
-            <h3 className="font-medium truncate">{position.title || 'Unknown Market'}</h3>
+            <h3 className="font-medium truncate">
+              {position.title || "Unknown Market"}
+            </h3>
             <div className="flex items-center gap-2 mt-1">
-              <Badge variant={position.outcome === 'Yes' ? 'default' : 'secondary'}>
-                {position.outcome || 'Unknown'}
+              <Badge
+                variant={position.outcome === "Yes" ? "default" : "secondary"}
+              >
+                {position.outcome || "Unknown"}
               </Badge>
               <span className="text-sm text-muted-foreground">
                 {(position.size ?? 0).toFixed(0)} shares @ $
@@ -268,7 +292,7 @@ function PositionCard({ position, signal, alignment }: PositionWithSignal) {
 
           <div className="text-right">
             <div className={`font-mono font-bold ${pnlColor}`}>
-              {pnl >= 0 ? '+' : ''}
+              {pnl >= 0 ? "+" : ""}
               {pnl.toFixed(1)}%
             </div>
             <div className="text-sm text-muted-foreground">
@@ -290,7 +314,8 @@ function PositionCard({ position, signal, alignment }: PositionWithSignal) {
           </span>
           {signal && (
             <span className="text-xs text-muted-foreground ml-auto">
-              Signal: {signal.consensusDecision} ({signal.consensusPercentage.toFixed(0)}
+              Signal: {signal.consensusDecision} (
+              {signal.consensusPercentage.toFixed(0)}
               %)
             </span>
           )}

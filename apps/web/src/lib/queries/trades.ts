@@ -4,9 +4,9 @@
  * Provides type-safe query options for Convex trades queries.
  * Use with useQuery() in components or ensureQueryData() in loaders.
  */
-import { convexQuery } from '@convex-dev/react-query';
-import { api } from 'backend/convex/_generated/api';
-import type { Id } from 'backend/convex/_generated/dataModel';
+import { convexQuery } from "@convex-dev/react-query";
+import { api } from "backend/convex/_generated/api";
+import type { Id } from "backend/convex/_generated/dataModel";
 
 // Default stale time for trades (15 seconds for real-time feed)
 const TRADES_STALE_TIME = 1000 * 15;
@@ -51,7 +51,7 @@ export const tradesQueries = {
     }),
 
   /** Get trades linked to a signal */
-  bySignal: (signalId: Id<'signals'>) =>
+  bySignal: (signalId: Id<"signals">) =>
     convexQuery(api.trades.getTradesBySignal, { signalId }),
 
   /** Get trade statistics */

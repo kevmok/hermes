@@ -1,12 +1,12 @@
-import { Context, Duration, Effect, Layer, Schedule } from 'effect';
-import { ConvexHttpClient } from 'convex/browser';
-import { api } from 'backend/convex/_generated/api';
-import type { Id } from 'backend/convex/_generated/dataModel';
+import { Context, Duration, Effect, Layer, Schedule } from "effect";
+import { ConvexHttpClient } from "convex/browser";
+import { api } from "backend/convex/_generated/api";
+import type { Id } from "backend/convex/_generated/dataModel";
 
 const CONVEX_URL = process.env.CONVEX_URL;
 
 if (!CONVEX_URL) {
-  throw new Error('CONVEX_URL environment variable is required');
+  throw new Error("CONVEX_URL environment variable is required");
 }
 
 // Retry schedule: exponential backoff, max 3 attempts
@@ -28,7 +28,7 @@ export interface MarketData {
 export interface TradeContext {
   size: number;
   price: number;
-  side: 'YES' | 'NO';
+  side: "YES" | "NO";
   taker?: string;
   timestamp: number;
 }
@@ -38,19 +38,19 @@ export interface MarketDataWithTrade extends MarketData {
 }
 
 export interface ModelPredictionData {
-  analysisRunId: Id<'analysisRuns'>;
-  marketId: Id<'markets'>;
+  analysisRunId: Id<"analysisRuns">;
+  marketId: Id<"markets">;
   modelName: string;
-  decision: 'YES' | 'NO' | 'NO_TRADE';
+  decision: "YES" | "NO" | "NO_TRADE";
   reasoning: string;
   responseTimeMs: number;
   confidence?: number;
 }
 
 export interface InsightData {
-  analysisRunId: Id<'analysisRuns'>;
-  marketId: Id<'markets'>;
-  consensusDecision: 'YES' | 'NO' | 'NO_TRADE';
+  analysisRunId: Id<"analysisRuns">;
+  marketId: Id<"markets">;
+  consensusDecision: "YES" | "NO" | "NO_TRADE";
   consensusPercentage: number;
   totalModels: number;
   agreeingModels: number;
@@ -60,7 +60,7 @@ export interface InsightData {
 
 // Markets for analysis - prices are fetched on-demand from Polymarket API
 export interface MarketForAnalysis {
-  _id: Id<'markets'>;
+  _id: Id<"markets">;
   polymarketId: string;
   slug: string;
   title: string;
@@ -73,7 +73,7 @@ export interface RawTradeData {
   slug: string;
   eventSlug: string;
   title: string; // Market title for display
-  side: 'BUY' | 'SELL';
+  side: "BUY" | "SELL";
   size: number;
   price: number;
   timestamp: number;
@@ -86,47 +86,47 @@ export interface RawTradeData {
   traderPseudonym?: string;
 }
 
-export class ConvexDataService extends Context.Tag('ConvexDataService')<
+export class ConvexDataService extends Context.Tag("ConvexDataService")<
   ConvexDataService,
   {
     readonly upsertMarket: (
       market: MarketData,
-    ) => Effect.Effect<Id<'markets'>, Error>;
+    ) => Effect.Effect<Id<"markets">, Error>;
     readonly upsertMarketWithTrade: (
       market: MarketDataWithTrade,
-    ) => Effect.Effect<Id<'markets'>, Error>;
+    ) => Effect.Effect<Id<"markets">, Error>;
     readonly upsertMarketsBatch: (
       markets: MarketData[],
-    ) => Effect.Effect<Id<'markets'>[], Error>;
+    ) => Effect.Effect<Id<"markets">[], Error>;
     readonly recordSnapshot: (
-      marketId: Id<'markets'>,
+      marketId: Id<"markets">,
       yesPrice: number,
       noPrice: number,
       volume: number,
-    ) => Effect.Effect<Id<'marketSnapshots'>, Error>;
+    ) => Effect.Effect<Id<"marketSnapshots">, Error>;
     readonly recordTrade: (
       trade: RawTradeData,
-    ) => Effect.Effect<Id<'trades'>, Error>;
+    ) => Effect.Effect<Id<"trades">, Error>;
     readonly getMarketsForAnalysis: (
       limit: number,
     ) => Effect.Effect<MarketForAnalysis[], Error>;
     readonly createAnalysisRun: (
-      triggerType: 'scheduled' | 'on_demand' | 'system',
-    ) => Effect.Effect<Id<'analysisRuns'>, Error>;
+      triggerType: "scheduled" | "on_demand" | "system",
+    ) => Effect.Effect<Id<"analysisRuns">, Error>;
     readonly updateAnalysisRun: (
-      runId: Id<'analysisRuns'>,
-      status: 'pending' | 'running' | 'completed' | 'failed',
+      runId: Id<"analysisRuns">,
+      status: "pending" | "running" | "completed" | "failed",
       marketsAnalyzed?: number,
       errorMessage?: string,
     ) => Effect.Effect<void, Error>;
     readonly saveModelPrediction: (
       data: ModelPredictionData,
-    ) => Effect.Effect<Id<'modelPredictions'>, Error>;
+    ) => Effect.Effect<Id<"modelPredictions">, Error>;
     readonly saveInsight: (
       data: InsightData,
-    ) => Effect.Effect<Id<'insights'>, Error>;
+    ) => Effect.Effect<Id<"insights">, Error>;
     readonly markMarketAnalyzed: (
-      marketId: Id<'markets'>,
+      marketId: Id<"markets">,
     ) => Effect.Effect<void, Error>;
   }
 >() {}
@@ -154,7 +154,7 @@ const make = Effect.sync(() => {
     }).pipe(Effect.retry(retrySchedule));
 
   const recordSnapshot = (
-    marketId: Id<'markets'>,
+    marketId: Id<"markets">,
     yesPrice: number,
     noPrice: number,
     volume: number,
@@ -187,7 +187,7 @@ const make = Effect.sync(() => {
     }).pipe(Effect.retry(retrySchedule));
 
   const createAnalysisRun = (
-    triggerType: 'scheduled' | 'on_demand' | 'system',
+    triggerType: "scheduled" | "on_demand" | "system",
   ) =>
     Effect.tryPromise({
       try: () =>
@@ -196,8 +196,8 @@ const make = Effect.sync(() => {
     }).pipe(Effect.retry(retrySchedule));
 
   const updateAnalysisRun = (
-    runId: Id<'analysisRuns'>,
-    status: 'pending' | 'running' | 'completed' | 'failed',
+    runId: Id<"analysisRuns">,
+    status: "pending" | "running" | "completed" | "failed",
     marketsAnalyzed?: number,
     errorMessage?: string,
   ) =>
@@ -224,7 +224,7 @@ const make = Effect.sync(() => {
       catch: (e) => new Error(`Failed to save insight: ${e}`),
     }).pipe(Effect.retry(retrySchedule));
 
-  const markMarketAnalyzed = (marketId: Id<'markets'>) =>
+  const markMarketAnalyzed = (marketId: Id<"markets">) =>
     Effect.tryPromise({
       try: () => client.mutation(api.markets.markMarketAnalyzed, { marketId }),
       catch: (e) => new Error(`Failed to mark market as analyzed: ${e}`),

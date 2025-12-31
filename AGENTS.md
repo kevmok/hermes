@@ -22,26 +22,26 @@ hermes/
 
 ## WHERE TO LOOK
 
-| Task | Location | Notes |
-|------|----------|-------|
-| Add Convex table/function | `packages/backend/convex/` | Schema in `schema.ts` |
-| Add dashboard page | `apps/web/src/routes/dashboard/` | TanStack file-based routing |
-| Add UI component | `apps/web/src/components/ui/` | shadcn/ui pattern |
-| Modify trade collection | `apps/lofn/src/services/polymarket/` | WebSocket + historical |
-| Add AI model | `packages/backend/convex/ai/` | Swarm orchestration |
-| Modify market filters | `apps/lofn/src/domain/market/` | Effect.ts predicates |
+| Task                      | Location                             | Notes                       |
+| ------------------------- | ------------------------------------ | --------------------------- |
+| Add Convex table/function | `packages/backend/convex/`           | Schema in `schema.ts`       |
+| Add dashboard page        | `apps/web/src/routes/dashboard/`     | TanStack file-based routing |
+| Add UI component          | `apps/web/src/components/ui/`        | shadcn/ui pattern           |
+| Modify trade collection   | `apps/lofn/src/services/polymarket/` | WebSocket + historical      |
+| Add AI model              | `packages/backend/convex/ai/`        | Swarm orchestration         |
+| Modify market filters     | `apps/lofn/src/domain/market/`       | Effect.ts predicates        |
 
 ## TECH STACK
 
-| Layer | Tech | Notes |
-|-------|------|-------|
-| Runtime | Bun | NOT Node.js - see anti-patterns |
-| Data Collector | Effect.ts | Functional, layered services |
-| Backend | Convex | Real-time DB + serverless |
-| Frontend | TanStack Start + React 19 | SSR, file-based routing |
-| UI | shadcn/ui + Tailwind v4 | Radix primitives |
-| AI | Anthropic, OpenAI, Google | Via Effect AI libraries |
-| Auth | Better Auth + Convex | OAuth providers |
+| Layer          | Tech                      | Notes                           |
+| -------------- | ------------------------- | ------------------------------- |
+| Runtime        | Bun                       | NOT Node.js - see anti-patterns |
+| Data Collector | Effect.ts                 | Functional, layered services    |
+| Backend        | Convex                    | Real-time DB + serverless       |
+| Frontend       | TanStack Start + React 19 | SSR, file-based routing         |
+| UI             | shadcn/ui + Tailwind v4   | Radix primitives                |
+| AI             | Anthropic, OpenAI, Google | Via Effect AI libraries         |
+| Auth           | Better Auth + Convex      | OAuth providers                 |
 
 ## CONVENTIONS
 
@@ -53,16 +53,16 @@ hermes/
 
 ## ANTI-PATTERNS (THIS PROJECT)
 
-| Forbidden | Use Instead |
-|-----------|-------------|
-| `node`, `npm`, `pnpm`, `yarn` | `bun` |
+| Forbidden                        | Use Instead                   |
+| -------------------------------- | ----------------------------- |
+| `node`, `npm`, `pnpm`, `yarn`    | `bun`                         |
 | `vite` CLI, `webpack`, `esbuild` | `bun build` or TanStack Start |
-| `express`, `fastify` | `Bun.serve()` or Convex |
-| `dotenv` | Bun auto-loads `.env` |
-| `jest`, `vitest` | `bun test` |
-| `ws`, `ioredis`, `pg` | Bun built-ins |
-| `as any`, `@ts-ignore` | Proper typing |
-| Empty `catch {}` blocks | Effect error handling |
+| `express`, `fastify`             | `Bun.serve()` or Convex       |
+| `dotenv`                         | Bun auto-loads `.env`         |
+| `jest`, `vitest`                 | `bun test`                    |
+| `ws`, `ioredis`, `pg`            | Bun built-ins                 |
+| `as any`, `@ts-ignore`           | Proper typing                 |
+| Empty `catch {}` blocks          | Effect error handling         |
 
 ## COMMANDS
 

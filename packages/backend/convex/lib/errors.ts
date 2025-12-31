@@ -1,9 +1,9 @@
-import { Data } from 'effect';
+import { Data } from "effect";
 
 /**
  * Error for Convex query failures
  */
-export class ConvexQueryError extends Data.TaggedError('ConvexQueryError')<{
+export class ConvexQueryError extends Data.TaggedError("ConvexQueryError")<{
   operation: string;
   message: string;
   cause?: unknown;
@@ -13,7 +13,7 @@ export class ConvexQueryError extends Data.TaggedError('ConvexQueryError')<{
  * Error for Convex mutation failures
  */
 export class ConvexMutationError extends Data.TaggedError(
-  'ConvexMutationError',
+  "ConvexMutationError",
 )<{
   operation: string;
   message: string;
@@ -23,7 +23,7 @@ export class ConvexMutationError extends Data.TaggedError(
 /**
  * Error for Polymarket API failures
  */
-export class PolymarketApiError extends Data.TaggedError('PolymarketApiError')<{
+export class PolymarketApiError extends Data.TaggedError("PolymarketApiError")<{
   endpoint: string;
   status?: number;
   message: string;
@@ -32,7 +32,7 @@ export class PolymarketApiError extends Data.TaggedError('PolymarketApiError')<{
 /**
  * Error for AI model failures
  */
-export class AIModelError extends Data.TaggedError('AIModelError')<{
+export class AIModelError extends Data.TaggedError("AIModelError")<{
   model: string;
   message: string;
   isRetryable: boolean;
@@ -42,7 +42,7 @@ export class AIModelError extends Data.TaggedError('AIModelError')<{
  * Error for market not found
  */
 export class MarketNotFoundError extends Data.TaggedError(
-  'MarketNotFoundError',
+  "MarketNotFoundError",
 )<{
   marketId: string;
 }> {}
@@ -51,7 +51,7 @@ export class MarketNotFoundError extends Data.TaggedError(
  * Error for signal not found
  */
 export class SignalNotFoundError extends Data.TaggedError(
-  'SignalNotFoundError',
+  "SignalNotFoundError",
 )<{
   signalId: string;
 }> {}
@@ -59,7 +59,7 @@ export class SignalNotFoundError extends Data.TaggedError(
 /**
  * Error for invalid configuration
  */
-export class ConfigurationError extends Data.TaggedError('ConfigurationError')<{
+export class ConfigurationError extends Data.TaggedError("ConfigurationError")<{
   setting: string;
   message: string;
 }> {}

@@ -1,16 +1,19 @@
-import { v } from 'convex/values';
-import { query, mutation, internalMutation } from './_generated/server';
-import type { Id, Doc } from './_generated/dataModel';
+import { v } from "convex/values";
+import { query, mutation, internalMutation } from "./_generated/server";
+import type { Id, Doc } from "./_generated/dataModel";
 
 type Badge =
-  | 'early_adopter'
-  | 'research_pro'
-  | 'signal_hunter'
-  | 'streak_7'
-  | 'streak_30'
-  | 'social_butterfly';
+  | "early_adopter"
+  | "research_pro"
+  | "signal_hunter"
+  | "streak_7"
+  | "streak_30"
+  | "social_butterfly";
 
-const BADGE_THRESHOLDS: Record<Badge, (activity: Doc<'userActivity'>) => boolean> = {
+const BADGE_THRESHOLDS: Record<
+  Badge,
+  (activity: Doc<"userActivity">) => boolean
+> = {
   early_adopter: () => false,
   research_pro: (a) => a.deepDivesUsed >= 10,
   signal_hunter: (a) => a.signalsViewed >= 100,
@@ -27,14 +30,14 @@ async function getAuthenticatedUser(ctx: {
   if (!identity) return null;
 
   const user = await ctx.db
-    .query('user')
-    .withIndex('userId', (q: any) => q.eq('userId', identity.subject))
+    .query("user")
+    .withIndex("userId", (q: any) => q.eq("userId", identity.subject))
     .first();
 
   return user;
 }
 
-function checkAndAwardBadges(activity: Doc<'userActivity'>): string[] {
+function checkAndAwardBadges(activity: Doc<"userActivity">): string[] {
   const newBadges: string[] = [];
   const currentBadges = new Set(activity.badges);
 
@@ -70,9 +73,9 @@ function isConsecutiveDay(lastTs: number, currentTs: number): boolean {
 }
 
 const activityValidator = v.object({
-  _id: v.id('userActivity'),
+  _id: v.id("userActivity"),
   _creationTime: v.number(),
-  userId: v.id('user'),
+  userId: v.id("user"),
   signalsViewed: v.number(),
   deepDivesUsed: v.number(),
   sharesGenerated: v.number(),
@@ -86,35 +89,35 @@ const activityValidator = v.object({
 export const getMyActivity = query({
   args: {},
   returns: v.union(activityValidator, v.null()),
-  handler: async (ctx): Promise<Doc<'userActivity'> | null> => {
+  handler: async (ctx): Promise<Doc<"userActivity"> | null> => {
     const user = await getAuthenticatedUser(ctx);
     if (!user) return null;
 
     return await ctx.db
-      .query('userActivity')
-      .withIndex('by_user', (q: any) => q.eq('userId', user._id))
+      .query("userActivity")
+      .withIndex("by_user", (q: any) => q.eq("userId", user._id))
       .first();
   },
 });
 
 export const initializeActivity = mutation({
   args: {},
-  returns: v.id('userActivity'),
-  handler: async (ctx): Promise<Id<'userActivity'>> => {
+  returns: v.id("userActivity"),
+  handler: async (ctx): Promise<Id<"userActivity">> => {
     const user = await getAuthenticatedUser(ctx);
-    if (!user) throw new Error('Not authenticated');
+    if (!user) throw new Error("Not authenticated");
 
     const existing = await ctx.db
-      .query('userActivity')
-      .withIndex('by_user', (q: any) => q.eq('userId', user._id))
+      .query("userActivity")
+      .withIndex("by_user", (q: any) => q.eq("userId", user._id))
       .first();
 
     if (existing) return existing._id;
 
     const now = Date.now();
-    const isBeta = now < new Date('2025-03-01').getTime();
+    const isBeta = now < new Date("2025-03-01").getTime();
 
-    return await ctx.db.insert('userActivity', {
+    return await ctx.db.insert("userActivity", {
       userId: user._id,
       signalsViewed: 0,
       deepDivesUsed: 0,
@@ -123,7 +126,7 @@ export const initializeActivity = mutation({
       currentStreak: 1,
       longestStreak: 1,
       lastActiveAt: now,
-      badges: isBeta ? ['early_adopter'] : [],
+      badges: isBeta ? ["early_adopter"] : [],
     });
   },
 });
@@ -136,14 +139,14 @@ export const recordSignalView = mutation({
     if (!user) return null;
 
     const activity = await ctx.db
-      .query('userActivity')
-      .withIndex('by_user', (q: any) => q.eq('userId', user._id))
+      .query("userActivity")
+      .withIndex("by_user", (q: any) => q.eq("userId", user._id))
       .first();
 
     if (!activity) return null;
 
     const now = Date.now();
-    const updates: Partial<Doc<'userActivity'>> = {
+    const updates: Partial<Doc<"userActivity">> = {
       signalsViewed: activity.signalsViewed + 1,
       lastActiveAt: now,
     };
@@ -162,7 +165,9 @@ export const recordSignalView = mutation({
     }
 
     const updatedActivity = { ...activity, ...updates };
-    const newBadges = checkAndAwardBadges(updatedActivity as Doc<'userActivity'>);
+    const newBadges = checkAndAwardBadges(
+      updatedActivity as Doc<"userActivity">,
+    );
 
     if (newBadges.length > 0) {
       updates.badges = [...activity.badges, ...newBadges];
@@ -175,24 +180,26 @@ export const recordSignalView = mutation({
 
 export const recordDeepDive = internalMutation({
   args: {
-    userId: v.id('user'),
+    userId: v.id("user"),
   },
   returns: v.null(),
   handler: async (ctx, args): Promise<null> => {
     const activity = await ctx.db
-      .query('userActivity')
-      .withIndex('by_user', (q: any) => q.eq('userId', args.userId))
+      .query("userActivity")
+      .withIndex("by_user", (q: any) => q.eq("userId", args.userId))
       .first();
 
     if (!activity) return null;
 
-    const updates: Partial<Doc<'userActivity'>> = {
+    const updates: Partial<Doc<"userActivity">> = {
       deepDivesUsed: activity.deepDivesUsed + 1,
       lastActiveAt: Date.now(),
     };
 
     const updatedActivity = { ...activity, ...updates };
-    const newBadges = checkAndAwardBadges(updatedActivity as Doc<'userActivity'>);
+    const newBadges = checkAndAwardBadges(
+      updatedActivity as Doc<"userActivity">,
+    );
 
     if (newBadges.length > 0) {
       updates.badges = [...activity.badges, ...newBadges];
@@ -211,19 +218,21 @@ export const recordShare = mutation({
     if (!user) return null;
 
     const activity = await ctx.db
-      .query('userActivity')
-      .withIndex('by_user', (q: any) => q.eq('userId', user._id))
+      .query("userActivity")
+      .withIndex("by_user", (q: any) => q.eq("userId", user._id))
       .first();
 
     if (!activity) return null;
 
-    const updates: Partial<Doc<'userActivity'>> = {
+    const updates: Partial<Doc<"userActivity">> = {
       sharesGenerated: activity.sharesGenerated + 1,
       lastActiveAt: Date.now(),
     };
 
     const updatedActivity = { ...activity, ...updates };
-    const newBadges = checkAndAwardBadges(updatedActivity as Doc<'userActivity'>);
+    const newBadges = checkAndAwardBadges(
+      updatedActivity as Doc<"userActivity">,
+    );
 
     if (newBadges.length > 0) {
       updates.badges = [...activity.badges, ...newBadges];
@@ -243,20 +252,24 @@ export const recordDailyLogin = mutation({
   }),
   handler: async (
     ctx,
-  ): Promise<{ isNewDay: boolean; currentStreak: number; newBadges: string[] }> => {
+  ): Promise<{
+    isNewDay: boolean;
+    currentStreak: number;
+    newBadges: string[];
+  }> => {
     const user = await getAuthenticatedUser(ctx);
     if (!user) return { isNewDay: false, currentStreak: 0, newBadges: [] };
 
     let activity = await ctx.db
-      .query('userActivity')
-      .withIndex('by_user', (q: any) => q.eq('userId', user._id))
+      .query("userActivity")
+      .withIndex("by_user", (q: any) => q.eq("userId", user._id))
       .first();
 
     const now = Date.now();
 
     if (!activity) {
-      const isBeta = now < new Date('2025-03-01').getTime();
-      await ctx.db.insert('userActivity', {
+      const isBeta = now < new Date("2025-03-01").getTime();
+      await ctx.db.insert("userActivity", {
         userId: user._id,
         signalsViewed: 0,
         deepDivesUsed: 0,
@@ -265,12 +278,12 @@ export const recordDailyLogin = mutation({
         currentStreak: 1,
         longestStreak: 1,
         lastActiveAt: now,
-        badges: isBeta ? ['early_adopter'] : [],
+        badges: isBeta ? ["early_adopter"] : [],
       });
       return {
         isNewDay: true,
         currentStreak: 1,
-        newBadges: isBeta ? ['early_adopter'] : [],
+        newBadges: isBeta ? ["early_adopter"] : [],
       };
     }
 
@@ -282,7 +295,7 @@ export const recordDailyLogin = mutation({
       };
     }
 
-    const updates: Partial<Doc<'userActivity'>> = {
+    const updates: Partial<Doc<"userActivity">> = {
       daysActive: activity.daysActive + 1,
       lastActiveAt: now,
     };
@@ -297,7 +310,9 @@ export const recordDailyLogin = mutation({
     }
 
     const updatedActivity = { ...activity, ...updates };
-    const newBadges = checkAndAwardBadges(updatedActivity as Doc<'userActivity'>);
+    const newBadges = checkAndAwardBadges(
+      updatedActivity as Doc<"userActivity">,
+    );
 
     if (newBadges.length > 0) {
       updates.badges = [...activity.badges, ...newBadges];
@@ -315,7 +330,7 @@ export const recordDailyLogin = mutation({
 
 export const getActivityStats = query({
   args: {
-    userId: v.optional(v.id('user')),
+    userId: v.optional(v.id("user")),
   },
   returns: v.union(
     v.object({
@@ -339,8 +354,8 @@ export const getActivityStats = query({
     }
 
     const activity = await ctx.db
-      .query('userActivity')
-      .withIndex('by_user', (q: any) => q.eq('userId', userId))
+      .query("userActivity")
+      .withIndex("by_user", (q: any) => q.eq("userId", userId))
       .first();
 
     if (!activity) return null;

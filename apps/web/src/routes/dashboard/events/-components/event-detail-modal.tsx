@@ -1,16 +1,16 @@
-import { useQuery } from '@tanstack/react-query';
-import { eventsQueries, eventsActions, tradesQueries } from '@/lib/queries';
+import { useQuery } from "@tanstack/react-query";
+import { eventsQueries, eventsActions, tradesQueries } from "@/lib/queries";
 import {
   Sheet,
   SheetContent,
   SheetHeader,
   SheetTitle,
   SheetDescription,
-} from '@/components/ui/sheet';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
-import { HugeiconsIcon } from '@hugeicons/react';
+} from "@/components/ui/sheet";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { HugeiconsIcon } from "@hugeicons/react";
 import {
   Activity03Icon,
   ArrowDown01Icon,
@@ -21,7 +21,7 @@ import {
   LinkSquare01Icon,
   MoneyBag02Icon,
   Time01Icon,
-} from '@hugeicons/core-free-icons';
+} from "@hugeicons/core-free-icons";
 
 interface EventDetailModalProps {
   eventSlug: string | null;
@@ -38,19 +38,19 @@ export function EventDetailModal({
 }: EventDetailModalProps) {
   // Fetch event from our database with markets
   const { data: eventWithMarkets, isLoading: eventLoading } = useQuery({
-    ...eventsQueries.withMarkets(eventSlug ?? ''),
+    ...eventsQueries.withMarkets(eventSlug ?? ""),
     enabled: !!eventSlug,
   });
 
   // Fetch real-time data from Polymarket API
   const { data: apiEvent, isLoading: apiLoading } = useQuery({
-    ...eventsActions.fetchBySlug(eventSlug ?? ''),
+    ...eventsActions.fetchBySlug(eventSlug ?? ""),
     enabled: !!eventSlug,
   });
 
   // Fetch recent trades for this event
   const { data: recentTrades } = useQuery({
-    ...tradesQueries.byEvent(eventSlug ?? '', 10),
+    ...tradesQueries.byEvent(eventSlug ?? "", 10),
     enabled: !!eventSlug,
   });
 
@@ -63,92 +63,92 @@ export function EventDetailModal({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className='w-full sm:max-w-xl overflow-y-auto'>
-        <SheetHeader className='mb-6'>
-          <SheetTitle className='text-xl'>Event Details</SheetTitle>
-          <SheetDescription className='text-muted-foreground line-clamp-2'>
-            {event?.title ?? eventSlug?.replace(/-/g, ' ')}
+      <SheetContent className="w-full sm:max-w-xl overflow-y-auto">
+        <SheetHeader className="mb-6">
+          <SheetTitle className="text-xl">Event Details</SheetTitle>
+          <SheetDescription className="text-muted-foreground line-clamp-2">
+            {event?.title ?? eventSlug?.replace(/-/g, " ")}
           </SheetDescription>
         </SheetHeader>
 
         {eventLoading ? (
-          <div className='space-y-4'>
-            <Skeleton className='h-24 w-full rounded-xl' />
-            <Skeleton className='h-32 w-full rounded-xl' />
-            <Skeleton className='h-48 w-full rounded-xl' />
+          <div className="space-y-4">
+            <Skeleton className="h-24 w-full rounded-xl" />
+            <Skeleton className="h-32 w-full rounded-xl" />
+            <Skeleton className="h-48 w-full rounded-xl" />
           </div>
         ) : !event ? (
-          <div className='text-center py-8 text-muted-foreground'>
+          <div className="text-center py-8 text-muted-foreground">
             Event data not available
           </div>
         ) : (
-          <div className='space-y-6'>
+          <div className="space-y-6">
             {/* Event image */}
             {(event.imageUrl || apiEvent?.image) && (
               <img
                 src={event.imageUrl || apiEvent?.image}
-                alt=''
-                className='w-full h-32 object-cover rounded-xl border border-white/[0.08]'
+                alt=""
+                className="w-full h-32 object-cover rounded-xl border border-white/[0.08]"
               />
             )}
 
             {/* Status badges */}
-            <div className='flex items-center gap-2'>
+            <div className="flex items-center gap-2">
               {event.isActive ? (
-                <Badge className='bg-emerald-500/20 text-emerald-300 border-emerald-500/30 border'>
+                <Badge className="bg-emerald-500/20 text-emerald-300 border-emerald-500/30 border">
                   ACTIVE
                 </Badge>
               ) : (
-                <Badge className='bg-red-500/20 text-red-300 border-red-500/30 border'>
+                <Badge className="bg-red-500/20 text-red-300 border-red-500/30 border">
                   CLOSED
                 </Badge>
               )}
-              <Badge className='bg-amber-500/20 text-amber-300 border-amber-500/30 border'>
+              <Badge className="bg-amber-500/20 text-amber-300 border-amber-500/30 border">
                 TRACKED
               </Badge>
             </div>
 
             {/* Stats grid */}
-            <div className='grid grid-cols-2 gap-4'>
-              <div className='p-4 rounded-xl border border-white/[0.08] bg-white/[0.02]'>
-                <div className='flex items-center gap-2 mb-2'>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="p-4 rounded-xl border border-white/[0.08] bg-white/[0.02]">
+                <div className="flex items-center gap-2 mb-2">
                   <HugeiconsIcon
                     icon={ChartLineData01Icon}
                     size={16}
-                    className='text-muted-foreground'
+                    className="text-muted-foreground"
                   />
-                  <span className='text-[10px] uppercase tracking-widest text-muted-foreground/60'>
+                  <span className="text-[10px] uppercase tracking-widest text-muted-foreground/60">
                     Whale Trades
                   </span>
                 </div>
-                <span className='text-xl font-bold text-white'>
+                <span className="text-xl font-bold text-white">
                   {event.tradeCount}
                 </span>
               </div>
-              <div className='p-4 rounded-xl border border-white/[0.08] bg-white/[0.02]'>
-                <div className='flex items-center gap-2 mb-2'>
+              <div className="p-4 rounded-xl border border-white/[0.08] bg-white/[0.02]">
+                <div className="flex items-center gap-2 mb-2">
                   <HugeiconsIcon
                     icon={MoneyBag02Icon}
                     size={16}
-                    className='text-muted-foreground'
+                    className="text-muted-foreground"
                   />
-                  <span className='text-[10px] uppercase tracking-widest text-muted-foreground/60'>
+                  <span className="text-[10px] uppercase tracking-widest text-muted-foreground/60">
                     Total Volume
                   </span>
                 </div>
-                <span className='text-xl font-bold text-emerald-400'>
+                <span className="text-xl font-bold text-emerald-400">
                   {formatVolume(event.totalVolume)}
                 </span>
               </div>
             </div>
 
             {/* Timestamps */}
-            <div className='flex items-center gap-4 text-xs text-muted-foreground'>
-              <div className='flex items-center gap-1.5'>
+            <div className="flex items-center gap-4 text-xs text-muted-foreground">
+              <div className="flex items-center gap-1.5">
                 <HugeiconsIcon icon={Time01Icon} size={14} />
                 <span>First trade {formatTimeAgo(event.firstTradeAt)}</span>
               </div>
-              <div className='flex items-center gap-1.5'>
+              <div className="flex items-center gap-1.5">
                 <HugeiconsIcon icon={Clock01Icon} size={14} />
                 <span>Last trade {formatTimeAgo(event.lastTradeAt)}</span>
               </div>
@@ -156,18 +156,18 @@ export function EventDetailModal({
 
             {/* Markets Section */}
             <div>
-              <h3 className='text-sm font-semibold text-muted-foreground mb-3 flex items-center gap-2'>
+              <h3 className="text-sm font-semibold text-muted-foreground mb-3 flex items-center gap-2">
                 <HugeiconsIcon icon={Activity03Icon} size={16} />
                 Markets ({markets.length})
               </h3>
 
               {apiLoading ? (
-                <div className='space-y-2'>
-                  <Skeleton className='h-16 w-full rounded-lg' />
-                  <Skeleton className='h-16 w-full rounded-lg' />
+                <div className="space-y-2">
+                  <Skeleton className="h-16 w-full rounded-lg" />
+                  <Skeleton className="h-16 w-full rounded-lg" />
                 </div>
               ) : markets.length > 0 ? (
-                <div className='space-y-2 max-h-64 overflow-y-auto'>
+                <div className="space-y-2 max-h-64 overflow-y-auto">
                   {markets.map((market) => {
                     // Find matching API market for real-time prices
                     const apiMarket = apiEvent?.markets?.find(
@@ -192,7 +192,7 @@ export function EventDetailModal({
                   })}
                 </div>
               ) : (
-                <div className='text-center py-4 text-muted-foreground text-sm'>
+                <div className="text-center py-4 text-muted-foreground text-sm">
                   No markets tracked yet
                 </div>
               )}
@@ -201,11 +201,11 @@ export function EventDetailModal({
             {/* Recent Trades */}
             {recentTrades && recentTrades.length > 0 && (
               <div>
-                <h3 className='text-sm font-semibold text-muted-foreground mb-3 flex items-center gap-2'>
+                <h3 className="text-sm font-semibold text-muted-foreground mb-3 flex items-center gap-2">
                   <HugeiconsIcon icon={ChartLineData01Icon} size={16} />
                   Recent Trades ({recentTrades.length})
                 </h3>
-                <div className='space-y-2 max-h-48 overflow-y-auto'>
+                <div className="space-y-2 max-h-48 overflow-y-auto">
                   {recentTrades.slice(0, 5).map((trade) => (
                     <TradeRow key={trade._id} trade={trade} />
                   ))}
@@ -216,18 +216,18 @@ export function EventDetailModal({
             {/* Actions */}
             {polymarketUrl && (
               <Button
-                variant='outline'
-                className='w-full'
+                variant="outline"
+                className="w-full"
                 render={
                   <a
                     href={polymarketUrl}
-                    target='_blank'
-                    rel='noopener noreferrer'
+                    target="_blank"
+                    rel="noopener noreferrer"
                   >
                     <HugeiconsIcon
                       icon={LinkSquare01Icon}
                       size={16}
-                      className='mr-2'
+                      className="mr-2"
                     />
                     View on Polymarket
                   </a>
@@ -261,33 +261,33 @@ function MarketRow({ market, prices, hasSignal, onSelect }: MarketRowProps) {
   return (
     <div
       onClick={onSelect}
-      className='flex items-center gap-3 p-3 rounded-lg border border-white/[0.06] bg-white/[0.01] hover:bg-white/[0.04] hover:border-white/[0.1] transition-all cursor-pointer group/market'
+      className="flex items-center gap-3 p-3 rounded-lg border border-white/[0.06] bg-white/[0.01] hover:bg-white/[0.04] hover:border-white/[0.1] transition-all cursor-pointer group/market"
     >
       {/* Price indicator */}
-      <div className='flex flex-col items-center justify-center w-14 h-14 rounded-lg bg-white/[0.02] border border-white/[0.06]'>
-        <span className='text-lg font-bold text-emerald-400 tabular-nums'>
-          {prices ? `${(prices.yes * 100).toFixed(0)}%` : '—'}
+      <div className="flex flex-col items-center justify-center w-14 h-14 rounded-lg bg-white/[0.02] border border-white/[0.06]">
+        <span className="text-lg font-bold text-emerald-400 tabular-nums">
+          {prices ? `${(prices.yes * 100).toFixed(0)}%` : "—"}
         </span>
-        <span className='text-[9px] text-muted-foreground uppercase'>YES</span>
+        <span className="text-[9px] text-muted-foreground uppercase">YES</span>
       </div>
 
       {/* Market info */}
-      <div className='flex-1 min-w-0'>
-        <h4 className='text-sm font-medium text-white/90 line-clamp-2 group-hover/market:text-white transition-colors'>
+      <div className="flex-1 min-w-0">
+        <h4 className="text-sm font-medium text-white/90 line-clamp-2 group-hover/market:text-white transition-colors">
           {market.title}
         </h4>
-        <div className='flex items-center gap-2 mt-1'>
+        <div className="flex items-center gap-2 mt-1">
           {market.isActive ? (
-            <Badge className='text-[8px] bg-emerald-500/10 text-emerald-300/80 border-emerald-500/20 border px-1.5 py-0'>
+            <Badge className="text-[8px] bg-emerald-500/10 text-emerald-300/80 border-emerald-500/20 border px-1.5 py-0">
               ACTIVE
             </Badge>
           ) : (
-            <Badge className='text-[8px] bg-red-500/10 text-red-300/80 border-red-500/20 border px-1.5 py-0'>
+            <Badge className="text-[8px] bg-red-500/10 text-red-300/80 border-red-500/20 border px-1.5 py-0">
               CLOSED
             </Badge>
           )}
           {hasSignal && (
-            <Badge className='text-[8px] bg-cyan-500/10 text-cyan-300/80 border-cyan-500/20 border px-1.5 py-0 flex items-center gap-0.5'>
+            <Badge className="text-[8px] bg-cyan-500/10 text-cyan-300/80 border-cyan-500/20 border px-1.5 py-0 flex items-center gap-0.5">
               <HugeiconsIcon icon={Activity03Icon} size={8} />
               SIGNALS
             </Badge>
@@ -299,7 +299,7 @@ function MarketRow({ market, prices, hasSignal, onSelect }: MarketRowProps) {
       <HugeiconsIcon
         icon={ArrowRight01Icon}
         size={16}
-        className='text-muted-foreground/40 group-hover/market:text-white/60 transition-colors'
+        className="text-muted-foreground/40 group-hover/market:text-white/60 transition-colors"
       />
     </div>
   );
@@ -307,7 +307,7 @@ function MarketRow({ market, prices, hasSignal, onSelect }: MarketRowProps) {
 
 interface Trade {
   _id: string;
-  side: 'BUY' | 'SELL';
+  side: "BUY" | "SELL";
   size: number;
   price: number;
   timestamp: number;
@@ -317,39 +317,39 @@ interface Trade {
 }
 
 function TradeRow({ trade }: { trade: Trade }) {
-  const isBuy = trade.side === 'BUY';
-  const isYes = trade.outcome === 'Yes' || trade.outcomeIndex === 0;
+  const isBuy = trade.side === "BUY";
+  const isYes = trade.outcome === "Yes" || trade.outcomeIndex === 0;
   const isBullish = (isBuy && isYes) || (!isBuy && !isYes);
 
   return (
-    <div className='flex items-center gap-3 p-2 rounded-lg border border-white/[0.04] bg-white/[0.01]'>
+    <div className="flex items-center gap-3 p-2 rounded-lg border border-white/[0.04] bg-white/[0.01]">
       <div
         className={`flex h-6 w-6 items-center justify-center rounded ${
-          isBullish ? 'bg-emerald-500/10' : 'bg-red-500/10'
+          isBullish ? "bg-emerald-500/10" : "bg-red-500/10"
         }`}
       >
         <HugeiconsIcon
           icon={isBullish ? ArrowUp01Icon : ArrowDown01Icon}
           size={12}
-          className={isBullish ? 'text-emerald-400' : 'text-red-400'}
+          className={isBullish ? "text-emerald-400" : "text-red-400"}
         />
       </div>
-      <div className='flex-1 min-w-0'>
+      <div className="flex-1 min-w-0">
         <span
-          className={`text-xs font-medium ${isBullish ? 'text-emerald-400' : 'text-red-400'}`}
+          className={`text-xs font-medium ${isBullish ? "text-emerald-400" : "text-red-400"}`}
         >
-          {isBuy ? 'BUY' : 'SELL'} {trade.outcome}
+          {isBuy ? "BUY" : "SELL"} {trade.outcome}
         </span>
-        <span className='text-[10px] text-muted-foreground ml-2'>
+        <span className="text-[10px] text-muted-foreground ml-2">
           @ {(trade.price * 100).toFixed(0)}%
         </span>
       </div>
-      <div className='text-right'>
-        <span className='text-xs font-bold text-white'>
+      <div className="text-right">
+        <span className="text-xs font-bold text-white">
           {formatUSD(trade.size)}
         </span>
         {trade.isWhale && (
-          <Badge className='text-[8px] bg-purple-500/10 text-purple-300 border-purple-500/20 border ml-1'>
+          <Badge className="text-[8px] bg-purple-500/10 text-purple-300 border-purple-500/20 border ml-1">
             WHALE
           </Badge>
         )}
@@ -359,7 +359,7 @@ function TradeRow({ trade }: { trade: Trade }) {
 }
 
 function formatVolume(volume: number | undefined | null): string {
-  if (volume == null || isNaN(volume)) return '$0';
+  if (volume == null || isNaN(volume)) return "$0";
   if (volume >= 1_000_000) return `$${(volume / 1_000_000).toFixed(1)}M`;
   if (volume >= 1_000) return `$${(volume / 1_000).toFixed(1)}K`;
   return `$${volume.toFixed(0)}`;
@@ -382,7 +382,7 @@ function formatTimeAgo(timestamp: number): string {
   if (days > 0) return `${days}d ago`;
   if (hours > 0) return `${hours}h ago`;
   if (minutes > 0) return `${minutes}m ago`;
-  return 'just now';
+  return "just now";
 }
 
 function parseOutcomePrices(
