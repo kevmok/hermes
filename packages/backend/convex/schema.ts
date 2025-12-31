@@ -423,4 +423,98 @@ export default defineSchema({
   })
     .index('by_user', ['userId'])
     .index('by_address', ['polymarketAddress']),
+
+  // ============ PHASE 3: MARKET INTELLIGENCE ============
+
+  // User credit tracking for deep dives
+  userCredits: defineTable({
+    userId: v.id('user'),
+    deepDiveCredits: v.number(),
+    monthlyAllocation: v.number(), // Credits given per month based on plan
+    lastRefreshedAt: v.number(), // When credits were last refreshed
+    totalUsed: v.number(), // Lifetime usage
+  }).index('by_user', ['userId']),
+
+  // Deep dive requests and results
+  deepDiveRequests: defineTable({
+    userId: v.id('user'),
+    marketId: v.id('markets'),
+    status: v.union(
+      v.literal('pending'),
+      v.literal('processing'),
+      v.literal('completed'),
+      v.literal('failed'),
+    ),
+    requestedAt: v.number(),
+    completedAt: v.optional(v.number()),
+    creditsCharged: v.number(),
+
+    // Result data (populated when completed)
+    result: v.optional(
+      v.object({
+        newsItems: v.array(
+          v.object({
+            title: v.string(),
+            url: v.string(),
+            source: v.string(),
+            summary: v.string(),
+            sentiment: v.union(
+              v.literal('positive'),
+              v.literal('negative'),
+              v.literal('neutral'),
+            ),
+            publishedAt: v.optional(v.number()),
+          }),
+        ),
+        socialSentiment: v.object({
+          score: v.number(), // -1 to 1
+          volume: v.string(), // High, Medium, Low
+          topOpinions: v.array(v.string()),
+        }),
+        relatedMarkets: v.array(
+          v.object({
+            marketId: v.id('markets'),
+            title: v.string(),
+            correlation: v.string(), // Description of relationship
+          }),
+        ),
+        historicalContext: v.string(),
+        updatedAnalysis: v.string(),
+        citations: v.array(v.string()),
+      }),
+    ),
+
+    errorMessage: v.optional(v.string()),
+  })
+    .index('by_user', ['userId', 'requestedAt'])
+    .index('by_market', ['marketId', 'requestedAt'])
+    .index('by_status', ['status']),
+
+  // Whale profiles for smart money tracking
+  whaleProfiles: defineTable({
+    address: v.string(), // Wallet address
+    firstSeenAt: v.number(),
+    lastSeenAt: v.number(),
+
+    // Activity stats
+    totalTrades: v.number(),
+    totalVolume: v.number(),
+    avgTradeSize: v.number(),
+
+    // Performance (on resolved markets)
+    resolvedTrades: v.number(),
+    correctPredictions: v.number(),
+    winRate: v.optional(v.number()), // Only calculated with 10+ resolved
+
+    // Classification
+    isSmartMoney: v.boolean(), // winRate > 60% with 10+ resolved
+    preferredCategories: v.array(v.string()),
+
+    // Metadata (from Polymarket if available)
+    username: v.optional(v.string()),
+    profileImage: v.optional(v.string()),
+  })
+    .index('by_address', ['address'])
+    .index('by_smart_money', ['isSmartMoney', 'totalVolume'])
+    .index('by_volume', ['totalVolume']),
 });

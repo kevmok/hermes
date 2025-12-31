@@ -17,6 +17,7 @@ import { Route as authAuthcallbackRouteImport } from './routes/(auth)/authcallba
 import { Route as authAuthRouteImport } from './routes/(auth)/auth'
 import { Route as DashboardTradesRouteRouteImport } from './routes/dashboard/trades/route'
 import { Route as DashboardEventsRouteRouteImport } from './routes/dashboard/events/route'
+import { Route as DashboardWhalesIndexRouteImport } from './routes/dashboard/whales/index'
 import { Route as DashboardTradesIndexRouteImport } from './routes/dashboard/trades/index'
 import { Route as DashboardSettingsIndexRouteImport } from './routes/dashboard/settings/index'
 import { Route as DashboardPortfolioIndexRouteImport } from './routes/dashboard/portfolio/index'
@@ -62,6 +63,11 @@ const DashboardTradesRouteRoute = DashboardTradesRouteRouteImport.update({
 const DashboardEventsRouteRoute = DashboardEventsRouteRouteImport.update({
   id: '/events',
   path: '/events',
+  getParentRoute: () => DashboardRouteRoute,
+} as any)
+const DashboardWhalesIndexRoute = DashboardWhalesIndexRouteImport.update({
+  id: '/whales/',
+  path: '/whales/',
   getParentRoute: () => DashboardRouteRoute,
 } as any)
 const DashboardTradesIndexRoute = DashboardTradesIndexRouteImport.update({
@@ -116,6 +122,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/portfolio': typeof DashboardPortfolioIndexRoute
   '/dashboard/settings': typeof DashboardSettingsIndexRoute
   '/dashboard/trades/': typeof DashboardTradesIndexRoute
+  '/dashboard/whales': typeof DashboardWhalesIndexRoute
   '/dashboard/trades/$signalId': typeof DashboardTradesSignalIdIndexRoute
 }
 export interface FileRoutesByTo {
@@ -130,6 +137,7 @@ export interface FileRoutesByTo {
   '/dashboard/portfolio': typeof DashboardPortfolioIndexRoute
   '/dashboard/settings': typeof DashboardSettingsIndexRoute
   '/dashboard/trades': typeof DashboardTradesIndexRoute
+  '/dashboard/whales': typeof DashboardWhalesIndexRoute
   '/dashboard/trades/$signalId': typeof DashboardTradesSignalIdIndexRoute
 }
 export interface FileRoutesById {
@@ -148,6 +156,7 @@ export interface FileRoutesById {
   '/dashboard/portfolio/': typeof DashboardPortfolioIndexRoute
   '/dashboard/settings/': typeof DashboardSettingsIndexRoute
   '/dashboard/trades/': typeof DashboardTradesIndexRoute
+  '/dashboard/whales/': typeof DashboardWhalesIndexRoute
   '/dashboard/trades/$signalId/': typeof DashboardTradesSignalIdIndexRoute
 }
 export interface FileRouteTypes {
@@ -166,6 +175,7 @@ export interface FileRouteTypes {
     | '/dashboard/portfolio'
     | '/dashboard/settings'
     | '/dashboard/trades/'
+    | '/dashboard/whales'
     | '/dashboard/trades/$signalId'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -180,6 +190,7 @@ export interface FileRouteTypes {
     | '/dashboard/portfolio'
     | '/dashboard/settings'
     | '/dashboard/trades'
+    | '/dashboard/whales'
     | '/dashboard/trades/$signalId'
   id:
     | '__root__'
@@ -197,6 +208,7 @@ export interface FileRouteTypes {
     | '/dashboard/portfolio/'
     | '/dashboard/settings/'
     | '/dashboard/trades/'
+    | '/dashboard/whales/'
     | '/dashboard/trades/$signalId/'
   fileRoutesById: FileRoutesById
 }
@@ -263,6 +275,13 @@ declare module '@tanstack/react-router' {
       path: '/events'
       fullPath: '/dashboard/events'
       preLoaderRoute: typeof DashboardEventsRouteRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/whales/': {
+      id: '/dashboard/whales/'
+      path: '/whales'
+      fullPath: '/dashboard/whales'
+      preLoaderRoute: typeof DashboardWhalesIndexRouteImport
       parentRoute: typeof DashboardRouteRoute
     }
     '/dashboard/trades/': {
@@ -362,6 +381,7 @@ interface DashboardRouteRouteChildren {
   DashboardPerformanceIndexRoute: typeof DashboardPerformanceIndexRoute
   DashboardPortfolioIndexRoute: typeof DashboardPortfolioIndexRoute
   DashboardSettingsIndexRoute: typeof DashboardSettingsIndexRoute
+  DashboardWhalesIndexRoute: typeof DashboardWhalesIndexRoute
 }
 
 const DashboardRouteRouteChildren: DashboardRouteRouteChildren = {
@@ -371,6 +391,7 @@ const DashboardRouteRouteChildren: DashboardRouteRouteChildren = {
   DashboardPerformanceIndexRoute: DashboardPerformanceIndexRoute,
   DashboardPortfolioIndexRoute: DashboardPortfolioIndexRoute,
   DashboardSettingsIndexRoute: DashboardSettingsIndexRoute,
+  DashboardWhalesIndexRoute: DashboardWhalesIndexRoute,
 }
 
 const DashboardRouteRouteWithChildren = DashboardRouteRoute._addFileChildren(

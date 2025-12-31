@@ -6,6 +6,7 @@ import {
   Calendar03Icon,
   Award01Icon,
   Wallet01Icon,
+  UserMultiple02Icon,
   Settings01Icon,
   Logout01Icon,
   Sun01Icon,
@@ -48,6 +49,12 @@ const navItems = [
     href: '/dashboard/portfolio',
     icon: Wallet01Icon,
     description: 'Your tracked positions',
+  },
+  {
+    title: 'Whales',
+    href: '/dashboard/whales',
+    icon: UserMultiple02Icon,
+    description: 'Smart money tracking',
   },
 ];
 

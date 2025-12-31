@@ -13,6 +13,7 @@ import type * as ai_swarm from "../ai/swarm.js";
 import type * as analysis from "../analysis.js";
 import type * as auth from "../auth.js";
 import type * as crons from "../crons.js";
+import type * as deepDive from "../deepDive.js";
 import type * as events from "../events.js";
 import type * as globalFilters from "../globalFilters.js";
 import type * as http from "../http.js";
@@ -36,6 +37,7 @@ import type * as trades from "../trades.js";
 import type * as userPreferences from "../userPreferences.js";
 import type * as users from "../users.js";
 import type * as watchlists from "../watchlists.js";
+import type * as whales from "../whales.js";
 
 import type {
   ApiFromModules,
@@ -49,6 +51,7 @@ declare const fullApi: ApiFromModules<{
   analysis: typeof analysis;
   auth: typeof auth;
   crons: typeof crons;
+  deepDive: typeof deepDive;
   events: typeof events;
   globalFilters: typeof globalFilters;
   http: typeof http;
@@ -72,6 +75,7 @@ declare const fullApi: ApiFromModules<{
   userPreferences: typeof userPreferences;
   users: typeof users;
   watchlists: typeof watchlists;
+  whales: typeof whales;
 }>;
 
 /**
