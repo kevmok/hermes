@@ -1,6 +1,7 @@
 import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
 import { Navbar } from "./-components/navbar";
 import { StatsBar } from "./-components/stats-bar";
+import { useCustomer } from "autumn-js/react";
 
 export const Route = createFileRoute("/dashboard")({
   beforeLoad: ({ context }) => {
@@ -12,6 +13,9 @@ export const Route = createFileRoute("/dashboard")({
 });
 
 function DashboardLayout() {
+  const { customer } = useCustomer();
+
+  console.log("Autumn customer:", customer);
   return (
     <div className="min-h-screen flex flex-col bg-background">
       {/* Fixed top navigation */}

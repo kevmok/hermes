@@ -8,6 +8,7 @@ import {
   useRouteContext,
 } from "@tanstack/react-router";
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
+import { AutumnProvider } from "autumn-js/react";
 
 import { authClient } from "@/lib/auth/client";
 import { getAuth } from "@/lib/auth/functions";
@@ -93,9 +94,11 @@ function RootComponent() {
         authClient={authClient}
         initialToken={context.token}
       >
-        <RootDocument>
-          <Outlet />
-        </RootDocument>
+        <AutumnProvider>
+          <RootDocument>
+            <Outlet />
+          </RootDocument>
+        </AutumnProvider>
       </ConvexBetterAuthProvider>
     </ThemeProvider>
   );

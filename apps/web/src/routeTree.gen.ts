@@ -24,6 +24,7 @@ import { Route as DashboardSettingsIndexRouteImport } from './routes/dashboard/s
 import { Route as DashboardPortfolioIndexRouteImport } from './routes/dashboard/portfolio/index'
 import { Route as DashboardPerformanceIndexRouteImport } from './routes/dashboard/performance/index'
 import { Route as DashboardEventsEventIdRouteImport } from './routes/dashboard/events/$eventId'
+import { Route as ApiAutumnSplatRouteImport } from './routes/api/autumn.$'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth.$'
 import { Route as DashboardTradesSignalIdIndexRouteImport } from './routes/dashboard/trades/$signalId/index'
 
@@ -102,6 +103,11 @@ const DashboardEventsEventIdRoute = DashboardEventsEventIdRouteImport.update({
   path: '/$eventId',
   getParentRoute: () => DashboardEventsRouteRoute,
 } as any)
+const ApiAutumnSplatRoute = ApiAutumnSplatRouteImport.update({
+  id: '/api/autumn/$',
+  path: '/api/autumn/$',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   id: '/api/auth/$',
   path: '/api/auth/$',
@@ -124,6 +130,7 @@ export interface FileRoutesByFullPath {
   '/authcallback': typeof authAuthcallbackRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/autumn/$': typeof ApiAutumnSplatRoute
   '/dashboard/events/$eventId': typeof DashboardEventsEventIdRoute
   '/dashboard/performance': typeof DashboardPerformanceIndexRoute
   '/dashboard/portfolio': typeof DashboardPortfolioIndexRoute
@@ -140,6 +147,7 @@ export interface FileRoutesByTo {
   '/authcallback': typeof authAuthcallbackRoute
   '/dashboard': typeof DashboardIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/autumn/$': typeof ApiAutumnSplatRoute
   '/dashboard/events/$eventId': typeof DashboardEventsEventIdRoute
   '/dashboard/performance': typeof DashboardPerformanceIndexRoute
   '/dashboard/portfolio': typeof DashboardPortfolioIndexRoute
@@ -160,6 +168,7 @@ export interface FileRoutesById {
   '/(auth)/authcallback': typeof authAuthcallbackRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/autumn/$': typeof ApiAutumnSplatRoute
   '/dashboard/events/$eventId': typeof DashboardEventsEventIdRoute
   '/dashboard/performance/': typeof DashboardPerformanceIndexRoute
   '/dashboard/portfolio/': typeof DashboardPortfolioIndexRoute
@@ -180,6 +189,7 @@ export interface FileRouteTypes {
     | '/authcallback'
     | '/dashboard/'
     | '/api/auth/$'
+    | '/api/autumn/$'
     | '/dashboard/events/$eventId'
     | '/dashboard/performance'
     | '/dashboard/portfolio'
@@ -196,6 +206,7 @@ export interface FileRouteTypes {
     | '/authcallback'
     | '/dashboard'
     | '/api/auth/$'
+    | '/api/autumn/$'
     | '/dashboard/events/$eventId'
     | '/dashboard/performance'
     | '/dashboard/portfolio'
@@ -215,6 +226,7 @@ export interface FileRouteTypes {
     | '/(auth)/authcallback'
     | '/dashboard/'
     | '/api/auth/$'
+    | '/api/autumn/$'
     | '/dashboard/events/$eventId'
     | '/dashboard/performance/'
     | '/dashboard/portfolio/'
@@ -230,6 +242,7 @@ export interface RootRouteChildren {
   DashboardRouteRoute: typeof DashboardRouteRouteWithChildren
   PerformanceRoute: typeof PerformanceRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
+  ApiAutumnSplatRoute: typeof ApiAutumnSplatRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -339,6 +352,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardEventsEventIdRouteImport
       parentRoute: typeof DashboardEventsRouteRoute
     }
+    '/api/autumn/$': {
+      id: '/api/autumn/$'
+      path: '/api/autumn/$'
+      fullPath: '/api/autumn/$'
+      preLoaderRoute: typeof ApiAutumnSplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/auth/$': {
       id: '/api/auth/$'
       path: '/api/auth/$'
@@ -424,6 +444,7 @@ const rootRouteChildren: RootRouteChildren = {
   DashboardRouteRoute: DashboardRouteRouteWithChildren,
   PerformanceRoute: PerformanceRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
+  ApiAutumnSplatRoute: ApiAutumnSplatRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

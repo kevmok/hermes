@@ -9,6 +9,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "autumn-js": "catalog:billing",
     "@base-ui/react": "^1.0.0",
     "@convex-dev/better-auth": "catalog:auth",
     "@convex-dev/react-query": "^0.1.0",

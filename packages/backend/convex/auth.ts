@@ -5,9 +5,11 @@ import {
   type AuthFunctions,
   createClient,
   createApi,
+  getSession,
+  getHeaders,
 } from "better-auth-convex";
 import { internal } from "./_generated/api";
-import { type MutationCtx, type QueryCtx } from "./_generated/server";
+import { type MutationCtx, type QueryCtx, query } from "./_generated/server";
 import type { DataModel } from "./_generated/dataModel";
 import schema from "./schema";
 import authConfig from "./auth.config";
@@ -103,7 +105,7 @@ export const {
 } = createApi(schema, createAuth, {
   // Optional: Skip input validation for smaller generated types
   // Since these are internal functions, validation is optional
-  skipValidation: true,
+  // skipValidation: true,
 });
 
 // Optional: If you need custom mutation builders (e.g., for custom context)
@@ -118,3 +120,13 @@ export const {
 // export const { create, ... } = createApi(schema, createAuth, {
 //   internalMutation: myCustomInternalMutation,
 // });
+
+export const getUserSession = query({
+  handler: async (ctx) => {
+    const auth = getAuth(ctx);
+    const headers = await getHeaders(ctx);
+    const user = await auth.api.getSession({ headers });
+
+    return user;
+  },
+});
