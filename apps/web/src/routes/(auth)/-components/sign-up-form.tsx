@@ -28,7 +28,11 @@ const signUpSchema = z.object({
   terms: z.boolean().refine((v) => v === true, "You must accept the terms"),
 });
 
-export function SignUpForm() {
+interface SignUpFormProps {
+  callbackUrl?: string;
+}
+
+export function SignUpForm({ callbackUrl = "/" }: SignUpFormProps) {
   const navigate = useNavigate();
   const [error, setError] = useState<string | null>(null);
 
@@ -57,7 +61,7 @@ export function SignUpForm() {
           return;
         }
 
-        navigate({ to: "/" });
+        navigate({ to: callbackUrl });
       } catch (err) {
         console.error(err);
         setError("An unexpected error occurred. Please try again.");

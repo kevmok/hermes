@@ -10,7 +10,11 @@ const colors = {
   textMuted: "#94a3b8",
 };
 
-export function SocialButtons() {
+interface SocialButtonsProps {
+  callbackUrl?: string;
+}
+
+export function SocialButtons({ callbackUrl = "/" }: SocialButtonsProps) {
   const [loadingProvider, setLoadingProvider] = useState<string | null>(null);
 
   const handleSocialLogin = async (provider: "google" | "discord") => {
@@ -18,7 +22,7 @@ export function SocialButtons() {
     try {
       await authClient.signIn.social({
         provider,
-        callbackURL: "/",
+        callbackURL: callbackUrl,
       });
     } catch (err) {
       console.error(`${provider} login error:`, err);

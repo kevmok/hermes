@@ -21,8 +21,10 @@ import { Route as DashboardEventsRouteRouteImport } from './routes/dashboard/eve
 import { Route as DashboardWhalesIndexRouteImport } from './routes/dashboard/whales/index'
 import { Route as DashboardTradesIndexRouteImport } from './routes/dashboard/trades/index'
 import { Route as DashboardSettingsIndexRouteImport } from './routes/dashboard/settings/index'
+import { Route as DashboardPricingIndexRouteImport } from './routes/dashboard/pricing/index'
 import { Route as DashboardPortfolioIndexRouteImport } from './routes/dashboard/portfolio/index'
 import { Route as DashboardPerformanceIndexRouteImport } from './routes/dashboard/performance/index'
+import { Route as DashboardCheckoutIndexRouteImport } from './routes/dashboard/checkout/index'
 import { Route as DashboardEventsEventIdRouteImport } from './routes/dashboard/events/$eventId'
 import { Route as ApiAutumnSplatRouteImport } from './routes/api/autumn.$'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth.$'
@@ -87,6 +89,11 @@ const DashboardSettingsIndexRoute = DashboardSettingsIndexRouteImport.update({
   path: '/settings/',
   getParentRoute: () => DashboardRouteRoute,
 } as any)
+const DashboardPricingIndexRoute = DashboardPricingIndexRouteImport.update({
+  id: '/pricing/',
+  path: '/pricing/',
+  getParentRoute: () => DashboardRouteRoute,
+} as any)
 const DashboardPortfolioIndexRoute = DashboardPortfolioIndexRouteImport.update({
   id: '/portfolio/',
   path: '/portfolio/',
@@ -98,6 +105,11 @@ const DashboardPerformanceIndexRoute =
     path: '/performance/',
     getParentRoute: () => DashboardRouteRoute,
   } as any)
+const DashboardCheckoutIndexRoute = DashboardCheckoutIndexRouteImport.update({
+  id: '/checkout/',
+  path: '/checkout/',
+  getParentRoute: () => DashboardRouteRoute,
+} as any)
 const DashboardEventsEventIdRoute = DashboardEventsEventIdRouteImport.update({
   id: '/$eventId',
   path: '/$eventId',
@@ -132,8 +144,10 @@ export interface FileRoutesByFullPath {
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/autumn/$': typeof ApiAutumnSplatRoute
   '/dashboard/events/$eventId': typeof DashboardEventsEventIdRoute
+  '/dashboard/checkout': typeof DashboardCheckoutIndexRoute
   '/dashboard/performance': typeof DashboardPerformanceIndexRoute
   '/dashboard/portfolio': typeof DashboardPortfolioIndexRoute
+  '/dashboard/pricing': typeof DashboardPricingIndexRoute
   '/dashboard/settings': typeof DashboardSettingsIndexRoute
   '/dashboard/trades/': typeof DashboardTradesIndexRoute
   '/dashboard/whales': typeof DashboardWhalesIndexRoute
@@ -149,8 +163,10 @@ export interface FileRoutesByTo {
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/autumn/$': typeof ApiAutumnSplatRoute
   '/dashboard/events/$eventId': typeof DashboardEventsEventIdRoute
+  '/dashboard/checkout': typeof DashboardCheckoutIndexRoute
   '/dashboard/performance': typeof DashboardPerformanceIndexRoute
   '/dashboard/portfolio': typeof DashboardPortfolioIndexRoute
+  '/dashboard/pricing': typeof DashboardPricingIndexRoute
   '/dashboard/settings': typeof DashboardSettingsIndexRoute
   '/dashboard/trades': typeof DashboardTradesIndexRoute
   '/dashboard/whales': typeof DashboardWhalesIndexRoute
@@ -170,8 +186,10 @@ export interface FileRoutesById {
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/autumn/$': typeof ApiAutumnSplatRoute
   '/dashboard/events/$eventId': typeof DashboardEventsEventIdRoute
+  '/dashboard/checkout/': typeof DashboardCheckoutIndexRoute
   '/dashboard/performance/': typeof DashboardPerformanceIndexRoute
   '/dashboard/portfolio/': typeof DashboardPortfolioIndexRoute
+  '/dashboard/pricing/': typeof DashboardPricingIndexRoute
   '/dashboard/settings/': typeof DashboardSettingsIndexRoute
   '/dashboard/trades/': typeof DashboardTradesIndexRoute
   '/dashboard/whales/': typeof DashboardWhalesIndexRoute
@@ -191,8 +209,10 @@ export interface FileRouteTypes {
     | '/api/auth/$'
     | '/api/autumn/$'
     | '/dashboard/events/$eventId'
+    | '/dashboard/checkout'
     | '/dashboard/performance'
     | '/dashboard/portfolio'
+    | '/dashboard/pricing'
     | '/dashboard/settings'
     | '/dashboard/trades/'
     | '/dashboard/whales'
@@ -208,8 +228,10 @@ export interface FileRouteTypes {
     | '/api/auth/$'
     | '/api/autumn/$'
     | '/dashboard/events/$eventId'
+    | '/dashboard/checkout'
     | '/dashboard/performance'
     | '/dashboard/portfolio'
+    | '/dashboard/pricing'
     | '/dashboard/settings'
     | '/dashboard/trades'
     | '/dashboard/whales'
@@ -228,8 +250,10 @@ export interface FileRouteTypes {
     | '/api/auth/$'
     | '/api/autumn/$'
     | '/dashboard/events/$eventId'
+    | '/dashboard/checkout/'
     | '/dashboard/performance/'
     | '/dashboard/portfolio/'
+    | '/dashboard/pricing/'
     | '/dashboard/settings/'
     | '/dashboard/trades/'
     | '/dashboard/whales/'
@@ -331,6 +355,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardSettingsIndexRouteImport
       parentRoute: typeof DashboardRouteRoute
     }
+    '/dashboard/pricing/': {
+      id: '/dashboard/pricing/'
+      path: '/pricing'
+      fullPath: '/dashboard/pricing'
+      preLoaderRoute: typeof DashboardPricingIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
     '/dashboard/portfolio/': {
       id: '/dashboard/portfolio/'
       path: '/portfolio'
@@ -343,6 +374,13 @@ declare module '@tanstack/react-router' {
       path: '/performance'
       fullPath: '/dashboard/performance'
       preLoaderRoute: typeof DashboardPerformanceIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/checkout/': {
+      id: '/dashboard/checkout/'
+      path: '/checkout'
+      fullPath: '/dashboard/checkout'
+      preLoaderRoute: typeof DashboardCheckoutIndexRouteImport
       parentRoute: typeof DashboardRouteRoute
     }
     '/dashboard/events/$eventId': {
@@ -418,8 +456,10 @@ interface DashboardRouteRouteChildren {
   DashboardEventsRouteRoute: typeof DashboardEventsRouteRouteWithChildren
   DashboardTradesRouteRoute: typeof DashboardTradesRouteRouteWithChildren
   DashboardIndexRoute: typeof DashboardIndexRoute
+  DashboardCheckoutIndexRoute: typeof DashboardCheckoutIndexRoute
   DashboardPerformanceIndexRoute: typeof DashboardPerformanceIndexRoute
   DashboardPortfolioIndexRoute: typeof DashboardPortfolioIndexRoute
+  DashboardPricingIndexRoute: typeof DashboardPricingIndexRoute
   DashboardSettingsIndexRoute: typeof DashboardSettingsIndexRoute
   DashboardWhalesIndexRoute: typeof DashboardWhalesIndexRoute
 }
@@ -428,8 +468,10 @@ const DashboardRouteRouteChildren: DashboardRouteRouteChildren = {
   DashboardEventsRouteRoute: DashboardEventsRouteRouteWithChildren,
   DashboardTradesRouteRoute: DashboardTradesRouteRouteWithChildren,
   DashboardIndexRoute: DashboardIndexRoute,
+  DashboardCheckoutIndexRoute: DashboardCheckoutIndexRoute,
   DashboardPerformanceIndexRoute: DashboardPerformanceIndexRoute,
   DashboardPortfolioIndexRoute: DashboardPortfolioIndexRoute,
+  DashboardPricingIndexRoute: DashboardPricingIndexRoute,
   DashboardSettingsIndexRoute: DashboardSettingsIndexRoute,
   DashboardWhalesIndexRoute: DashboardWhalesIndexRoute,
 }

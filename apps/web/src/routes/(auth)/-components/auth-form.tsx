@@ -7,6 +7,10 @@ import { SocialButtons } from "./social-buttons";
 
 type AuthMode = "sign-in" | "sign-up" | "forgot-password";
 
+interface AuthFormProps {
+  redirectUrl?: string;
+}
+
 const colors = {
   bg: "#030712",
   surface: "#111827",
@@ -20,8 +24,9 @@ const colors = {
   emerald: "#10b981",
 };
 
-export function AuthForm() {
+export function AuthForm({ redirectUrl }: AuthFormProps) {
   const [mode, setMode] = useState<AuthMode>("sign-in");
+  const callbackUrl = redirectUrl ?? "/";
 
   const titles: Record<AuthMode, { title: string; subtitle: string }> = {
     "sign-in": {
@@ -78,9 +83,9 @@ export function AuthForm() {
           transition={{ duration: 0.15 }}
         >
           {mode === "sign-in" && (
-            <SignInForm onForgotPassword={() => setMode("forgot-password")} />
+            <SignInForm onForgotPassword={() => setMode("forgot-password")} callbackUrl={callbackUrl} />
           )}
-          {mode === "sign-up" && <SignUpForm />}
+          {mode === "sign-up" && <SignUpForm callbackUrl={callbackUrl} />}
           {mode === "forgot-password" && (
             <ForgotPasswordForm onBack={() => setMode("sign-in")} />
           )}
@@ -111,7 +116,7 @@ export function AuthForm() {
             </div>
           </div>
 
-          <SocialButtons />
+          <SocialButtons callbackUrl={callbackUrl} />
         </div>
       )}
 

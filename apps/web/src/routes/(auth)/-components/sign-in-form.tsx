@@ -27,9 +27,10 @@ const signInSchema = z.object({
 
 interface SignInFormProps {
   onForgotPassword: () => void;
+  callbackUrl?: string;
 }
 
-export function SignInForm({ onForgotPassword }: SignInFormProps) {
+export function SignInForm({ onForgotPassword, callbackUrl = "/" }: SignInFormProps) {
   const navigate = useNavigate();
   const [error, setError] = useState<string | null>(null);
 
@@ -54,7 +55,7 @@ export function SignInForm({ onForgotPassword }: SignInFormProps) {
           return;
         }
 
-        navigate({ to: "/" });
+        navigate({ to: callbackUrl });
       } catch (err) {
         console.warn(err);
         setError("An unexpected error occurred. Please try again.");

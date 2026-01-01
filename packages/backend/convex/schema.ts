@@ -426,15 +426,6 @@ export default defineSchema({
 
   // ============ PHASE 3: MARKET INTELLIGENCE ============
 
-  // User credit tracking for deep dives
-  userCredits: defineTable({
-    userId: v.id("user"),
-    deepDiveCredits: v.number(),
-    monthlyAllocation: v.number(), // Credits given per month based on plan
-    lastRefreshedAt: v.number(), // When credits were last refreshed
-    totalUsed: v.number(), // Lifetime usage
-  }).index("by_user", ["userId"]),
-
   // Deep dive requests and results
   deepDiveRequests: defineTable({
     userId: v.id("user"),

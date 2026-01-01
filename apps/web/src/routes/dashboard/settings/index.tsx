@@ -1,8 +1,9 @@
 import { useState } from "react";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useConvexMutation, convexQuery } from "@convex-dev/react-query";
 import { api } from "backend/convex/_generated/api";
+import { useCustomer } from "autumn-js/react";
 import {
   Card,
   CardContent,
@@ -11,6 +12,7 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
   Select,
   SelectContent,
@@ -26,6 +28,8 @@ import {
   Settings01Icon,
   Notification01Icon,
   Mail01Icon,
+  CreditCardIcon,
+  Loading03Icon,
 } from "@hugeicons/core-free-icons";
 import { useTheme } from "@/lib/theme";
 
@@ -95,6 +99,8 @@ function SettingsPage() {
 
         <NotificationPreferencesCard />
 
+        <BillingCard />
+
         <Card className="border-border bg-card opacity-60">
           <CardHeader>
             <CardTitle className="text-base">Account</CardTitle>
@@ -108,6 +114,129 @@ function SettingsPage() {
         </Card>
       </div>
     </div>
+  );
+}
+
+function BillingCard() {
+  const { customer, openBillingPortal, isLoading } = useCustomer();
+  const [isOpening, setIsOpening] = useState(false);
+
+  const currentProduct = customer?.products?.find(
+    (p) => p.status === "active" || p.status === "trialing",
+  );
+
+  const isTrialing = currentProduct?.status === "trialing";
+  const trialEndsAt = currentProduct?.current_period_end;
+  const daysRemaining = trialEndsAt
+    ? Math.max(0, Math.ceil((trialEndsAt * 1000 - Date.now()) / (1000 * 60 * 60 * 24)))
+    : 0;
+
+  const deepDives = customer?.features?.deep_dives;
+  const deepDiveBalance = deepDives?.balance ?? 0;
+  const isUnlimited = deepDives?.unlimited ?? false;
+
+  const handleOpenPortal = async () => {
+    setIsOpening(true);
+    try {
+      await openBillingPortal({ returnUrl: window.location.href });
+    } finally {
+      setIsOpening(false);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <Card className="border-border bg-card">
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2">
+            <HugeiconsIcon icon={CreditCardIcon} size={18} className="text-primary" />
+            Billing
+          </CardTitle>
+          <CardDescription>Loading billing information...</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex justify-center py-4">
+            <HugeiconsIcon icon={Loading03Icon} size={24} className="animate-spin text-muted-foreground" />
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <Card className="border-border bg-card">
+      <CardHeader>
+        <CardTitle className="text-base flex items-center gap-2">
+          <HugeiconsIcon icon={CreditCardIcon} size={18} className="text-primary" />
+          Billing
+        </CardTitle>
+        <CardDescription>
+          Manage your subscription and billing details.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-muted-foreground">Current Plan</span>
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium">
+                {currentProduct?.name ?? "No Plan"}
+              </span>
+              {currentProduct && (
+                <Badge variant={isTrialing ? "secondary" : "default"} className="text-xs">
+                  {isTrialing ? "Trial" : "Active"}
+                </Badge>
+              )}
+            </div>
+          </div>
+
+          {isTrialing && daysRemaining > 0 && (
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-muted-foreground">Trial Ends</span>
+              <span className="text-sm text-amber-500 font-medium">
+                {daysRemaining} days remaining
+              </span>
+            </div>
+          )}
+
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-muted-foreground">Deep Dives</span>
+            <span className="text-sm font-medium">
+              {isUnlimited ? "Unlimited" : `${deepDiveBalance} remaining`}
+            </span>
+          </div>
+        </div>
+
+        <div className="flex gap-3 pt-2">
+          {currentProduct ? (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleOpenPortal}
+              disabled={isOpening}
+              className="flex-1"
+            >
+              {isOpening ? "Opening..." : "Manage Billing"}
+            </Button>
+          ) : (
+            <Link
+              to="/dashboard/pricing"
+              className="flex-1 inline-flex items-center justify-center h-7 px-2.5 text-[0.8rem] font-medium rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+            >
+              Choose a Plan
+            </Link>
+          )}
+          {currentProduct && (
+            <Link
+              to="/dashboard/pricing"
+              className="inline-flex items-center justify-center text-sm text-primary hover:underline"
+            >
+              Change Plan
+            </Link>
+          )}
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 

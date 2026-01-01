@@ -1,26 +1,31 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
+import { z } from "zod";
 import { AuthForm } from "./-components/auth-form";
 import { AuthIllustration } from "./-components/auth-illustration";
 
+const authSearchSchema = z.object({
+  redirect: z.string().optional(),
+});
+
 export const Route = createFileRoute("/(auth)/auth")({
-  beforeLoad: ({ context }) => {
-    // Redirect authenticated users to dashboard
+  validateSearch: authSearchSchema,
+  beforeLoad: ({ context, search }) => {
     if (context.isAuthenticated) {
-      throw redirect({ to: "/" });
+      throw redirect({ to: search.redirect ?? "/" });
     }
   },
   component: AuthPage,
 });
 
 function AuthPage() {
+  const { redirect: redirectUrl } = Route.useSearch();
+
   return (
     <>
-      {/* Left Panel - Form */}
       <div className="relative flex flex-col justify-center px-6 py-12 lg:px-12 xl:px-20">
-        <AuthForm />
+        <AuthForm redirectUrl={redirectUrl} />
       </div>
 
-      {/* Right Panel - Illustration */}
       <div className="hidden lg:block relative">
         <AuthIllustration />
       </div>

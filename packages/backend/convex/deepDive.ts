@@ -48,118 +48,6 @@ type DeepDiveResult = {
   citations: string[];
 };
 
-export const getCredits = query({
-  args: {},
-  returns: v.union(
-    v.object({
-      deepDiveCredits: v.number(),
-      monthlyAllocation: v.number(),
-      totalUsed: v.number(),
-      lastRefreshedAt: v.optional(v.number()),
-    }),
-    v.null(),
-  ),
-  handler: async (
-    ctx,
-  ): Promise<{
-    deepDiveCredits: number;
-    monthlyAllocation: number;
-    totalUsed: number;
-    lastRefreshedAt?: number;
-  } | null> => {
-    const user = await getAuthenticatedUser(ctx);
-    if (!user) return null;
-
-    const credits = await ctx.db
-      .query("userCredits")
-      .withIndex("by_user", (q) => q.eq("userId", user._id))
-      .first();
-
-    return (
-      credits ?? {
-        deepDiveCredits: 0,
-        monthlyAllocation: 0,
-        totalUsed: 0,
-      }
-    );
-  },
-});
-
-export const initializeCredits = internalMutation({
-  args: {
-    userId: v.id("user"),
-    initialCredits: v.number(),
-    monthlyAllocation: v.number(),
-  },
-  returns: v.id("userCredits"),
-  handler: async (ctx, args): Promise<Id<"userCredits">> => {
-    const existing = await ctx.db
-      .query("userCredits")
-      .withIndex("by_user", (q) => q.eq("userId", args.userId))
-      .first();
-
-    if (existing) {
-      return existing._id;
-    }
-
-    return await ctx.db.insert("userCredits", {
-      userId: args.userId,
-      deepDiveCredits: args.initialCredits,
-      monthlyAllocation: args.monthlyAllocation,
-      lastRefreshedAt: Date.now(),
-      totalUsed: 0,
-    });
-  },
-});
-
-export const deductCredit = internalMutation({
-  args: {
-    userId: v.id("user"),
-    amount: v.number(),
-  },
-  returns: v.null(),
-  handler: async (ctx, args): Promise<null> => {
-    const credits = await ctx.db
-      .query("userCredits")
-      .withIndex("by_user", (q) => q.eq("userId", args.userId))
-      .first();
-
-    if (!credits || credits.deepDiveCredits < args.amount) {
-      throw new ConvexError("Insufficient credits");
-    }
-
-    await ctx.db.patch(credits._id, {
-      deepDiveCredits: credits.deepDiveCredits - args.amount,
-      totalUsed: credits.totalUsed + args.amount,
-    });
-
-    return null;
-  },
-});
-
-export const refundCredit = internalMutation({
-  args: {
-    userId: v.id("user"),
-    amount: v.number(),
-  },
-  returns: v.null(),
-  handler: async (ctx, args): Promise<null> => {
-    const credits = await ctx.db
-      .query("userCredits")
-      .withIndex("by_user", (q) => q.eq("userId", args.userId))
-      .first();
-
-    if (!credits) return null;
-
-    await ctx.db.patch(credits._id, {
-      deepDiveCredits: credits.deepDiveCredits + args.amount,
-      totalUsed: Math.max(0, credits.totalUsed - args.amount),
-    });
-
-    return null;
-  },
-});
-
 export const requestDeepDive = mutation({
   args: {
     marketId: v.id("markets"),
@@ -169,31 +57,19 @@ export const requestDeepDive = mutation({
     const user = await getAuthenticatedUser(ctx);
     if (!user) throw new ConvexError("Not authenticated");
 
-    const sixHoursAgo = Date.now() - 6 * 60 * 60 * 1000;
-    const cachedRequest = await ctx.db
+    const existingRequest = await ctx.db
       .query("deepDiveRequests")
-      .withIndex("by_market", (q) => q.eq("marketId", args.marketId))
+      .withIndex("by_user", (q) => q.eq("userId", user._id))
       .filter((q) =>
         q.and(
+          q.eq(q.field("marketId"), args.marketId),
           q.eq(q.field("status"), "completed"),
-          q.gt(q.field("completedAt"), sixHoursAgo),
         ),
       )
       .first();
 
-    if (cachedRequest) {
-      return cachedRequest._id;
-    }
-
-    const credits = await ctx.db
-      .query("userCredits")
-      .withIndex("by_user", (q) => q.eq("userId", user._id))
-      .first();
-
-    if (!credits || credits.deepDiveCredits < 1) {
-      throw new ConvexError(
-        "Insufficient credits. Upgrade your plan for more deep dives.",
-      );
+    if (existingRequest) {
+      return existingRequest._id;
     }
 
     const requestId = await ctx.db.insert("deepDiveRequests", {
@@ -202,11 +78,6 @@ export const requestDeepDive = mutation({
       status: "pending",
       requestedAt: Date.now(),
       creditsCharged: 1,
-    });
-
-    await ctx.db.patch(credits._id, {
-      deepDiveCredits: credits.deepDiveCredits - 1,
-      totalUsed: credits.totalUsed + 1,
     });
 
     await ctx.scheduler.runAfter(0, internal.deepDive.runDeepDiveAnalysis, {
@@ -429,17 +300,6 @@ Provide a comprehensive analysis with recent news, sentiment, and updated probab
       });
     } catch (error) {
       console.error("Deep dive failed:", error);
-
-      const request = await ctx.runQuery(internal.deepDive.getRequest, {
-        requestId: args.requestId,
-      });
-
-      if (request) {
-        await ctx.runMutation(internal.deepDive.refundCredit, {
-          userId: request.userId,
-          amount: request.creditsCharged,
-        });
-      }
 
       await ctx.runMutation(internal.deepDive.failRequest, {
         requestId: args.requestId,

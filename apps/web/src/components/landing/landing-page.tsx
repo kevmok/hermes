@@ -1356,8 +1356,9 @@ function HowItWorksSection() {
 function PricingSection() {
   const tiers = [
     {
+      id: "starter",
       name: "Starter",
-      price: 29,
+      price: 40,
       description: "Perfect for getting started",
       features: [
         "All AI signals",
@@ -1369,8 +1370,9 @@ function PricingSection() {
       highlighted: false,
     },
     {
+      id: "pro",
       name: "Pro",
-      price: 79,
+      price: 99,
       description: "For serious traders",
       features: [
         "Everything in Starter",
@@ -1383,18 +1385,16 @@ function PricingSection() {
       highlighted: true,
     },
     {
-      name: "Enterprise",
+      id: "unlimited",
+      name: "Unlimited",
       price: 249,
-      description: "For teams & power users",
+      description: "For power users",
       features: [
         "Everything in Pro",
-        "50 deep dives/month",
-        "API access",
-        "Team seats (up to 5)",
-        "Custom integrations",
-        "Dedicated support",
+        "Unlimited deep dives",
+        "Priority support",
       ],
-      cta: "Contact Sales",
+      cta: "Start Free Trial",
       highlighted: false,
     },
   ];
@@ -1518,7 +1518,7 @@ function PricingSection() {
                   ))}
                 </ul>
                 <motion.a
-                  href={tier.name === "Enterprise" ? "/contact" : "/auth"}
+                  href={`/auth?redirect=/dashboard/checkout?plan=${tier.id}`}
                   whileHover={{
                     scale: 1.02,
                     boxShadow: tier.highlighted

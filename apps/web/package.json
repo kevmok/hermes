@@ -9,7 +9,6 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "autumn-js": "catalog:billing",
     "@base-ui/react": "^1.0.0",
     "@convex-dev/better-auth": "catalog:auth",
     "@convex-dev/react-query": "^0.1.0",
@@ -26,6 +25,8 @@
     "@tanstack/react-start": "catalog:tanstack",
     "@tanstack/react-table": "catalog:tanstack",
     "@tanstack/router-plugin": "catalog:tanstack",
+    "atmn": "^0.0.30",
+    "autumn-js": "catalog:billing",
     "backend": "workspace:*",
     "better-auth": "catalog:auth",
     "class-variance-authority": "^0.7.1",
