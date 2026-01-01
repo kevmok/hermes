@@ -81,7 +81,7 @@ function PricingPage() {
     await checkout({
       productId,
       dialog: CheckoutDialog,
-      successUrl: `${window.location.origin}/dashboard?checkout=success`,
+      successUrl: `${window.location.origin}/dashboard/checkout/success`,
     });
   };
 

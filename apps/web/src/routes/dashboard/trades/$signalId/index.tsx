@@ -6,6 +6,7 @@ import type { Id } from "backend/convex/_generated/dataModel";
 import { ConsensusViz } from "./-components/consensus-viz";
 import { ModelReasoningCards } from "./-components/model-reasoning-cards";
 import { MarketMetadata } from "./-components/market-metadata";
+import { DeepDivePanel } from "../../-components/deep-dive-panel";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { buttonVariants } from "@/components/ui/button";
@@ -282,6 +283,18 @@ function TradeDetailPage() {
                 </CardContent>
               </Card>
             </section>
+
+            {signal.market && (
+              <section>
+                <h2 className="text-sm font-semibold mb-3 text-muted-foreground uppercase tracking-wider">
+                  Deep Research
+                </h2>
+                <DeepDivePanel
+                  marketId={signal.market._id}
+                  marketTitle={signal.market.title}
+                />
+              </section>
+            )}
           </div>
         </div>
       </div>

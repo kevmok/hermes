@@ -20,6 +20,7 @@ import {
   ArrowDown01Icon,
   MinusSignIcon,
 } from "@hugeicons/core-free-icons";
+import { DeepDivePanel } from "./deep-dive-panel";
 
 interface MarketDetailModalProps {
   marketId: string | null;
@@ -282,6 +283,14 @@ export function MarketDetailModal({
                 <Separator />
               </>
             )}
+
+            {/* Deep Dive Research */}
+            <DeepDivePanel
+              marketId={marketId as Id<"markets">}
+              marketTitle={market.title}
+            />
+
+            <Separator />
 
             {/* Actions */}
             <DialogFooter className="gap-2 pt-4">

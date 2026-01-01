@@ -6,7 +6,6 @@ import {
 } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { z } from "zod";
-import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { eventsQueries } from "@/lib/queries";
 import { queryClient } from "@/lib/providers/query";
 import { EventsTable } from "./-components/events-table";
@@ -52,7 +51,6 @@ function EventsLayout() {
   const navigate = useNavigate();
   const search = Route.useSearch();
 
-  // Check if child route (drawer) is active
   const childMatch = useMatch({
     from: "/dashboard/events/$eventId",
     shouldThrow: false,
@@ -62,17 +60,16 @@ function EventsLayout() {
     eventsQueries.stats(),
   );
 
-  const handleDrawerClose = () => {
-    navigate({ to: "/dashboard/events", search });
-  };
-
   const handleRowClick = (eventSlug: string) => {
     navigate({
       to: "/dashboard/events/$eventId",
       params: { eventId: eventSlug },
-      search,
     });
   };
+
+  if (childMatch) {
+    return <Outlet />;
+  }
 
   return (
     <div className="min-h-full">
@@ -128,16 +125,6 @@ function EventsLayout() {
       <div className="p-4 md:p-6">
         <EventsTable filters={search} onRowClick={handleRowClick} />
       </div>
-
-      {/* Event Detail Drawer */}
-      <Sheet
-        open={!!childMatch}
-        onOpenChange={(open) => !open && handleDrawerClose()}
-      >
-        <SheetContent className="w-full sm:w-[600px] sm:max-w-[600px] overflow-y-auto p-0">
-          <Outlet />
-        </SheetContent>
-      </Sheet>
     </div>
   );
 }

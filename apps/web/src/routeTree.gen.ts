@@ -29,6 +29,7 @@ import { Route as DashboardEventsEventIdRouteImport } from './routes/dashboard/e
 import { Route as ApiAutumnSplatRouteImport } from './routes/api/autumn.$'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth.$'
 import { Route as DashboardTradesSignalIdIndexRouteImport } from './routes/dashboard/trades/$signalId/index'
+import { Route as DashboardCheckoutSuccessIndexRouteImport } from './routes/dashboard/checkout/success/index'
 
 const PerformanceRoute = PerformanceRouteImport.update({
   id: '/performance',
@@ -131,6 +132,12 @@ const DashboardTradesSignalIdIndexRoute =
     path: '/$signalId/',
     getParentRoute: () => DashboardTradesRouteRoute,
   } as any)
+const DashboardCheckoutSuccessIndexRoute =
+  DashboardCheckoutSuccessIndexRouteImport.update({
+    id: '/checkout/success/',
+    path: '/checkout/success/',
+    getParentRoute: () => DashboardRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -151,6 +158,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/settings': typeof DashboardSettingsIndexRoute
   '/dashboard/trades/': typeof DashboardTradesIndexRoute
   '/dashboard/whales': typeof DashboardWhalesIndexRoute
+  '/dashboard/checkout/success': typeof DashboardCheckoutSuccessIndexRoute
   '/dashboard/trades/$signalId': typeof DashboardTradesSignalIdIndexRoute
 }
 export interface FileRoutesByTo {
@@ -170,6 +178,7 @@ export interface FileRoutesByTo {
   '/dashboard/settings': typeof DashboardSettingsIndexRoute
   '/dashboard/trades': typeof DashboardTradesIndexRoute
   '/dashboard/whales': typeof DashboardWhalesIndexRoute
+  '/dashboard/checkout/success': typeof DashboardCheckoutSuccessIndexRoute
   '/dashboard/trades/$signalId': typeof DashboardTradesSignalIdIndexRoute
 }
 export interface FileRoutesById {
@@ -193,6 +202,7 @@ export interface FileRoutesById {
   '/dashboard/settings/': typeof DashboardSettingsIndexRoute
   '/dashboard/trades/': typeof DashboardTradesIndexRoute
   '/dashboard/whales/': typeof DashboardWhalesIndexRoute
+  '/dashboard/checkout/success/': typeof DashboardCheckoutSuccessIndexRoute
   '/dashboard/trades/$signalId/': typeof DashboardTradesSignalIdIndexRoute
 }
 export interface FileRouteTypes {
@@ -216,6 +226,7 @@ export interface FileRouteTypes {
     | '/dashboard/settings'
     | '/dashboard/trades/'
     | '/dashboard/whales'
+    | '/dashboard/checkout/success'
     | '/dashboard/trades/$signalId'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -235,6 +246,7 @@ export interface FileRouteTypes {
     | '/dashboard/settings'
     | '/dashboard/trades'
     | '/dashboard/whales'
+    | '/dashboard/checkout/success'
     | '/dashboard/trades/$signalId'
   id:
     | '__root__'
@@ -257,6 +269,7 @@ export interface FileRouteTypes {
     | '/dashboard/settings/'
     | '/dashboard/trades/'
     | '/dashboard/whales/'
+    | '/dashboard/checkout/success/'
     | '/dashboard/trades/$signalId/'
   fileRoutesById: FileRoutesById
 }
@@ -411,6 +424,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardTradesSignalIdIndexRouteImport
       parentRoute: typeof DashboardTradesRouteRoute
     }
+    '/dashboard/checkout/success/': {
+      id: '/dashboard/checkout/success/'
+      path: '/checkout/success'
+      fullPath: '/dashboard/checkout/success'
+      preLoaderRoute: typeof DashboardCheckoutSuccessIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
   }
 }
 
@@ -462,6 +482,7 @@ interface DashboardRouteRouteChildren {
   DashboardPricingIndexRoute: typeof DashboardPricingIndexRoute
   DashboardSettingsIndexRoute: typeof DashboardSettingsIndexRoute
   DashboardWhalesIndexRoute: typeof DashboardWhalesIndexRoute
+  DashboardCheckoutSuccessIndexRoute: typeof DashboardCheckoutSuccessIndexRoute
 }
 
 const DashboardRouteRouteChildren: DashboardRouteRouteChildren = {
@@ -474,6 +495,7 @@ const DashboardRouteRouteChildren: DashboardRouteRouteChildren = {
   DashboardPricingIndexRoute: DashboardPricingIndexRoute,
   DashboardSettingsIndexRoute: DashboardSettingsIndexRoute,
   DashboardWhalesIndexRoute: DashboardWhalesIndexRoute,
+  DashboardCheckoutSuccessIndexRoute: DashboardCheckoutSuccessIndexRoute,
 }
 
 const DashboardRouteRouteWithChildren = DashboardRouteRoute._addFileChildren(

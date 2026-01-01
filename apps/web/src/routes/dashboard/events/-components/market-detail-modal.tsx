@@ -1,4 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
+import { convexQuery } from "@convex-dev/react-query";
+import { api } from "backend/convex/_generated/api";
 import { marketsActions, tradesQueries } from "@/lib/queries";
 import {
   Sheet,
@@ -20,6 +22,7 @@ import {
   LinkSquare01Icon,
   MoneyBag02Icon,
 } from "@hugeicons/core-free-icons";
+import { DeepDivePanel } from "../../-components/deep-dive-panel";
 
 interface MarketDetailModalProps {
   slug: string | null;
@@ -35,6 +38,12 @@ export function MarketDetailModal({
   // Fetch market data from Polymarket API
   const { data: market, isLoading: marketLoading } = useQuery({
     ...marketsActions.fetchBySlug(slug ?? ""),
+    enabled: !!slug,
+  });
+
+  // Fetch market from Convex to get marketId for DeepDive
+  const { data: convexMarket } = useQuery({
+    ...convexQuery(api.markets.getMarketBySlug, { slug: slug ?? "" }),
     enabled: !!slug,
   });
 
@@ -205,6 +214,13 @@ export function MarketDetailModal({
                 </div>
               </div>
             ) : null}
+
+            {convexMarket && (
+              <DeepDivePanel
+                marketId={convexMarket._id}
+                marketTitle={convexMarket.title}
+              />
+            )}
 
             {/* Actions */}
             {polymarketUrl && (

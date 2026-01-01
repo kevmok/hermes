@@ -5,7 +5,6 @@ import {
   type AuthFunctions,
   createClient,
   createApi,
-  getSession,
   getHeaders,
 } from "better-auth-convex";
 import { internal } from "./_generated/api";

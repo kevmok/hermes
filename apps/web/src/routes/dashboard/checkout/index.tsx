@@ -36,7 +36,7 @@ function CheckoutPage() {
 				await checkout({
 					productId: plan,
 					dialog: CheckoutDialog,
-					successUrl: "/dashboard?checkout=success",
+					successUrl: `${window.location.origin}/dashboard/checkout/success`,
 				});
 			} catch (err) {
 				setError(err instanceof Error ? err.message : "Checkout failed");

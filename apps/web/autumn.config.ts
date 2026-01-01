@@ -51,7 +51,7 @@ export const unlimited = product({
 	name: "Unlimited",
 	items: [
 		priceItem({ price: 249, interval: "month" }),
-		featureItem({ feature_id: deep_dives.id, unlimited: true }),
+		featureItem({ feature_id: deep_dives.id, included_usage: "inf" }),
 		featureItem({ feature_id: signals.id }),
 		featureItem({ feature_id: portfolio_sync.id }),
 		featureItem({ feature_id: whale_watch.id }),
