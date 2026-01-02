@@ -119,6 +119,165 @@ export const upsertMarketWithTrade = mutation({
   },
 });
 
+const tierValidator = v.union(
+  v.literal("bronze"),
+  v.literal("silver"),
+  v.literal("gold"),
+  v.literal("platinum"),
+);
+
+export const upsertMarketWithTier = mutation({
+  args: {
+    polymarketId: v.string(),
+    conditionId: v.optional(v.string()),
+    slug: v.string(),
+    eventSlug: v.string(),
+    title: v.string(),
+    imageUrl: v.optional(v.string()),
+    isActive: v.boolean(),
+    tradeContext: tradeContextValidator,
+    tier: tierValidator,
+  },
+  handler: async (ctx, args) => {
+    const { tradeContext, tier, ...marketArgs } = args;
+    const now = Date.now();
+
+    const existing = await ctx.db
+      .query("markets")
+      .withIndex("by_polymarket_id", (q) =>
+        q.eq("polymarketId", args.polymarketId),
+      )
+      .first();
+
+    let marketId;
+    if (existing) {
+      await ctx.db.patch(existing._id, {
+        ...marketArgs,
+        updatedAt: now,
+        lastTradeAt: now,
+      });
+      marketId = existing._id;
+    } else {
+      marketId = await ctx.db.insert("markets", {
+        ...marketArgs,
+        createdAt: now,
+        updatedAt: now,
+        lastTradeAt: now,
+      });
+    }
+
+    if (tier === "bronze") {
+      console.log(
+        `[TIER:BRONZE] $${tradeContext.size.toLocaleString()} trade - storing only, no AI analysis`,
+      );
+      return { marketId, tier, action: "stored_only" };
+    }
+
+    if (tier === "silver" || tier === "gold") {
+      console.log(
+        `[TIER:${tier.toUpperCase()}] $${tradeContext.size.toLocaleString()} trade - queued for batch analysis`,
+      );
+
+      await ctx.db.insert("analysisQueue", {
+        marketId,
+        tier,
+        tradeSize: tradeContext.size,
+        tradePrice: tradeContext.price,
+        tradeSide: tradeContext.side,
+        queuedAt: now,
+        status: "pending",
+      });
+
+      await updateMarketHeat(ctx, marketId, tradeContext.size, tradeContext.price);
+
+      return { marketId, tier, action: "queued_for_batch" };
+    }
+
+    if (tier === "platinum") {
+      console.log(
+        `[TIER:PLATINUM] $${tradeContext.size.toLocaleString()} MEGA WHALE - immediate full swarm analysis`,
+      );
+
+      try {
+        await ctx.scheduler.runAfter(
+          0,
+          internal.analysis.analyzeTradeForSignal,
+          { marketId, tradeContext },
+        );
+      } catch (error) {
+        console.error("Failed to schedule platinum analysis:", {
+          marketId,
+          error,
+        });
+      }
+
+      return { marketId, tier, action: "immediate_analysis" };
+    }
+
+    return { marketId, tier, action: "unknown" };
+  },
+});
+
+async function updateMarketHeat(
+  ctx: { db: any },
+  marketId: any,
+  tradeSize: number,
+  tradePrice: number,
+) {
+  const now = Date.now();
+  const windowStart = Math.floor(now / (30 * 60 * 1000)) * (30 * 60 * 1000);
+
+  const existing = await ctx.db
+    .query("marketHeat")
+    .withIndex("by_market", (q: any) => q.eq("marketId", marketId))
+    .first();
+
+  if (existing && existing.windowStart === windowStart) {
+    await ctx.db.patch(existing._id, {
+      whaleTradeCount: existing.whaleTradeCount + 1,
+      totalWhaleVolume: existing.totalWhaleVolume + tradeSize,
+      latestPrice: tradePrice,
+      heatScore: calculateHeatScore(
+        existing.whaleTradeCount + 1,
+        existing.totalWhaleVolume + tradeSize,
+        tradePrice,
+        existing.priceAtWindowStart,
+      ),
+      updatedAt: now,
+    });
+  } else {
+    if (existing) {
+      await ctx.db.delete(existing._id);
+    }
+    await ctx.db.insert("marketHeat", {
+      marketId,
+      windowStart,
+      whaleTradeCount: 1,
+      totalWhaleVolume: tradeSize,
+      latestPrice: tradePrice,
+      priceAtWindowStart: tradePrice,
+      heatScore: calculateHeatScore(1, tradeSize, tradePrice, tradePrice),
+      updatedAt: now,
+    });
+  }
+}
+
+function calculateHeatScore(
+  tradeCount: number,
+  totalVolume: number,
+  latestPrice: number,
+  startPrice?: number,
+): number {
+  const volumeScore = Math.log10(Math.max(totalVolume, 1)) * 10;
+  const tradeScore = tradeCount * 5;
+  const priceMovement = startPrice
+    ? Math.abs(latestPrice - startPrice) * 100
+    : 0;
+  const movementScore = priceMovement * 20;
+
+  return Math.round(volumeScore + tradeScore + movementScore);
+}
+
 export const upsertMarketsBatch = mutation({
   args: {
     markets: v.array(
@@ -291,6 +450,16 @@ export const getMarketBySlug = query({
       .query("markets")
       .withIndex("by_slug", (q) => q.eq("slug", args.slug))
       .first();
+  },
+});
+
+export const getMarketsByEventSlug = query({
+  args: { eventSlug: v.string() },
+  handler: async (ctx, args) => {
+    return await ctx.db
+      .query("markets")
+      .withIndex("by_event_slug", (q) => q.eq("eventSlug", args.eventSlug))
+      .collect();
   },
 });
 

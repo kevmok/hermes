@@ -323,6 +323,49 @@ export default defineSchema({
     .index("by_market_time", ["marketId", "signalTimestamp"])
     .index("by_category", ["marketCategory", "signalTimestamp"]),
 
+  // ============ ANALYSIS QUEUE (for batched analysis) ============
+
+  analysisQueue: defineTable({
+    marketId: v.id("markets"),
+    tier: v.union(
+      v.literal("silver"),
+      v.literal("gold"),
+      v.literal("platinum"),
+    ),
+    tradeSize: v.number(),
+    tradePrice: v.number(),
+    tradeSide: v.union(v.literal("YES"), v.literal("NO")),
+    queuedAt: v.number(),
+    processedAt: v.optional(v.number()),
+    status: v.union(
+      v.literal("pending"),
+      v.literal("processing"),
+      v.literal("completed"),
+      v.literal("skipped"),
+    ),
+    batchId: v.optional(v.string()),
+  })
+    .index("by_status", ["status", "queuedAt"])
+    .index("by_market", ["marketId", "queuedAt"])
+    .index("by_tier", ["tier", "status"])
+    .index("by_batch", ["batchId"]),
+
+  // ============ MARKET HEAT (for batch prioritization) ============
+
+  marketHeat: defineTable({
+    marketId: v.id("markets"),
+    windowStart: v.number(),
+    whaleTradeCount: v.number(),
+    totalWhaleVolume: v.number(),
+    latestPrice: v.number(),
+    priceAtWindowStart: v.optional(v.number()),
+    heatScore: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_market", ["marketId"])
+    .index("by_window", ["windowStart"])
+    .index("by_heat", ["heatScore"]),
+
   // ============ ANALYSIS REQUESTS (for on-demand) ============
 
   analysisRequests: defineTable({
@@ -522,4 +565,71 @@ export default defineSchema({
     lastActiveAt: v.number(),
     badges: v.array(v.string()),
   }).index("by_user", ["userId"]),
+
+  smartTriggers: defineTable({
+    marketId: v.id("markets"),
+    triggerType: v.union(
+      v.literal("price_movement"),
+      v.literal("contrarian_whale"),
+      v.literal("resolution_proximity"),
+    ),
+    status: v.union(
+      v.literal("active"),
+      v.literal("triggered"),
+      v.literal("expired"),
+    ),
+
+    priceMovement: v.optional(
+      v.object({
+        direction: v.union(v.literal("up"), v.literal("down")),
+        magnitude: v.number(),
+        timeWindowMs: v.number(),
+        startPrice: v.number(),
+        currentPrice: v.number(),
+        startedAt: v.number(),
+      }),
+    ),
+
+    contrarianWhale: v.optional(
+      v.object({
+        whaleAddress: v.string(),
+        whaleSide: v.union(v.literal("YES"), v.literal("NO")),
+        consensusSide: v.union(v.literal("YES"), v.literal("NO")),
+        tradeSize: v.number(),
+        whaleWinRate: v.optional(v.number()),
+      }),
+    ),
+
+    resolutionProximity: v.optional(
+      v.object({
+        estimatedResolutionAt: v.optional(v.number()),
+        daysUntilResolution: v.optional(v.number()),
+        currentPrice: v.number(),
+        priceExtremeLevel: v.union(
+          v.literal("very_high"),
+          v.literal("high"),
+          v.literal("medium"),
+          v.literal("low"),
+        ),
+      }),
+    ),
+
+    score: v.number(),
+    createdAt: v.number(),
+    triggeredAt: v.optional(v.number()),
+    expiresAt: v.number(),
+  })
+    .index("by_market", ["marketId"])
+    .index("by_type", ["triggerType", "status"])
+    .index("by_status", ["status", "createdAt"])
+    .index("by_score", ["status", "score"])
+    .index("by_expiry", ["expiresAt"]),
+
+  priceSnapshots: defineTable({
+    marketId: v.id("markets"),
+    price: v.number(),
+    timestamp: v.number(),
+  })
+    .index("by_market_time", ["marketId", "timestamp"])
+    .index("by_timestamp", ["timestamp"]),
 });

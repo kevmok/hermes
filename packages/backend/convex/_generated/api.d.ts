@@ -33,6 +33,7 @@ import type * as portfolio from "../portfolio.js";
 import type * as resolution from "../resolution.js";
 import type * as scheduledJobs from "../scheduledJobs.js";
 import type * as signals from "../signals.js";
+import type * as smartTriggers from "../smartTriggers.js";
 import type * as trades from "../trades.js";
 import type * as userActivity from "../userActivity.js";
 import type * as userPreferences from "../userPreferences.js";
@@ -72,6 +73,7 @@ declare const fullApi: ApiFromModules<{
   resolution: typeof resolution;
   scheduledJobs: typeof scheduledJobs;
   signals: typeof signals;
+  smartTriggers: typeof smartTriggers;
   trades: typeof trades;
   userActivity: typeof userActivity;
   userPreferences: typeof userPreferences;

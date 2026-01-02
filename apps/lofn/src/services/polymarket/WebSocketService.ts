@@ -1,10 +1,10 @@
 import { Context, Effect, Queue, Schema, type Ref } from "effect";
 import type pl from "nodejs-polars";
-import { CONFIG } from "../../config";
+import { CONFIG, getTierForTradeSize } from "../../config";
 import { DataService } from "../data";
 import {
   ConvexDataService,
-  type MarketDataWithTrade,
+  type MarketDataWithTier,
   type RawTradeData,
 } from "../data/ConvexDataService";
 import {
@@ -121,15 +121,22 @@ const processTradeMessage = (
     const row = buildMarketRow(tradeData);
     yield* updateMarketsRef(marketsRef, row);
 
-    // 2. Determine trade side for signal context
+    // 2. Determine trade side and tier for signal context
     const tradeSide = t.outcome.toUpperCase() === "YES" ? "YES" : "NO";
+    const tier = getTierForTradeSize(sizeUsd);
 
-    // 3. Send to Convex with trade context - triggers signal generation
-    // Note: Simplified market data - no volatile prices/volumes (fetched on-demand from API)
-    const marketDataWithTrade: MarketDataWithTrade = {
+    if (!tier) {
+      console.log(
+        `Trade: ${row.title.slice(0, 40)}... | $${sizeUsd.toFixed(0)} - below tier threshold, skipping`,
+      );
+      return;
+    }
+
+    // 3. Build market data with tier for tiered analysis
+    const marketDataWithTier: MarketDataWithTier = {
       polymarketId: t.conditionId,
       conditionId: t.conditionId,
-      slug: t.slug ?? t.conditionId, // Use slug from trade, fallback to conditionId
+      slug: t.slug ?? t.conditionId,
       eventSlug: t.eventSlug ?? "",
       title: t.title,
       isActive: true,
@@ -137,9 +144,10 @@ const processTradeMessage = (
         size: sizeUsd,
         price: t.price,
         side: tradeSide as "YES" | "NO",
-        taker: t.proxyWallet, // proxyWallet is the taker address
+        taker: t.proxyWallet,
         timestamp: Date.now(),
       },
+      tier,
     };
 
     // 4. Build raw trade data for the trades table
@@ -147,7 +155,7 @@ const processTradeMessage = (
       conditionId: t.conditionId,
       slug: t.slug ?? "",
       eventSlug: t.eventSlug ?? "",
-      title: t.title, // Include market title for display
+      title: t.title,
       side: (t.side?.toUpperCase() === "BUY" ? "BUY" : "SELL") as
         | "BUY"
         | "SELL",
@@ -158,15 +166,15 @@ const processTradeMessage = (
       outcome: t.outcome,
       outcomeIndex: t.outcomeIndex ?? 0,
       transactionHash: t.transactionHash,
-      isWhale: true, // Passed shouldIncludeTrade filter, so it's a whale trade
+      isWhale: true,
       traderName: t.name,
       traderPseudonym: t.pseudonym,
     };
 
-    // 5. Send to Convex in parallel: market upsert + raw trade storage
-    yield* Effect.all(
+    // 5. Send to Convex in parallel: tier-aware market upsert + raw trade storage
+    const results = yield* Effect.all(
       [
-        convex.upsertMarketWithTrade(marketDataWithTrade).pipe(
+        convex.upsertMarketWithTier(marketDataWithTier).pipe(
           Effect.catchAll((error) => {
             console.error("Convex market upsert failed:", error);
             return Effect.succeed(undefined);
@@ -182,7 +190,47 @@ const processTradeMessage = (
       { concurrency: 2 },
     );
 
+    const tierResult = results[0];
+    const tierLabel = tier.toUpperCase();
+    const actionLabel = tierResult?.action ?? "unknown";
+
     console.log(
-      `Trade: ${row.title.slice(0, 50)}... | $${sizeUsd.toFixed(0)} ${tradeSide} → Signal Pipeline`,
+      `[${tierLabel}] $${sizeUsd.toLocaleString()} ${tradeSide} | ${row.title.slice(0, 40)}... → ${actionLabel}`,
     );
+
+    // 6. Smart Triggers: Track price and check for contrarian whale (non-blocking)
+    if (tierResult?.marketId) {
+      yield* Effect.all(
+        [
+          convex.trackTradePrice(tierResult.marketId, t.price).pipe(
+            Effect.tap((result) => {
+              if (result.priceMovementDetected) {
+                console.log(
+                  `  ⚡ TRIGGER: Price movement detected for ${row.title.slice(0, 30)}...`,
+                );
+              }
+            }),
+            Effect.catchAll(() => Effect.succeed(undefined)),
+          ),
+          convex
+            .checkContrarianWhale(
+              tierResult.marketId,
+              t.proxyWallet ?? "",
+              tradeSide as "YES" | "NO",
+              sizeUsd,
+            )
+            .pipe(
+              Effect.tap((result) => {
+                if (result.isContrarian && result.triggerId) {
+                  console.log(
+                    `  🐋 TRIGGER: Contrarian whale detected! Score: ${result.score}`,
+                  );
+                }
+              }),
+              Effect.catchAll(() => Effect.succeed(undefined)),
+            ),
+        ],
+        { concurrency: 2 },
+      );
+    }
   });

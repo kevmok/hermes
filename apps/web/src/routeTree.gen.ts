@@ -14,7 +14,6 @@ import { Route as DashboardRouteRouteImport } from './routes/dashboard/route'
 import { Route as authRouteRouteImport } from './routes/(auth)/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as DashboardIndexRouteImport } from './routes/dashboard/index'
-import { Route as authAuthcallbackRouteImport } from './routes/(auth)/authcallback'
 import { Route as authAuthRouteImport } from './routes/(auth)/auth'
 import { Route as DashboardTradesRouteRouteImport } from './routes/dashboard/trades/route'
 import { Route as DashboardEventsRouteRouteImport } from './routes/dashboard/events/route'
@@ -25,6 +24,7 @@ import { Route as DashboardPricingIndexRouteImport } from './routes/dashboard/pr
 import { Route as DashboardPortfolioIndexRouteImport } from './routes/dashboard/portfolio/index'
 import { Route as DashboardPerformanceIndexRouteImport } from './routes/dashboard/performance/index'
 import { Route as DashboardCheckoutIndexRouteImport } from './routes/dashboard/checkout/index'
+import { Route as DashboardAlertsIndexRouteImport } from './routes/dashboard/alerts/index'
 import { Route as DashboardEventsEventIdRouteImport } from './routes/dashboard/events/$eventId'
 import { Route as ApiAutumnSplatRouteImport } from './routes/api/autumn.$'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth.$'
@@ -54,11 +54,6 @@ const DashboardIndexRoute = DashboardIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => DashboardRouteRoute,
-} as any)
-const authAuthcallbackRoute = authAuthcallbackRouteImport.update({
-  id: '/authcallback',
-  path: '/authcallback',
-  getParentRoute: () => authRouteRoute,
 } as any)
 const authAuthRoute = authAuthRouteImport.update({
   id: '/auth',
@@ -111,6 +106,11 @@ const DashboardCheckoutIndexRoute = DashboardCheckoutIndexRouteImport.update({
   path: '/checkout/',
   getParentRoute: () => DashboardRouteRoute,
 } as any)
+const DashboardAlertsIndexRoute = DashboardAlertsIndexRouteImport.update({
+  id: '/alerts/',
+  path: '/alerts/',
+  getParentRoute: () => DashboardRouteRoute,
+} as any)
 const DashboardEventsEventIdRoute = DashboardEventsEventIdRouteImport.update({
   id: '/$eventId',
   path: '/$eventId',
@@ -146,11 +146,11 @@ export interface FileRoutesByFullPath {
   '/dashboard/events': typeof DashboardEventsRouteRouteWithChildren
   '/dashboard/trades': typeof DashboardTradesRouteRouteWithChildren
   '/auth': typeof authAuthRoute
-  '/authcallback': typeof authAuthcallbackRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/autumn/$': typeof ApiAutumnSplatRoute
   '/dashboard/events/$eventId': typeof DashboardEventsEventIdRoute
+  '/dashboard/alerts': typeof DashboardAlertsIndexRoute
   '/dashboard/checkout': typeof DashboardCheckoutIndexRoute
   '/dashboard/performance': typeof DashboardPerformanceIndexRoute
   '/dashboard/portfolio': typeof DashboardPortfolioIndexRoute
@@ -166,11 +166,11 @@ export interface FileRoutesByTo {
   '/performance': typeof PerformanceRoute
   '/dashboard/events': typeof DashboardEventsRouteRouteWithChildren
   '/auth': typeof authAuthRoute
-  '/authcallback': typeof authAuthcallbackRoute
   '/dashboard': typeof DashboardIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/autumn/$': typeof ApiAutumnSplatRoute
   '/dashboard/events/$eventId': typeof DashboardEventsEventIdRoute
+  '/dashboard/alerts': typeof DashboardAlertsIndexRoute
   '/dashboard/checkout': typeof DashboardCheckoutIndexRoute
   '/dashboard/performance': typeof DashboardPerformanceIndexRoute
   '/dashboard/portfolio': typeof DashboardPortfolioIndexRoute
@@ -190,11 +190,11 @@ export interface FileRoutesById {
   '/dashboard/events': typeof DashboardEventsRouteRouteWithChildren
   '/dashboard/trades': typeof DashboardTradesRouteRouteWithChildren
   '/(auth)/auth': typeof authAuthRoute
-  '/(auth)/authcallback': typeof authAuthcallbackRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/autumn/$': typeof ApiAutumnSplatRoute
   '/dashboard/events/$eventId': typeof DashboardEventsEventIdRoute
+  '/dashboard/alerts/': typeof DashboardAlertsIndexRoute
   '/dashboard/checkout/': typeof DashboardCheckoutIndexRoute
   '/dashboard/performance/': typeof DashboardPerformanceIndexRoute
   '/dashboard/portfolio/': typeof DashboardPortfolioIndexRoute
@@ -214,11 +214,11 @@ export interface FileRouteTypes {
     | '/dashboard/events'
     | '/dashboard/trades'
     | '/auth'
-    | '/authcallback'
     | '/dashboard/'
     | '/api/auth/$'
     | '/api/autumn/$'
     | '/dashboard/events/$eventId'
+    | '/dashboard/alerts'
     | '/dashboard/checkout'
     | '/dashboard/performance'
     | '/dashboard/portfolio'
@@ -234,11 +234,11 @@ export interface FileRouteTypes {
     | '/performance'
     | '/dashboard/events'
     | '/auth'
-    | '/authcallback'
     | '/dashboard'
     | '/api/auth/$'
     | '/api/autumn/$'
     | '/dashboard/events/$eventId'
+    | '/dashboard/alerts'
     | '/dashboard/checkout'
     | '/dashboard/performance'
     | '/dashboard/portfolio'
@@ -257,11 +257,11 @@ export interface FileRouteTypes {
     | '/dashboard/events'
     | '/dashboard/trades'
     | '/(auth)/auth'
-    | '/(auth)/authcallback'
     | '/dashboard/'
     | '/api/auth/$'
     | '/api/autumn/$'
     | '/dashboard/events/$eventId'
+    | '/dashboard/alerts/'
     | '/dashboard/checkout/'
     | '/dashboard/performance/'
     | '/dashboard/portfolio/'
@@ -318,13 +318,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/dashboard/'
       preLoaderRoute: typeof DashboardIndexRouteImport
       parentRoute: typeof DashboardRouteRoute
-    }
-    '/(auth)/authcallback': {
-      id: '/(auth)/authcallback'
-      path: '/authcallback'
-      fullPath: '/authcallback'
-      preLoaderRoute: typeof authAuthcallbackRouteImport
-      parentRoute: typeof authRouteRoute
     }
     '/(auth)/auth': {
       id: '/(auth)/auth'
@@ -396,6 +389,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardCheckoutIndexRouteImport
       parentRoute: typeof DashboardRouteRoute
     }
+    '/dashboard/alerts/': {
+      id: '/dashboard/alerts/'
+      path: '/alerts'
+      fullPath: '/dashboard/alerts'
+      preLoaderRoute: typeof DashboardAlertsIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
     '/dashboard/events/$eventId': {
       id: '/dashboard/events/$eventId'
       path: '/$eventId'
@@ -436,12 +436,10 @@ declare module '@tanstack/react-router' {
 
 interface authRouteRouteChildren {
   authAuthRoute: typeof authAuthRoute
-  authAuthcallbackRoute: typeof authAuthcallbackRoute
 }
 
 const authRouteRouteChildren: authRouteRouteChildren = {
   authAuthRoute: authAuthRoute,
-  authAuthcallbackRoute: authAuthcallbackRoute,
 }
 
 const authRouteRouteWithChildren = authRouteRoute._addFileChildren(
@@ -476,6 +474,7 @@ interface DashboardRouteRouteChildren {
   DashboardEventsRouteRoute: typeof DashboardEventsRouteRouteWithChildren
   DashboardTradesRouteRoute: typeof DashboardTradesRouteRouteWithChildren
   DashboardIndexRoute: typeof DashboardIndexRoute
+  DashboardAlertsIndexRoute: typeof DashboardAlertsIndexRoute
   DashboardCheckoutIndexRoute: typeof DashboardCheckoutIndexRoute
   DashboardPerformanceIndexRoute: typeof DashboardPerformanceIndexRoute
   DashboardPortfolioIndexRoute: typeof DashboardPortfolioIndexRoute
@@ -489,6 +488,7 @@ const DashboardRouteRouteChildren: DashboardRouteRouteChildren = {
   DashboardEventsRouteRoute: DashboardEventsRouteRouteWithChildren,
   DashboardTradesRouteRoute: DashboardTradesRouteRouteWithChildren,
   DashboardIndexRoute: DashboardIndexRoute,
+  DashboardAlertsIndexRoute: DashboardAlertsIndexRoute,
   DashboardCheckoutIndexRoute: DashboardCheckoutIndexRoute,
   DashboardPerformanceIndexRoute: DashboardPerformanceIndexRoute,
   DashboardPortfolioIndexRoute: DashboardPortfolioIndexRoute,

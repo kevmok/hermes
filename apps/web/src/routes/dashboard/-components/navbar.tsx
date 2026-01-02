@@ -7,6 +7,7 @@ import {
   Award01Icon,
   Wallet01Icon,
   UserMultiple02Icon,
+  FlashIcon,
   Settings01Icon,
   Logout01Icon,
   Sun01Icon,
@@ -29,6 +30,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import { queryClient } from "@/lib/providers/query";
 
 const navItems = [
   {
@@ -36,6 +38,12 @@ const navItems = [
     href: "/dashboard/trades",
     icon: Activity03Icon,
     description: "Trade-triggered signals",
+  },
+  {
+    title: "Alerts",
+    href: "/dashboard/alerts",
+    icon: FlashIcon,
+    description: "Smart opportunity alerts",
   },
   {
     title: "Events",
@@ -73,6 +81,9 @@ export function Navbar() {
     await authClient.signOut({
       fetchOptions: {
         onSuccess: () => {
+          // queryClient.removeQueries({
+          //   queryKey: ["token"],
+          // });
           router.invalidate();
         },
       },

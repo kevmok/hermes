@@ -15,6 +15,26 @@ export const CONFIG = {
   HISTORICAL_LIMIT: 1000,
 } as const;
 
+export const ANALYSIS_TIERS = {
+  BRONZE_MIN: 5000,
+  BRONZE_MAX: 15000,
+  SILVER_MIN: 15000,
+  SILVER_MAX: 50000,
+  GOLD_MIN: 50000,
+  GOLD_MAX: 100000,
+  PLATINUM_MIN: 100000,
+} as const;
+
+export type AnalysisTier = "bronze" | "silver" | "gold" | "platinum";
+
+export const getTierForTradeSize = (sizeUsd: number): AnalysisTier | null => {
+  if (sizeUsd < ANALYSIS_TIERS.BRONZE_MIN) return null;
+  if (sizeUsd < ANALYSIS_TIERS.BRONZE_MAX) return "bronze";
+  if (sizeUsd < ANALYSIS_TIERS.SILVER_MAX) return "silver";
+  if (sizeUsd < ANALYSIS_TIERS.GOLD_MAX) return "gold";
+  return "platinum";
+};
+
 export const IGNORE_CRYPTO_KEYWORDS = [
   "bitcoin",
   "btc",

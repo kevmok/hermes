@@ -2,13 +2,24 @@ import { ConvexError, v } from "convex/values";
 import {
   internalAction,
   internalMutation,
+  internalQuery,
   mutation,
   query,
 } from "./_generated/server";
 import { api, internal } from "./_generated/api";
-import type { Id } from "./_generated/dataModel";
+import type { Id, Doc } from "./_generated/dataModel";
 import { Effect } from "effect";
-import { querySwarm, buildPrompt, type SwarmResponse } from "./ai/swarm";
+import { action } from "./_generated/server";
+import {
+  querySwarm,
+  queryQuickSwarm,
+  queryEventSwarm,
+  buildPrompt,
+  buildEventPrompt,
+  type SwarmResponse,
+  type EventAnalysisResponse,
+  type MarketWithPrice,
+} from "./ai/swarm";
 
 // Trade context validator for signal creation
 const tradeContextValidator = v.object({
@@ -278,6 +289,284 @@ export const requestMarketAnalysis = mutation({
       requestId,
       cached: false,
     };
+  },
+});
+
+export const requestQuickAnalysis = action({
+  args: { marketId: v.id("markets") },
+  returns: v.object({
+    success: v.boolean(),
+    insightId: v.optional(v.id("insights")),
+    cached: v.optional(v.boolean()),
+    error: v.optional(v.string()),
+  }),
+  handler: async (
+    ctx,
+    args,
+  ): Promise<{
+    success: boolean;
+    insightId?: Id<"insights">;
+    cached?: boolean;
+    error?: string;
+  }> => {
+    try {
+      const recentInsight = await ctx.runQuery(
+        internal.insights.getRecentInsightForMarket,
+        {
+          marketId: args.marketId,
+          withinMs: 15 * 60 * 1000,
+        },
+      );
+
+      if (recentInsight) {
+        return {
+          success: true,
+          insightId: recentInsight._id,
+          cached: true,
+        };
+      }
+
+      const market = await ctx.runQuery(api.markets.getMarket, {
+        marketId: args.marketId,
+      });
+
+      if (!market) {
+        return { success: false, error: "Market not found" };
+      }
+
+      const marketData = await ctx.runAction(
+        api.polymarket.markets.getMarketBySlug,
+        { slug: market.slug },
+      );
+
+      if (!marketData) {
+        return { success: false, error: "Could not fetch market prices" };
+      }
+
+      const yesPrice = parseFloat(marketData.outcomePrices?.[0] ?? "0.5");
+      const noPrice = parseFloat(marketData.outcomePrices?.[1] ?? "0.5");
+
+      const { systemPrompt, userPrompt } = buildPrompt(market, {
+        yesPrice,
+        noPrice,
+      });
+
+      const swarmResponse = await Effect.runPromise(
+        queryQuickSwarm(systemPrompt, userPrompt) as Effect.Effect<SwarmResponse>,
+      );
+
+      if (swarmResponse.totalModels === 0) {
+        return { success: false, error: "No AI models configured" };
+      }
+
+      const insightId: Id<"insights"> = await ctx.runMutation(
+        api.analysis.saveInsight,
+        {
+          marketId: args.marketId,
+          consensusDecision: swarmResponse.consensusDecision,
+          consensusPercentage: swarmResponse.consensusPercentage,
+          totalModels: swarmResponse.totalModels,
+          agreeingModels: swarmResponse.successfulModels,
+          aggregatedReasoning: swarmResponse.aggregatedReasoning,
+          priceAtAnalysis: yesPrice,
+        },
+      );
+
+      console.log(
+        `Quick analysis for ${market.title}: ${swarmResponse.consensusDecision} (${swarmResponse.consensusPercentage.toFixed(0)}% consensus)`,
+      );
+
+      return { success: true, insightId };
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      console.error(`Quick analysis failed for market ${args.marketId}:`, errorMessage);
+      return { success: false, error: errorMessage };
+    }
+  },
+});
+
+const eventAnalysisResultValidator = v.object({
+  eventSummary: v.string(),
+  marketCorrelations: v.string(),
+  topOpportunity: v.optional(
+    v.object({
+      marketSlug: v.string(),
+      reason: v.string(),
+    }),
+  ),
+  risks: v.array(v.string()),
+  markets: v.array(
+    v.object({
+      marketSlug: v.string(),
+      decision: v.union(v.literal("YES"), v.literal("NO"), v.literal("NO_TRADE")),
+      confidence: v.number(),
+      keyFactors: v.array(v.string()),
+      edgeAssessment: v.object({
+        hasEdge: v.boolean(),
+        edgeSize: v.number(),
+        direction: v.union(
+          v.literal("underpriced"),
+          v.literal("overpriced"),
+          v.literal("fair"),
+        ),
+      }),
+    }),
+  ),
+});
+
+export const analyzeEvent = action({
+  args: { eventSlug: v.string() },
+  returns: v.object({
+    success: v.boolean(),
+    result: v.optional(eventAnalysisResultValidator),
+    insightsCreated: v.optional(v.number()),
+    error: v.optional(v.string()),
+  }),
+  handler: async (
+    ctx,
+    args,
+  ): Promise<{
+    success: boolean;
+    result?: {
+      eventSummary: string;
+      marketCorrelations: string;
+      topOpportunity?: { marketSlug: string; reason: string };
+      risks: string[];
+      markets: Array<{
+        marketSlug: string;
+        decision: "YES" | "NO" | "NO_TRADE";
+        confidence: number;
+        keyFactors: string[];
+        edgeAssessment: {
+          hasEdge: boolean;
+          edgeSize: number;
+          direction: "underpriced" | "overpriced" | "fair";
+        };
+      }>;
+    };
+    insightsCreated?: number;
+    error?: string;
+  }> => {
+    try {
+      const event = await ctx.runQuery(api.events.getEventBySlug, {
+        eventSlug: args.eventSlug,
+      });
+
+      if (!event) {
+        return { success: false, error: "Event not found" };
+      }
+
+      const markets = await ctx.runQuery(api.markets.getMarketsByEventSlug, {
+        eventSlug: args.eventSlug,
+      });
+
+      if (!markets || markets.length === 0) {
+        return { success: false, error: "No markets found for this event" };
+      }
+
+      const marketsWithPrices: MarketWithPrice[] = [];
+      for (const market of markets) {
+        const marketData = await ctx.runAction(
+          api.polymarket.markets.getMarketBySlug,
+          { slug: market.slug },
+        );
+
+        if (marketData) {
+          marketsWithPrices.push({
+            slug: market.slug,
+            title: market.title,
+            yesPrice: parseFloat(marketData.outcomePrices?.[0] ?? "0.5"),
+            noPrice: parseFloat(marketData.outcomePrices?.[1] ?? "0.5"),
+            isActive: market.isActive,
+          });
+        }
+      }
+
+      if (marketsWithPrices.length === 0) {
+        return { success: false, error: "Could not fetch prices for any markets" };
+      }
+
+      const { systemPrompt, userPrompt } = buildEventPrompt(
+        { title: event.title, eventSlug: event.eventSlug },
+        marketsWithPrices,
+      );
+
+      const response = await Effect.runPromise(
+        queryEventSwarm(systemPrompt, userPrompt) as Effect.Effect<EventAnalysisResponse>,
+      );
+
+      if (!response.success || !response.analysis) {
+        return { success: false, error: response.error || "Analysis failed" };
+      }
+
+      let insightsCreated = 0;
+      for (const marketAnalysis of response.analysis.markets) {
+        const market = markets.find((m: { slug: string }) => m.slug === marketAnalysis.marketSlug);
+        if (!market) continue;
+
+        const priceInfo = marketsWithPrices.find((m: MarketWithPrice) => m.slug === marketAnalysis.marketSlug);
+        if (!priceInfo) continue;
+
+        const aggregatedReasoning = [
+          `Event context: ${response.analysis.eventSummary}`,
+          `Key factors: ${marketAnalysis.keyFactors.join("; ")}`,
+          marketAnalysis.edgeAssessment.hasEdge
+            ? `Edge: ${marketAnalysis.edgeAssessment.direction} by ${Math.abs(marketAnalysis.edgeAssessment.edgeSize).toFixed(1)}pp`
+            : "No significant edge detected",
+        ].join(" | ");
+
+        await ctx.runMutation(api.analysis.saveInsight, {
+          marketId: market._id,
+          consensusDecision: marketAnalysis.decision,
+          consensusPercentage: marketAnalysis.confidence,
+          totalModels: 3,
+          agreeingModels: Math.ceil((marketAnalysis.confidence / 100) * 3),
+          aggregatedReasoning,
+          priceAtAnalysis: priceInfo.yesPrice,
+        });
+
+        insightsCreated++;
+      }
+
+      console.log(
+        `Event analysis for ${event.title}: ${insightsCreated} insights created`,
+      );
+
+      const mutableResult = {
+        eventSummary: response.analysis.eventSummary,
+        marketCorrelations: response.analysis.marketCorrelations,
+        topOpportunity: response.analysis.topOpportunity
+          ? {
+              marketSlug: response.analysis.topOpportunity.marketSlug,
+              reason: response.analysis.topOpportunity.reason,
+            }
+          : undefined,
+        risks: [...response.analysis.risks],
+        markets: response.analysis.markets.map((m) => ({
+          marketSlug: m.marketSlug,
+          decision: m.decision,
+          confidence: m.confidence,
+          keyFactors: [...m.keyFactors],
+          edgeAssessment: {
+            hasEdge: m.edgeAssessment.hasEdge,
+            edgeSize: m.edgeAssessment.edgeSize,
+            direction: m.edgeAssessment.direction,
+          },
+        })),
+      };
+
+      return {
+        success: true,
+        result: mutableResult,
+        insightsCreated,
+      };
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      console.error(`Event analysis failed for ${args.eventSlug}:`, errorMessage);
+      return { success: false, error: errorMessage };
+    }
   },
 });
 
@@ -723,5 +1012,246 @@ export const analyzeTradeForSignal = internalAction({
       );
       return { success: false, reason: errorMessage };
     }
+  },
+});
+
+export const processBatchAnalysis = internalAction({
+  args: {},
+  returns: v.object({
+    processed: v.number(),
+    skipped: v.number(),
+    failed: v.number(),
+    markets: v.array(v.string()),
+  }),
+  handler: async (
+    ctx,
+  ): Promise<{
+    processed: number;
+    skipped: number;
+    failed: number;
+    markets: string[];
+  }> => {
+    const batchId = `batch_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
+    console.log(`[BATCH:${batchId}] Starting batch analysis...`);
+
+    const pendingItems: Doc<"analysisQueue">[] = await ctx.runQuery(
+      internal.analysis.getPendingQueueItems,
+      {},
+    );
+
+    if (pendingItems.length === 0) {
+      console.log(`[BATCH:${batchId}] No pending items in queue`);
+      return { processed: 0, skipped: 0, failed: 0, markets: [] };
+    }
+
+    console.log(
+      `[BATCH:${batchId}] Found ${pendingItems.length} pending items`,
+    );
+
+    const marketIds: Id<"markets">[] = [
+      ...new Set(pendingItems.map((item: Doc<"analysisQueue">) => item.marketId)),
+    ];
+    const heatScores: { marketId: Id<"markets">; heatScore: number }[] =
+      await ctx.runQuery(internal.analysis.getMarketHeatScores, { marketIds });
+
+    const sortedMarkets = marketIds
+      .map((id: Id<"markets">) => ({
+        marketId: id,
+        heat:
+          heatScores.find(
+            (h: { marketId: Id<"markets">; heatScore: number }) =>
+              h.marketId === id,
+          )?.heatScore ?? 0,
+      }))
+      .sort(
+        (
+          a: { marketId: Id<"markets">; heat: number },
+          b: { marketId: Id<"markets">; heat: number },
+        ) => b.heat - a.heat,
+      );
+
+    const MAX_MARKETS_PER_BATCH = 5;
+    const marketsToAnalyze = sortedMarkets.slice(0, MAX_MARKETS_PER_BATCH);
+
+    console.log(
+      `[BATCH:${batchId}] Analyzing top ${marketsToAnalyze.length} markets by heat score`,
+    );
+
+    let processed = 0;
+    let skipped = 0;
+    let failed = 0;
+    const analyzedMarkets: string[] = [];
+
+    for (const { marketId } of marketsToAnalyze) {
+      const marketItems = pendingItems.filter(
+        (item: Doc<"analysisQueue">) => item.marketId === marketId,
+      );
+      const latestItem = marketItems.sort(
+        (a: Doc<"analysisQueue">, b: Doc<"analysisQueue">) =>
+          b.queuedAt - a.queuedAt,
+      )[0];
+
+      if (!latestItem) continue;
+
+      await ctx.runMutation(internal.analysis.markQueueItemProcessing, {
+        itemId: latestItem._id,
+        batchId,
+      });
+
+      const market = await ctx.runQuery(internal.markets.getMarketById, {
+        marketId,
+      });
+
+      if (!market) {
+        await ctx.runMutation(internal.analysis.markQueueItemCompleted, {
+          itemId: latestItem._id,
+          status: "skipped",
+        });
+        skipped++;
+        continue;
+      }
+
+      const cooldownHours = 4;
+      if (
+        market.lastAnalyzedAt &&
+        Date.now() - market.lastAnalyzedAt < cooldownHours * 60 * 60 * 1000
+      ) {
+        console.log(
+          `[BATCH:${batchId}] Skipping ${market.title.slice(0, 30)}... - analyzed recently`,
+        );
+        await ctx.runMutation(internal.analysis.markQueueItemCompleted, {
+          itemId: latestItem._id,
+          status: "skipped",
+        });
+        skipped++;
+        continue;
+      }
+
+      try {
+        const tradeContext = {
+          size: latestItem.tradeSize,
+          price: latestItem.tradePrice,
+          side: latestItem.tradeSide,
+          timestamp: latestItem.queuedAt,
+        };
+
+        const result = await ctx.runAction(
+          internal.analysis.analyzeTradeForSignal,
+          { marketId, tradeContext },
+        );
+
+        if (result.success && !result.skipped) {
+          processed++;
+          analyzedMarkets.push(market.title);
+          console.log(
+            `[BATCH:${batchId}] Analyzed: ${market.title.slice(0, 40)}...`,
+          );
+        } else {
+          skipped++;
+          console.log(
+            `[BATCH:${batchId}] Skipped: ${market.title.slice(0, 40)}... - ${result.reason}`,
+          );
+        }
+
+        await ctx.runMutation(internal.analysis.markQueueItemCompleted, {
+          itemId: latestItem._id,
+          status: "completed",
+        });
+      } catch (error) {
+        failed++;
+        console.error(
+          `[BATCH:${batchId}] Failed: ${market.title.slice(0, 40)}...`,
+          error,
+        );
+        await ctx.runMutation(internal.analysis.markQueueItemCompleted, {
+          itemId: latestItem._id,
+          status: "skipped",
+        });
+      }
+
+      for (const item of marketItems) {
+        if (item._id !== latestItem._id) {
+          await ctx.runMutation(internal.analysis.markQueueItemCompleted, {
+            itemId: item._id,
+            status: "skipped",
+          });
+        }
+      }
+    }
+
+    await ctx.runMutation(internal.analysis.cleanupOldHeatScores, {});
+
+    console.log(
+      `[BATCH:${batchId}] Complete - processed: ${processed}, skipped: ${skipped}, failed: ${failed}`,
+    );
+
+    return { processed, skipped, failed, markets: analyzedMarkets };
+  },
+});
+
+export const getPendingQueueItems = internalQuery({
+  args: {},
+  handler: async (ctx) => {
+    return await ctx.db
+      .query("analysisQueue")
+      .withIndex("by_status", (q) => q.eq("status", "pending"))
+      .take(100);
+  },
+});
+
+export const getMarketHeatScores = internalQuery({
+  args: { marketIds: v.array(v.id("markets")) },
+  handler: async (ctx, args) => {
+    const results = [];
+    for (const marketId of args.marketIds) {
+      const heat = await ctx.db
+        .query("marketHeat")
+        .withIndex("by_market", (q) => q.eq("marketId", marketId))
+        .first();
+      if (heat) {
+        results.push({ marketId, heatScore: heat.heatScore });
+      }
+    }
+    return results;
+  },
+});
+
+export const markQueueItemProcessing = internalMutation({
+  args: { itemId: v.id("analysisQueue"), batchId: v.string() },
+  handler: async (ctx, args) => {
+    await ctx.db.patch(args.itemId, {
+      status: "processing",
+      batchId: args.batchId,
+    });
+  },
+});
+
+export const markQueueItemCompleted = internalMutation({
+  args: {
+    itemId: v.id("analysisQueue"),
+    status: v.union(v.literal("completed"), v.literal("skipped")),
+  },
+  handler: async (ctx, args) => {
+    await ctx.db.patch(args.itemId, {
+      status: args.status,
+      processedAt: Date.now(),
+    });
+  },
+});
+
+export const cleanupOldHeatScores = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    const oneHourAgo = Date.now() - 60 * 60 * 1000;
+    const oldHeat = await ctx.db
+      .query("marketHeat")
+      .filter((q) => q.lt(q.field("updatedAt"), oneHourAgo))
+      .collect();
+
+    for (const heat of oldHeat) {
+      await ctx.db.delete(heat._id);
+    }
+
+    return { deleted: oldHeat.length };
   },
 });

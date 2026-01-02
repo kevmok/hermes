@@ -63,12 +63,12 @@ const SAMPLE_TRADES = [
   },
 ];
 
-const AI_MODELS = [
-  { name: "Claude", color: "#d97706", icon: "C" },
-  { name: "GPT-4", color: "#10b981", icon: "O" },
-  { name: "Gemini", color: "#3b82f6", icon: "G" },
-  { name: "Grok", color: "#ffffff", icon: "Gk" },
-  { name: "Qwen", color: "#6551E9", icon: "Q" },
+const AI_NODES = [
+  { name: "Node 1", color: "#22d3ee", icon: "α" },
+  { name: "Node 2", color: "#10b981", icon: "β" },
+  { name: "Node 3", color: "#a855f7", icon: "γ" },
+  { name: "Node 4", color: "#f59e0b", icon: "δ" },
+  { name: "Node 5", color: "#ec4899", icon: "ε" },
 ];
 
 // ============================================================================
@@ -164,12 +164,12 @@ function CircuitBoard() {
 // TRADE ANALYSIS ANIMATION (Hero centerpiece)
 // ============================================================================
 
-function AIModelNode({
-  model,
+function AINode({
+  node,
   isAnalyzing,
   delay,
 }: {
-  model: (typeof AI_MODELS)[0];
+  node: (typeof AI_NODES)[0];
   isAnalyzing: boolean;
   delay: number;
 }) {
@@ -183,28 +183,28 @@ function AIModelNode({
       <motion.div
         className="relative w-14 h-14 rounded-xl flex items-center justify-center font-bold text-lg"
         style={{
-          background: `linear-gradient(135deg, ${model.color}22, ${model.color}44)`,
-          border: `1px solid ${model.color}66`,
-          color: model.color,
+          background: `linear-gradient(135deg, ${node.color}22, ${node.color}44)`,
+          border: `1px solid ${node.color}66`,
+          color: node.color,
         }}
         animate={
           isAnalyzing
             ? {
                 boxShadow: [
-                  `0 0 0px ${model.color}00`,
-                  `0 0 30px ${model.color}88`,
-                  `0 0 0px ${model.color}00`,
+                  `0 0 0px ${node.color}00`,
+                  `0 0 30px ${node.color}88`,
+                  `0 0 0px ${node.color}00`,
                 ],
               }
             : {}
         }
         transition={{ duration: 1, repeat: isAnalyzing ? Infinity : 0 }}
       >
-        {model.icon}
+        {node.icon}
         {isAnalyzing && (
           <motion.div
             className="absolute inset-0 rounded-xl border-2"
-            style={{ borderColor: model.color }}
+            style={{ borderColor: node.color }}
             animate={{ scale: [1, 1.3], opacity: [0.8, 0] }}
             transition={{ duration: 1, repeat: Infinity }}
           />
@@ -214,7 +214,7 @@ function AIModelNode({
         className="text-xs text-(--text-muted)"
         style={{ color: colors.textMuted }}
       >
-        {model.name}
+        {node.name}
       </span>
     </motion.div>
   );
@@ -362,12 +362,12 @@ function TradeAnalysisWheel() {
           </motion.div>
         </AnimatePresence>
 
-        {/* AI Models Row */}
-        <div className="flex items-center justify-center gap-8 mb-8">
-          {AI_MODELS.map((model, i) => (
-            <AIModelNode
-              key={model.name}
-              model={model}
+        {/* AI Swarm Nodes */}
+        <div className="flex items-center justify-center gap-6 mb-8">
+          {AI_NODES.map((node, i) => (
+            <AINode
+              key={node.name}
+              node={node}
               isAnalyzing={isAnalyzing}
               delay={i * 0.1}
             />
@@ -699,8 +699,8 @@ function HeroSection() {
           className="text-lg sm:text-xl text-center max-w-2xl mx-auto mb-12 leading-relaxed"
           style={{ color: colors.textMuted }}
         >
-          Hermes monitors Polymarket 24/7, detects whale trades, and runs
-          multi-AI consensus analysis in seconds.
+          Hermes monitors Polymarket 24/7, detects whale trades, runs multi-AI
+          consensus analysis, and alerts you to opportunities in real-time.
         </motion.p>
 
         {/* Trade Analysis Animation */}
@@ -914,7 +914,7 @@ function FeaturesSection() {
       ),
       title: "Whale Detection",
       description:
-        "Know within 60 seconds when $10k+ trades hit any market. Track smart money moves before prices adjust.",
+        "Real-time tracking of $5K+ trades with tiered analysis. Platinum trades ($100K+) trigger instant AI consensus.",
       color: colors.cyan,
     },
     {
@@ -935,7 +935,7 @@ function FeaturesSection() {
       ),
       title: "Multi-AI Consensus",
       description:
-        "Claude, GPT-4, and Gemini analyze independently. We only signal when they agree.",
+        "Multiple AI models analyze each market independently. Confidence-weighted voting delivers actionable signals.",
       color: colors.emerald,
     },
     {
@@ -950,13 +950,13 @@ function FeaturesSection() {
           <path
             strokeLinecap="round"
             strokeLinejoin="round"
-            d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z"
+            d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z"
           />
         </svg>
       ),
-      title: "Transparent Track Record",
+      title: "Smart Alerts",
       description:
-        "See our historical accuracy by category, confidence level, and time period. No hiding, no cherry-picking.",
+        "Automated opportunity detection: 10%+ price swings, contrarian whale bets, and markets near resolution.",
       color: colors.purple,
     },
     {
@@ -971,14 +971,61 @@ function FeaturesSection() {
           <path
             strokeLinecap="round"
             strokeLinejoin="round"
+            d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z"
+          />
+        </svg>
+      ),
+      title: "Transparent Track Record",
+      description:
+        "See our historical accuracy by category, confidence level, and time period. No hiding, no cherry-picking.",
+      color: colors.cyan,
+    },
+    {
+      icon: (
+        <svg
+          className="w-7 h-7"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke={colors.emerald}
+          strokeWidth="1.5"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"
+          />
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+          />
+        </svg>
+      ),
+      title: "Whale Watch",
+      description:
+        "Track smart money addresses. See when top traders bet against AI consensus — often a contrarian signal.",
+      color: colors.emerald,
+    },
+    {
+      icon: (
+        <svg
+          className="w-7 h-7"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke={colors.purple}
+          strokeWidth="1.5"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
             d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0"
           />
         </svg>
       ),
-      title: "Instant Alerts",
+      title: "Instant Notifications",
       description:
-        "Email alerts for high-confidence signals. Never miss a trade while you sleep.",
-      color: colors.cyan,
+        "Email alerts for high-confidence signals and smart triggers. Never miss a trade while you sleep.",
+      color: colors.purple,
     },
   ];
 
@@ -1028,7 +1075,7 @@ function FeaturesSection() {
           </p>
         </AnimatedSection>
 
-        <div className="grid md:grid-cols-2 gap-6">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {features.map((feature, i) => (
             <FeatureCard key={feature.title} {...feature} delay={i * 0.1} />
           ))}
@@ -1362,9 +1409,10 @@ function PricingSection() {
       description: "Perfect for getting started",
       features: [
         "All AI signals",
-        "Email alerts",
-        "1 deep dive research/month",
-        "Basic analytics",
+        "Smart alerts dashboard",
+        "Email notifications",
+        "1 deep dive/month",
+        "Performance tracking",
       ],
       cta: "Start Free Trial",
       highlighted: false,
@@ -1377,8 +1425,9 @@ function PricingSection() {
       features: [
         "Everything in Starter",
         "10 deep dives/month",
+        "Whale watch tracking",
         "Portfolio sync",
-        "Whale watch alerts",
+        "Quick AI analysis",
         "Priority support",
       ],
       cta: "Start Free Trial",
@@ -1392,7 +1441,8 @@ function PricingSection() {
       features: [
         "Everything in Pro",
         "Unlimited deep dives",
-        "Priority support",
+        "Event-level AI analysis",
+        "API access (coming soon)",
       ],
       cta: "Start Free Trial",
       highlighted: false,

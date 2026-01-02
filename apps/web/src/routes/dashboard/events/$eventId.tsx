@@ -1,5 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
+import { useAction } from "convex/react";
+import { api } from "backend/convex/_generated/api";
 import { eventsQueries, signalsQueries } from "@/lib/queries";
 import { queryClient } from "@/lib/providers/query";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -18,6 +20,8 @@ import {
   AlertCircleIcon,
   Clock01Icon,
   TradeUpIcon,
+  AiMagicIcon,
+  Loading03Icon,
 } from "@hugeicons/core-free-icons";
 import { useState } from "react";
 import { MarketDetailModal } from "./-components/market-detail-modal";
@@ -39,6 +43,14 @@ function EventDetailRoute() {
   const [selectedMarketSlug, setSelectedMarketSlug] = useState<string | null>(
     null
   );
+  const [isAnalyzingEvent, setIsAnalyzingEvent] = useState(false);
+  const [eventAnalysisResult, setEventAnalysisResult] = useState<{
+    success: boolean;
+    insightsCreated?: number;
+    error?: string;
+  } | null>(null);
+
+  const analyzeEvent = useAction(api.analysis.analyzeEvent);
 
   const {
     data: event,
@@ -160,6 +172,55 @@ function EventDetailRoute() {
               </div>
 
               <div className="flex items-center gap-3">
+                {event.isActive && (
+                  <Button
+                    size="lg"
+                    variant="outline"
+                    disabled={isAnalyzingEvent}
+                    onClick={async () => {
+                      setIsAnalyzingEvent(true);
+                      setEventAnalysisResult(null);
+                      try {
+                        const result = await analyzeEvent({
+                          eventSlug: event.eventSlug,
+                        });
+                        setEventAnalysisResult(result);
+                        if (result.success) {
+                          queryClient.invalidateQueries({ queryKey: ["insights"] });
+                          queryClient.invalidateQueries({ queryKey: ["signals"] });
+                        }
+                      } catch (err) {
+                        setEventAnalysisResult({
+                          success: false,
+                          error: err instanceof Error ? err.message : "Analysis failed",
+                        });
+                      } finally {
+                        setIsAnalyzingEvent(false);
+                      }
+                    }}
+                    className="bg-violet-500/10 text-violet-400 border-violet-500/30 hover:bg-violet-500/20 hover:text-violet-300"
+                  >
+                    {isAnalyzingEvent ? (
+                      <>
+                        <HugeiconsIcon
+                          icon={Loading03Icon}
+                          size={18}
+                          className="mr-2 animate-spin"
+                        />
+                        Analyzing Event...
+                      </>
+                    ) : (
+                      <>
+                        <HugeiconsIcon
+                          icon={AiMagicIcon}
+                          size={18}
+                          className="mr-2"
+                        />
+                        Analyze All Markets
+                      </>
+                    )}
+                  </Button>
+                )}
                 <Button
                   size="lg"
                   className="bg-amber-500 hover:bg-amber-600 text-black font-semibold shadow-[0_0_20px_rgba(245,158,11,0.2)]"
@@ -179,6 +240,19 @@ function EventDetailRoute() {
                   }
                 />
               </div>
+              {eventAnalysisResult && (
+                <div
+                  className={`mt-4 px-4 py-2 rounded-lg text-sm ${
+                    eventAnalysisResult.success
+                      ? "bg-emerald-500/10 text-emerald-400"
+                      : "bg-red-500/10 text-red-400"
+                  }`}
+                >
+                  {eventAnalysisResult.success
+                    ? `Analysis complete! ${eventAnalysisResult.insightsCreated} insights created.`
+                    : eventAnalysisResult.error || "Analysis failed"}
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -307,6 +381,40 @@ function MarketCard({
 }) {
   const isAnalyzed = !!market.lastAnalyzedAt;
   const isResolved = !!market.outcome;
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [analysisResult, setAnalysisResult] = useState<{
+    success: boolean;
+    cached?: boolean;
+    error?: string;
+  } | null>(null);
+
+  const requestQuickAnalysis = useAction(api.analysis.requestQuickAnalysis);
+
+  const handleQuickAnalyze = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (isAnalyzing) return;
+
+    setIsAnalyzing(true);
+    setAnalysisResult(null);
+
+    try {
+      const result = await requestQuickAnalysis({
+        marketId: market._id as Id<"markets">,
+      });
+      setAnalysisResult(result);
+      if (result.success) {
+        queryClient.invalidateQueries({ queryKey: ["signals"] });
+        queryClient.invalidateQueries({ queryKey: ["insights"] });
+      }
+    } catch (error) {
+      setAnalysisResult({
+        success: false,
+        error: error instanceof Error ? error.message : "Analysis failed",
+      });
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
 
   return (
     <div
@@ -324,15 +432,60 @@ function MarketCard({
         >
           {market.isActive ? "Live" : "Closed"}
         </Badge>
-        {isAnalyzed && (
-          <Badge
-            variant="outline"
-            className="bg-cyan-500/10 text-cyan-400 border-cyan-500/20"
-          >
-            AI Signal
-          </Badge>
-        )}
+        <div className="flex items-center gap-2">
+          {isAnalyzed && (
+            <Badge
+              variant="outline"
+              className="bg-cyan-500/10 text-cyan-400 border-cyan-500/20"
+            >
+              AI Signal
+            </Badge>
+          )}
+          {market.isActive && !isResolved && (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleQuickAnalyze}
+              disabled={isAnalyzing}
+              className="h-6 px-2 text-xs bg-violet-500/10 text-violet-400 border-violet-500/20 hover:bg-violet-500/20 hover:text-violet-300"
+            >
+              {isAnalyzing ? (
+                <>
+                  <HugeiconsIcon
+                    icon={Loading03Icon}
+                    size={12}
+                    className="mr-1 animate-spin"
+                  />
+                  Analyzing...
+                </>
+              ) : (
+                <>
+                  <HugeiconsIcon icon={AiMagicIcon} size={12} className="mr-1" />
+                  Quick AI
+                </>
+              )}
+            </Button>
+          )}
+        </div>
       </div>
+
+      {analysisResult && (
+        <div
+          className={`mb-3 px-3 py-2 rounded-lg text-xs ${
+            analysisResult.success
+              ? analysisResult.cached
+                ? "bg-amber-500/10 text-amber-400"
+                : "bg-emerald-500/10 text-emerald-400"
+              : "bg-red-500/10 text-red-400"
+          }`}
+        >
+          {analysisResult.success
+            ? analysisResult.cached
+              ? "Recent analysis found"
+              : "Analysis complete!"
+            : analysisResult.error || "Analysis failed"}
+        </div>
+      )}
 
       <h3 className="font-semibold text-foreground line-clamp-2 leading-snug mb-4 flex-1 group-hover:text-amber-400 transition-colors">
         {market.title}

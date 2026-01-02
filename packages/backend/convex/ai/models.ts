@@ -22,7 +22,20 @@ export const SWARM_MODELS = [
   "openai/gpt-oss-20b",
 ] as const;
 
+export const QUICK_ANALYSIS_MODELS = [
+  "google/gemini-3-flash-preview",
+  "openai/gpt-5-mini",
+  "x-ai/grok-4.1-fast",
+] as const;
+
 export type SwarmModelId = (typeof SWARM_MODELS)[number];
+export type QuickAnalysisModelId = (typeof QUICK_ANALYSIS_MODELS)[number];
+
+export const QUICK_MODEL_DISPLAY_NAMES: Record<QuickAnalysisModelId, string> = {
+  "google/gemini-3-flash-preview": "Gemini 3 Flash",
+  "openai/gpt-5-mini": "GPT-5 Mini",
+  "x-ai/grok-4.1-fast": "Grok 4.1 Fast",
+};
 
 /**
  * Human-readable display names for each model.
@@ -86,6 +99,25 @@ export const getConfiguredModels = (): ModelEntry[] => {
   return SWARM_MODELS.map((id) => ({
     id,
     displayName: MODEL_DISPLAY_NAMES[id],
+    layer: createModelLayer(id),
+  }));
+};
+
+export interface QuickModelEntry {
+  readonly id: QuickAnalysisModelId;
+  readonly displayName: string;
+  readonly layer: Layer.Layer<LanguageModel.LanguageModel, never, never>;
+}
+
+export const getQuickAnalysisModels = (): QuickModelEntry[] => {
+  if (!process.env.OPENROUTER_API_KEY) {
+    console.warn("OPENROUTER_API_KEY not set - no models available");
+    return [];
+  }
+
+  return QUICK_ANALYSIS_MODELS.map((id) => ({
+    id,
+    displayName: QUICK_MODEL_DISPLAY_NAMES[id],
     layer: createModelLayer(id),
   }));
 };

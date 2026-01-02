@@ -2,17 +2,20 @@ import { LanguageModel } from "@effect/ai";
 import { Duration, Effect, Schedule } from "effect";
 import {
   getConfiguredModels,
+  getQuickAnalysisModels,
   getAggregationModel,
   type ModelEntry,
 } from "./models";
 import {
   PredictionOutputSchema,
   AggregationOutputSchema,
+  EventAnalysisOutputSchema,
   type PredictionOutput,
   type Decision,
   type SwarmResult,
   type SwarmResponse,
   type AggregationOutput,
+  type EventAnalysisOutput,
 } from "./schema";
 
 // Re-export types for external use
@@ -430,4 +433,215 @@ export const querySwarm = (systemPrompt: string, userPrompt: string) =>
     // Calculate consensus with AI-powered aggregation
     const consensus = yield* calculateConsensus(results);
     return consensus;
+  });
+
+export const queryQuickSwarm = (systemPrompt: string, userPrompt: string) =>
+  Effect.gen(function* () {
+    const models = getQuickAnalysisModels();
+
+    if (models.length === 0) {
+      console.warn("No AI models configured - check OPENROUTER_API_KEY");
+      return {
+        results: [],
+        consensusDecision: "NO_TRADE" as const,
+        consensusPercentage: 0,
+        totalModels: 0,
+        successfulModels: 0,
+        voteDistribution: { YES: 0, NO: 0, NO_TRADE: 0 },
+        averageConfidence: 0,
+        confidenceRange: { min: 0, max: 0 },
+        aggregatedKeyFactors: [],
+        aggregatedRisks: [],
+        aggregatedReasoning: "",
+      };
+    }
+
+    console.log(
+      `Quick analysis with ${models.length} models: ${models.map((m) => m.displayName).join(", ")}`,
+    );
+    const startTime = Date.now();
+
+    const retrySchedule = Schedule.exponential(Duration.seconds(1)).pipe(
+      Schedule.intersect(Schedule.recurs(2)),
+    );
+
+    const results = yield* Effect.all(
+      models.map((model) =>
+        queryWithModel(model as ModelEntry, systemPrompt, userPrompt).pipe(
+          Effect.retry(retrySchedule),
+        ),
+      ),
+      { concurrency: 3 },
+    );
+
+    const totalTime = Date.now() - startTime;
+    console.log(`Quick analysis completed in ${totalTime}ms`);
+
+    for (const result of results) {
+      if (result.error) {
+        console.log(
+          `  ${result.modelName}: ERROR: ${result.error.slice(0, 50)} (${result.responseTimeMs}ms)`,
+        );
+      } else if (result.prediction) {
+        console.log(
+          `  ${result.modelName}: ${result.prediction.decision} (${result.prediction.confidence}% confidence, ${result.responseTimeMs}ms)`,
+        );
+      }
+    }
+
+    const consensus = yield* calculateConsensus(results);
+    return consensus;
+  });
+
+export interface MarketWithPrice {
+  slug: string;
+  title: string;
+  yesPrice: number;
+  noPrice: number;
+  isActive: boolean;
+}
+
+export interface EventAnalysisResponse {
+  success: boolean;
+  analysis: EventAnalysisOutput | null;
+  modelName: string;
+  responseTimeMs: number;
+  error?: string;
+}
+
+export const buildEventPrompt = (
+  event: { title: string; eventSlug: string },
+  markets: MarketWithPrice[],
+): { systemPrompt: string; userPrompt: string } => {
+  const systemPrompt = `You are an expert prediction market analyst specializing in multi-market event analysis.
+You are analyzing an event with multiple related prediction markets. Your task is to:
+1. Understand how the markets relate to each other
+2. Identify correlations and dependencies between market outcomes
+3. Find the best opportunity across all markets considering risk/reward
+4. Provide a trading recommendation for each market
+
+Decision Guidelines:
+- YES: Market is underpriced (true probability > market price + 10%)
+- NO: Market is overpriced (true probability < market price - 10%)
+- NO_TRADE: Edge is small (<10%) or high uncertainty
+
+Analyze all markets holistically - outcomes in one market may affect others.`;
+
+  const marketsList = markets
+    .map(
+      (m, i) => `${i + 1}. "${m.title}"
+   Slug: ${m.slug}
+   YES: ${(m.yesPrice * 100).toFixed(1)}% | NO: ${(m.noPrice * 100).toFixed(1)}%
+   Status: ${m.isActive ? "Active" : "Closed"}`,
+    )
+    .join("\n\n");
+
+  const userPrompt = `Analyze this multi-market event:
+
+**Event**: ${event.title}
+**Event Slug**: ${event.eventSlug}
+
+**Markets (${markets.length} total)**:
+${marketsList}
+
+Provide:
+1. A synthesis of the overall event landscape
+2. How these markets correlate with each other
+3. The single best opportunity (if any) and why
+4. Event-level risks
+5. Individual analysis for each market with decision, confidence, and key factors`;
+
+  return { systemPrompt, userPrompt };
+};
+
+const queryEventWithModel = (
+  model: ModelEntry,
+  systemPrompt: string,
+  userPrompt: string,
+) =>
+  Effect.gen(function* () {
+    const startTime = Date.now();
+
+    const result = yield* Effect.gen(function* () {
+      const lm = yield* LanguageModel.LanguageModel;
+      const response = yield* lm.generateObject({
+        prompt: [
+          { role: "system" as const, content: systemPrompt },
+          { role: "user" as const, content: userPrompt },
+        ],
+        schema: EventAnalysisOutputSchema,
+        objectName: "eventAnalysis",
+      });
+      return response;
+    }).pipe(
+      Effect.provide(model.layer),
+      Effect.catchAll((error) =>
+        Effect.succeed({
+          value: null as EventAnalysisOutput | null,
+          error: String(error),
+        }),
+      ),
+    );
+
+    const responseTimeMs = Date.now() - startTime;
+    const error = (result as { error?: string }).error;
+
+    return {
+      success: !error && result.value !== null,
+      analysis: result.value,
+      modelName: model.id,
+      responseTimeMs,
+      error,
+    } satisfies EventAnalysisResponse;
+  });
+
+export const queryEventSwarm = (systemPrompt: string, userPrompt: string) =>
+  Effect.gen(function* () {
+    const models = getQuickAnalysisModels();
+
+    if (models.length === 0) {
+      console.warn("No AI models configured - check OPENROUTER_API_KEY");
+      return {
+        success: false,
+        analysis: null,
+        modelName: "none",
+        responseTimeMs: 0,
+        error: "No AI models configured",
+      } satisfies EventAnalysisResponse;
+    }
+
+    console.log(`Event analysis with ${models.length} models`);
+    const startTime = Date.now();
+
+    const retrySchedule = Schedule.exponential(Duration.seconds(1)).pipe(
+      Schedule.intersect(Schedule.recurs(2)),
+    );
+
+    const results = yield* Effect.all(
+      models.map((model) =>
+        queryEventWithModel(model as ModelEntry, systemPrompt, userPrompt).pipe(
+          Effect.retry(retrySchedule),
+        ),
+      ),
+      { concurrency: 3 },
+    );
+
+    const totalTime = Date.now() - startTime;
+    console.log(`Event analysis completed in ${totalTime}ms`);
+
+    const successfulResult = results.find((r) => r.success && r.analysis);
+    if (successfulResult) {
+      console.log(`Event analysis succeeded with ${successfulResult.modelName}`);
+      return successfulResult;
+    }
+
+    const firstResult = results[0];
+    console.log(`Event analysis failed: ${firstResult?.error || "Unknown error"}`);
+    return firstResult || {
+      success: false,
+      analysis: null,
+      modelName: "none",
+      responseTimeMs: totalTime,
+      error: "All models failed",
+    };
   });

@@ -125,9 +125,69 @@ export const AggregationOutputSchema = Schema.Struct({
 
 export type AggregationOutput = typeof AggregationOutputSchema.Type;
 
-/**
- * Aggregated response from the AI swarm with consensus calculation
- */
+export const MarketAnalysisSchema = Schema.Struct({
+  marketSlug: Schema.String.annotations({
+    description: "The slug identifier for this market",
+  }),
+
+  decision: DecisionSchema,
+
+  confidence: Schema.Number.annotations({
+    description: "Confidence level 0-100 in the decision",
+  }),
+
+  keyFactors: Schema.Array(Schema.String).annotations({
+    description: "1-3 key factors specific to this market",
+  }),
+
+  edgeAssessment: Schema.Struct({
+    hasEdge: Schema.Boolean,
+    edgeSize: Schema.Number.annotations({
+      description: "Size of edge in percentage points (-50 to 50)",
+    }),
+    direction: Schema.Literal("underpriced", "overpriced", "fair"),
+  }),
+}).annotations({
+  identifier: "MarketAnalysis",
+});
+
+export type MarketAnalysis = typeof MarketAnalysisSchema.Type;
+
+export const EventAnalysisOutputSchema = Schema.Struct({
+  eventSummary: Schema.String.annotations({
+    description: "Brief synthesis of the overall event landscape (max 500 chars)",
+  }),
+
+  marketCorrelations: Schema.String.annotations({
+    description: "How markets within this event relate to each other",
+  }),
+
+  topOpportunity: Schema.optional(
+    Schema.Struct({
+      marketSlug: Schema.String,
+      reason: Schema.String.annotations({
+        description: "Why this market has the best risk/reward",
+      }),
+    }),
+  ).annotations({
+    description: "The single best opportunity across all markets in this event",
+  }),
+
+  risks: Schema.Array(Schema.String).annotations({
+    description: "Event-level risks that could affect multiple markets",
+  }),
+
+  markets: Schema.Array(MarketAnalysisSchema).annotations({
+    description: "Individual analysis for each market in the event",
+  }),
+}).annotations({
+  identifier: "EventAnalysisOutput",
+  title: "Event-Level AI Analysis Output",
+  description: "Structured output from analyzing all markets in an event together",
+});
+
+export type EventAnalysisOutput = typeof EventAnalysisOutputSchema.Type;
+
 export interface SwarmResponse {
   results: SwarmResult[];
   consensusDecision: Decision;

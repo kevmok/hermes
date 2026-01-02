@@ -6,6 +6,12 @@ export const deep_dives = feature({
 	type: "single_use",
 });
 
+export const quick_analysis = feature({
+	id: "quick_analysis",
+	name: "Quick Analysis",
+	type: "single_use",
+});
+
 export const signals = feature({
 	id: "signals",
 	name: "AI Signals",
@@ -30,6 +36,7 @@ export const starter = product({
 	items: [
 		priceItem({ price: 40, interval: "month" }),
 		featureItem({ feature_id: deep_dives.id, included_usage: 1, interval: "month" }),
+		featureItem({ feature_id: quick_analysis.id, included_usage: 5, interval: "month" }),
 		featureItem({ feature_id: signals.id }),
 	],
 });
@@ -40,6 +47,7 @@ export const pro = product({
 	items: [
 		priceItem({ price: 99, interval: "month" }),
 		featureItem({ feature_id: deep_dives.id, included_usage: 10, interval: "month" }),
+		featureItem({ feature_id: quick_analysis.id, included_usage: 50, interval: "month" }),
 		featureItem({ feature_id: signals.id }),
 		featureItem({ feature_id: portfolio_sync.id }),
 		featureItem({ feature_id: whale_watch.id }),
@@ -52,6 +60,7 @@ export const unlimited = product({
 	items: [
 		priceItem({ price: 249, interval: "month" }),
 		featureItem({ feature_id: deep_dives.id, included_usage: "inf" }),
+		featureItem({ feature_id: quick_analysis.id, included_usage: "inf" }),
 		featureItem({ feature_id: signals.id }),
 		featureItem({ feature_id: portfolio_sync.id }),
 		featureItem({ feature_id: whale_watch.id }),

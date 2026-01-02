@@ -2,6 +2,7 @@ import { Context, Duration, Effect, Layer, Schedule } from "effect";
 import { ConvexHttpClient } from "convex/browser";
 import { api } from "backend/convex/_generated/api";
 import type { Id } from "backend/convex/_generated/dataModel";
+import { type AnalysisTier, getTierForTradeSize } from "../../config";
 
 const CONVEX_URL = process.env.CONVEX_URL;
 
@@ -35,6 +36,17 @@ export interface TradeContext {
 
 export interface MarketDataWithTrade extends MarketData {
   tradeContext: TradeContext;
+}
+
+export interface MarketDataWithTier extends MarketData {
+  tradeContext: TradeContext;
+  tier: AnalysisTier;
+}
+
+export interface TierResult {
+  marketId: Id<"markets">;
+  tier: AnalysisTier;
+  action: string;
 }
 
 export interface ModelPredictionData {
@@ -86,6 +98,18 @@ export interface RawTradeData {
   traderPseudonym?: string;
 }
 
+export interface TrackPriceResult {
+  snapshotRecorded: boolean;
+  priceMovementDetected: boolean;
+  triggerId?: Id<"smartTriggers">;
+}
+
+export interface ContrarianWhaleResult {
+  isContrarian: boolean;
+  triggerId?: Id<"smartTriggers">;
+  score?: number;
+}
+
 export class ConvexDataService extends Context.Tag("ConvexDataService")<
   ConvexDataService,
   {
@@ -95,6 +119,9 @@ export class ConvexDataService extends Context.Tag("ConvexDataService")<
     readonly upsertMarketWithTrade: (
       market: MarketDataWithTrade,
     ) => Effect.Effect<Id<"markets">, Error>;
+    readonly upsertMarketWithTier: (
+      market: MarketDataWithTier,
+    ) => Effect.Effect<TierResult, Error>;
     readonly upsertMarketsBatch: (
       markets: MarketData[],
     ) => Effect.Effect<Id<"markets">[], Error>;
@@ -128,6 +155,16 @@ export class ConvexDataService extends Context.Tag("ConvexDataService")<
     readonly markMarketAnalyzed: (
       marketId: Id<"markets">,
     ) => Effect.Effect<void, Error>;
+    readonly trackTradePrice: (
+      marketId: Id<"markets">,
+      price: number,
+    ) => Effect.Effect<TrackPriceResult, Error>;
+    readonly checkContrarianWhale: (
+      marketId: Id<"markets">,
+      whaleAddress: string,
+      whaleSide: "YES" | "NO",
+      tradeSize: number,
+    ) => Effect.Effect<ContrarianWhaleResult, Error>;
   }
 >() {}
 
@@ -145,6 +182,13 @@ const make = Effect.sync(() => {
     Effect.tryPromise({
       try: () => client.mutation(api.markets.upsertMarketWithTrade, market),
       catch: (e) => new Error(`Failed to upsert market with trade: ${e}`),
+    }).pipe(Effect.retry(retrySchedule));
+
+  const upsertMarketWithTier = (market: MarketDataWithTier) =>
+    Effect.tryPromise({
+      try: () =>
+        client.mutation(api.markets.upsertMarketWithTier, market) as Promise<TierResult>,
+      catch: (e) => new Error(`Failed to upsert market with tier: ${e}`),
     }).pipe(Effect.retry(retrySchedule));
 
   const upsertMarketsBatch = (markets: MarketData[]) =>
@@ -179,9 +223,9 @@ const make = Effect.sync(() => {
   const getMarketsForAnalysis = (limit: number) =>
     Effect.tryPromise({
       try: () =>
-        client.query(api.markets.getMarketsNeedingAnalysis, {
+        client.query(api.markets.listActiveMarkets, {
           limit,
-          minHoursSinceLastAnalysis: 6,
+          sortBy: "recent" as const,
         }),
       catch: (e) => new Error(`Failed to get markets for analysis: ${e}`),
     }).pipe(Effect.retry(retrySchedule));
@@ -230,9 +274,37 @@ const make = Effect.sync(() => {
       catch: (e) => new Error(`Failed to mark market as analyzed: ${e}`),
     }).pipe(Effect.retry(retrySchedule));
 
+  const trackTradePrice = (marketId: Id<"markets">, price: number) =>
+    Effect.tryPromise({
+      try: () =>
+        client.mutation(api.smartTriggers.trackTradePrice, {
+          marketId,
+          price,
+        }) as Promise<TrackPriceResult>,
+      catch: (e) => new Error(`Failed to track trade price: ${e}`),
+    }).pipe(Effect.retry(retrySchedule));
+
+  const checkContrarianWhale = (
+    marketId: Id<"markets">,
+    whaleAddress: string,
+    whaleSide: "YES" | "NO",
+    tradeSize: number,
+  ) =>
+    Effect.tryPromise({
+      try: () =>
+        client.mutation(api.smartTriggers.checkContrarianWhale, {
+          marketId,
+          whaleAddress,
+          whaleSide,
+          tradeSize,
+        }) as Promise<ContrarianWhaleResult>,
+      catch: (e) => new Error(`Failed to check contrarian whale: ${e}`),
+    }).pipe(Effect.retry(retrySchedule));
+
   return {
     upsertMarket,
     upsertMarketWithTrade,
+    upsertMarketWithTier,
     upsertMarketsBatch,
     recordSnapshot,
     recordTrade,
@@ -242,6 +314,8 @@ const make = Effect.sync(() => {
     saveModelPrediction,
     saveInsight,
     markMarketAnalyzed,
+    trackTradePrice,
+    checkContrarianWhale,
   };
 });
 

@@ -138,6 +138,23 @@ export const getInsightsSince = internalQuery({
   },
 });
 
+export const getRecentInsightForMarket = internalQuery({
+  args: {
+    marketId: v.id("markets"),
+    withinMs: v.number(),
+  },
+  handler: async (ctx, args) => {
+    return await ctx.db
+      .query("insights")
+      .withIndex("by_market_time", (q) =>
+        q
+          .eq("marketId", args.marketId)
+          .gte("timestamp", Date.now() - args.withinMs),
+      )
+      .first();
+  },
+});
+
 export const getAnalysisRequest = query({
   args: { requestId: v.id("analysisRequests") },
   handler: async (ctx, args) => {

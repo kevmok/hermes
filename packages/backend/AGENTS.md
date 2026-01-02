@@ -1,17 +1,17 @@
 # BACKEND - Convex Serverless
 
-Real-time database + serverless functions for trades, signals, and AI analysis.
+Real-time database + serverless functions for trades, signals, smart triggers, and AI analysis.
 
 ## STRUCTURE
 
 ```
 convex/
-├── schema.ts          # Database schema (all tables)
+├── schema.ts          # Database schema (635 lines - all tables + indexes)
 ├── _generated/        # Auto-generated (DO NOT EDIT)
 ├── ai/
-│   ├── swarm.ts       # AI consensus orchestration
-│   ├── models.ts      # Model configurations
-│   └── schema.ts      # AI-specific validators
+│   ├── swarm.ts       # AI consensus orchestration (647 lines)
+│   ├── models.ts      # Model configurations (QUICK/FULL/EVENT)
+│   └── schema.ts      # AI-specific validators (Effect Schema)
 ├── polymarket/
 │   ├── client.ts      # Polymarket API client
 │   ├── markets.ts     # Market data fetching
@@ -19,9 +19,11 @@ convex/
 ├── lib/
 │   └── errors.ts      # Error utilities
 ├── trades.ts          # Trade ingestion + whale detection
-├── signals.ts         # Signal queries + mutations
+├── signals.ts         # Signal queries + mutations (652 lines)
 ├── markets.ts         # Market CRUD
 ├── events.ts          # Event aggregation
+├── analysis.ts        # AI analysis orchestration (1257 lines)
+├── smartTriggers.ts   # Smart alert detection (631 lines)
 ├── insights.ts        # AI insight queries
 ├── crons.ts           # Scheduled job definitions
 └── scheduledJobs.ts   # Job implementations
@@ -29,26 +31,29 @@ convex/
 
 ## WHERE TO LOOK
 
-| Task                  | Location                                         |
-| --------------------- | ------------------------------------------------ |
-| Add table             | `schema.ts` - defineTable + indexes              |
-| Add query             | Feature file (e.g., `signals.ts`) - export query |
-| Add mutation          | Feature file - export mutation                   |
-| Add external API call | Use `action` not mutation                        |
-| Modify AI consensus   | `ai/swarm.ts`                                    |
-| Add scheduled job     | `crons.ts` + `scheduledJobs.ts`                  |
-| Fetch Polymarket data | `polymarket/` directory                          |
+| Task                   | Location                                         |
+| ---------------------- | ------------------------------------------------ |
+| Add table              | `schema.ts` - defineTable + indexes              |
+| Add query              | Feature file (e.g., `signals.ts`) - export query |
+| Add mutation           | Feature file - export mutation                   |
+| Add external API call  | Use `action` not mutation                        |
+| Modify AI consensus    | `ai/swarm.ts`                                    |
+| Add scheduled job      | `crons.ts` + `scheduledJobs.ts`                  |
+| Fetch Polymarket data  | `polymarket/` directory                          |
+| Add smart trigger type | `smartTriggers.ts`                               |
 
 ## SCHEMA (Key Tables)
 
-| Table           | Purpose                | Key Indexes                                   |
-| --------------- | ---------------------- | --------------------------------------------- |
-| `trades`        | Raw WebSocket trades   | `by_condition_id`, `by_whale`, `by_timestamp` |
-| `signals`       | AI consensus results   | `by_market`, `by_high_confidence`             |
-| `markets`       | Market metadata        | `by_polymarket_id`, `by_slug`                 |
-| `events`        | Event aggregations     | `by_event_slug`, `by_volume`                  |
-| `insights`      | Batch analysis results | `by_market`, `by_confidence_level`            |
-| `globalFilters` | Singleton config       | -                                             |
+| Table            | Purpose                 | Key Indexes                                    |
+| ---------------- | ----------------------- | ---------------------------------------------- |
+| `trades`         | Raw WebSocket trades    | `by_condition_id`, `by_whale`, `by_timestamp`  |
+| `signals`        | AI consensus results    | `by_market`, `by_high_confidence`              |
+| `markets`        | Market metadata         | `by_polymarket_id`, `by_slug`                  |
+| `events`         | Event aggregations      | `by_event_slug`, `by_volume`                   |
+| `smartTriggers`  | Opportunity alerts      | `by_status_score`, `by_market_status`          |
+| `priceSnapshots` | Price history (4h)      | `by_market_timestamp`                          |
+| `insights`       | Batch analysis results  | `by_market`, `by_confidence_level`             |
+| `globalFilters`  | Singleton config        | -                                              |
 
 ## FUNCTION TYPES
 
@@ -89,17 +94,33 @@ export const internalCreate = internalMutation({ ... });
 ```
 Trade triggers whale threshold
          ↓
-  ai/swarm.ts: runConsensusAnalysis
+  Tiered routing (Bronze/Silver/Gold/Platinum)
+         ↓
+  ai/swarm.ts: queryFullSwarm / queryQuickSwarm / queryEventSwarm
          ↓
   Parallel calls to 3 models:
   ├── Claude claude-sonnet-4-20250514 (Anthropic)
   ├── GPT-4o (OpenAI)
   └── Gemini 1.5 Pro (Google)
          ↓
-  Aggregate votes → consensus decision
+  Confidence-weighted consensus
          ↓
   Store in signals table
 ```
+
+## SMART TRIGGERS
+
+Three trigger types detected automatically:
+
+| Type                  | Detection Logic                              | Score Factors          |
+| --------------------- | -------------------------------------------- | ---------------------- |
+| `price_movement`      | 10%+ price change in 4 hours                 | Magnitude, volume      |
+| `contrarian_whale`    | Whale bets opposite of AI consensus          | Whale win rate, size   |
+| `resolution_proximity`| Near resolution + extreme price (>85%/<15%)  | Time to resolve, price |
+
+Called from lofn via:
+- `trackTradePrice` - Records snapshots, detects movements
+- `checkContrarianWhale` - Compares whale vs consensus
 
 ## TYPING INTERNAL FUNCTIONS
 
@@ -115,3 +136,12 @@ export const myAction = internalAction({
   },
 });
 ```
+
+## CRON JOBS
+
+| Job                    | Schedule      | Purpose                          |
+| ---------------------- | ------------- | -------------------------------- |
+| `runAutomaticAnalysis` | Every 30 min  | Batch analyze high-volume markets|
+| `cleanupOldData`       | Daily 4AM UTC | Prune old snapshots/predictions  |
+| `expireOldTriggers`    | Every hour    | Expire stale smart triggers      |
+| `cleanupOldTriggers`   | Daily 5AM UTC | Delete expired triggers          |
